@@ -9,18 +9,19 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
-@Entity
+@Entity(name = "lotes")
 public class Lote {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "lote_id")
     private Long loteId;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "lote_codigo", nullable = false, unique = true)
     private Integer loteCodigo;
 
     @OneToMany
-    @JoinColumn(name = "loteProducto")
+    @JoinColumn(name = "lote_producto")
     private List<Producto> loteProductos;
 
     public Long getLoteId() {

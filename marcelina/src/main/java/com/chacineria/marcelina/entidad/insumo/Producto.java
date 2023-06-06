@@ -8,14 +8,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-@Entity
+@Entity(name = "productos")
 public class Producto implements Serializable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "producto_id")
     private Long productoId;
 
-    @Column(length = 50, nullable = false)
+    @Column(name = "producto_nombre", length = 50, nullable = false)
     private String productoNombre;
 
     public Long getProductoId() {
