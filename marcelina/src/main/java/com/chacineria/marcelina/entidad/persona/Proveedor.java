@@ -80,5 +80,5 @@ public class Proveedor implements Serializable{
         this.proveedorLocalidad = proveedorLocalidad;
     }
 
-    
+    public Proveedor() { }
 }

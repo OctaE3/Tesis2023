@@ -1,0 +1,10 @@
+package com.chacineria.marcelina.repositorio.control;
+import com.chacineria.marcelina.entidad.control.PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canierias;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_CanieriasRepositorio extends JpaRepository<PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canierias, Long>{
+    
+}

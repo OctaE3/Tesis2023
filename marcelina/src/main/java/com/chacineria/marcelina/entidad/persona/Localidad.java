@@ -40,5 +40,5 @@ public class Localidad implements Serializable {
         this.localidadNombre = localidadNombre;
     }
 
-    
+    public Localidad() { }
 }

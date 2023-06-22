@@ -1,15 +1,22 @@
 package com.chacineria.marcelina.entidad.insumo;
 import com.chacineria.marcelina.entidad.persona.Proveedor;
+import com.chacineria.marcelina.entidad.trazabilidad.PResumen_de_Trazabilidad;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serializable;
 import java.sql.Date;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
 @Entity(name = "control_de_insumos")
@@ -27,7 +34,7 @@ public class Control_de_Insumos implements Serializable{
     private Date insumoFecha;
 
     @ManyToOne
-    @JoinColumn(name = "control_de_insumos_proveedor")
+    @JoinColumn(name = "control_de_insumos_proveedor", nullable = false)
     private Proveedor insumoProveedor;
 
     @Column(name = "control_de_insumos_tipo", length = 20, nullable = false)
@@ -39,7 +46,7 @@ public class Control_de_Insumos implements Serializable{
     @Column(name = "control_de_insumos_motivo_rechazo", length = 150, nullable = true)
     private String insumoMotivoDeRechazo;
 
-    @Column(name = "control_de_insumos_responsable", length = 50, nullable = false, unique = true)
+    @Column(name = "control_de_insumos_responsable", length = 50, nullable = false)
     private String insumoResponsable;
 
     @Column(name = "control_de_insumos_fecha_vencimiento", nullable = false)
@@ -129,5 +136,15 @@ public class Control_de_Insumos implements Serializable{
         this.insumoResponsable = insumoResponsable;
         this.insumoFechaVencimiento = insumoFechaVencimiento;
     }
+
+    public Control_de_Insumos() { }
     
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "diariaDeProduccionAditivos")
+    @JsonIgnore
+    private Set<PDiaria_de_Produccion> diariaDeProduccion = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "resumenDeTrazabilidadMatPrimaNoCarnica")
+    @JsonIgnore
+    private Set<PResumen_de_Trazabilidad> resumenDeTrazabilidad = new HashSet<>();
+
 }

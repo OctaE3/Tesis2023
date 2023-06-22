@@ -1,8 +1,10 @@
 package com.chacineria.marcelina.entidad.insumo;
 import com.chacineria.marcelina.entidad.persona.Proveedor;
+import com.chacineria.marcelina.entidad.persona.Usuario;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Set;
+import java.util.HashSet;
 import java.sql.Date;
 
 import javax.persistence.Column;
@@ -44,11 +46,12 @@ public class PRecepcion_de_Materias_Primas_Carnicas implements Serializable{
     @Column(name = "recepcion_materias_primas_carnicas_temperatura", nullable = false)
     private String recepcionDeMateriasPrimasCarnicasTemperatura;
 
-    @Column(name = "recepcion_materias_primas_carnicas_motivoDeRechazo", length = 150, nullable = true)
+    @Column(name = "recepcion_materias_primas_carnicas_motivoDeRechazo", length = 150)
     private String recepcionDeMateriasPrimasCarnicasMotivoDeRechazo;
 
-    @Column(name = "recepcion_materias_primas_carnicas_responsable", length = 50, nullable = false, unique = true)
-    private String recepcionDeMateriasPrimasCarnicasResponsable;
+    @ManyToOne
+    @JoinColumn(name = "recepcion_materias_primas_carnicas_responsable", nullable = false)
+    private Usuario recepcionDeMateriasPrimasCarnicasResponsable;
 
     public Long getRecepcionDeMateriasPrimasCarnicasId() {
         return recepcionDeMateriasPrimasCarnicasId;
@@ -107,11 +110,11 @@ public class PRecepcion_de_Materias_Primas_Carnicas implements Serializable{
         this.recepcionDeMateriasPrimasCarnicasMotivoDeRechazo = recepcionDeMateriasPrimasCarnicasMotivoDeRechazo;
     }
 
-    public String getRecepcionDeMateriasPrimasCarnicasResponsable() {
+    public Usuario getRecepcionDeMateriasPrimasCarnicasResponsable() {
         return recepcionDeMateriasPrimasCarnicasResponsable;
     }
 
-    public void setRecepcionDeMateriasPrimasCarnicasResponsable(String recepcionDeMateriasPrimasCarnicasResponsable) {
+    public void setRecepcionDeMateriasPrimasCarnicasResponsable(Usuario recepcionDeMateriasPrimasCarnicasResponsable) {
         this.recepcionDeMateriasPrimasCarnicasResponsable = recepcionDeMateriasPrimasCarnicasResponsable;
     }
 
@@ -120,7 +123,7 @@ public class PRecepcion_de_Materias_Primas_Carnicas implements Serializable{
             Set<Carne> recepcionDeMateriasPrimasCarnicasProductos,
             String recepcionDeMateriasPrimasCarnicasPaseSanitario, String recepcionDeMateriasPrimasCarnicasTemperatura,
             String recepcionDeMateriasPrimasCarnicasMotivoDeRechazo,
-            String recepcionDeMateriasPrimasCarnicasResponsable) {
+            Usuario recepcionDeMateriasPrimasCarnicasResponsable) {
         this.recepcionDeMateriasPrimasCarnicasId = recepcionDeMateriasPrimasCarnicasId;
         this.recepcionDeMateriasPrimasCarnicasFecha = recepcionDeMateriasPrimasCarnicasFecha;
         this.recepcionDeMateriasPrimasCarnicasProveedor = recepcionDeMateriasPrimasCarnicasProveedor;
@@ -131,6 +134,5 @@ public class PRecepcion_de_Materias_Primas_Carnicas implements Serializable{
         this.recepcionDeMateriasPrimasCarnicasResponsable = recepcionDeMateriasPrimasCarnicasResponsable;
     }
 
-
-
+    public PRecepcion_de_Materias_Primas_Carnicas() { }
 }

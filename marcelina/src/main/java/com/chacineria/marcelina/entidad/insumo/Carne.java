@@ -1,7 +1,9 @@
 package com.chacineria.marcelina.entidad.insumo;
+import com.chacineria.marcelina.entidad.trazabilidad.PResumen_de_Trazabilidad;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -33,7 +35,7 @@ public class Carne implements Serializable{
     @Column(name = "carne_cantidad", nullable = false)
     private Double carneCantidad;
 
-    @Column(name = "carne_pase_sanitario", length = 999999999, nullable = false, unique = true)
+    @Column(name = "carne_pase_sanitario", length = 30, nullable = false, unique = true)
     private String carnePaseSanitario;
 
     public Long getCarneId() {
@@ -84,6 +86,8 @@ public class Carne implements Serializable{
         this.carnePaseSanitario = carnePaseSanitario;
     }
 
+    public Carne(){ }
+
     public Carne(Long carneId, String carneNombre, String carneTipo, String carneCorte, Double carneCantidad,
             String carnePaseSanitario) {
         this.carneId = carneId;
@@ -97,4 +101,12 @@ public class Carne implements Serializable{
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "recepcionDeMateriasPrimasCarnicasProductos")
     @JsonIgnore
     private Set<PRecepcion_de_Materias_Primas_Carnicas> recepcion_materias_primas_carnicas = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "diariaDeProduccionInsumosCarnicos")
+    @JsonIgnore
+    private Set<PDiaria_de_Produccion> diariaDeProduccion = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "resumenDeTrazabilidadMatPrimaCarnica")
+    @JsonIgnore
+    private Set<PResumen_de_Trazabilidad> resumenDeTrazabilidad = new HashSet<>();
 }

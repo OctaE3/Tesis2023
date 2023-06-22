@@ -1,5 +1,6 @@
 package com.chacineria.marcelina.entidad.insumo;
 import com.chacineria.marcelina.entidad.persona.Proveedor;
+import com.chacineria.marcelina.entidad.persona.Usuario;
 
 import java.io.Serializable;
 import java.sql.Date;
@@ -36,8 +37,9 @@ public class PControl_de_Productos_Quimicos implements Serializable{
     @Column(name = "control_productos_quimicos_motivoDeRechazo", length = 150, nullable = true)
     private String controlDeProductosQuimicosMotivoDeRechazo;
 
-    @Column(name = "control_productos_quimicos_responsable", length = 50, nullable = false, unique = true)
-    private String controlDeProductosQuimicosResponsable;
+    @ManyToOne
+    @JoinColumn(name = "control_productos_quimicos_responsable", nullable = false)
+    private Usuario controlDeProductosQuimicosResponsable;
 
     public Long getControlDeProductosQuimicosId() {
         return controlDeProductosQuimicosId;
@@ -87,18 +89,18 @@ public class PControl_de_Productos_Quimicos implements Serializable{
         this.controlDeProductosQuimicosMotivoDeRechazo = controlDeProductosQuimicosMotivoDeRechazo;
     }
 
-    public String getControlDeProductosQuimicosResponsable() {
+    public Usuario getControlDeProductosQuimicosResponsable() {
         return controlDeProductosQuimicosResponsable;
     }
 
-    public void setControlDeProductosQuimicosResponsable(String controlDeProductosQuimicosResponsable) {
+    public void setControlDeProductosQuimicosResponsable(Usuario controlDeProductosQuimicosResponsable) {
         this.controlDeProductosQuimicosResponsable = controlDeProductosQuimicosResponsable;
     }
 
     public PControl_de_Productos_Quimicos(Long controlDeProductosQuimicosId, Date controlDeProductosQuimicosFecha,
             String controlDeProductosQuimicosProductoQuimico, Proveedor controlDeProductosQuimicosProveedor,
             String controlDeProductosQuimicosLote, String controlDeProductosQuimicosMotivoDeRechazo,
-            String controlDeProductosQuimicosResponsable) {
+            Usuario controlDeProductosQuimicosResponsable) {
         this.controlDeProductosQuimicosId = controlDeProductosQuimicosId;
         this.controlDeProductosQuimicosFecha = controlDeProductosQuimicosFecha;
         this.controlDeProductosQuimicosProductoQuimico = controlDeProductosQuimicosProductoQuimico;
@@ -108,5 +110,5 @@ public class PControl_de_Productos_Quimicos implements Serializable{
         this.controlDeProductosQuimicosResponsable = controlDeProductosQuimicosResponsable;
     }
 
-
+    public PControl_de_Productos_Quimicos() { }
 }

@@ -79,5 +79,5 @@ public class Cliente implements Serializable {
         this.clienteLocalidad = clienteLocalidad;
     }
 
-    
+    public Cliente() { }
 }

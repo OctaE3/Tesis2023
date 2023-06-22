@@ -52,5 +52,5 @@ public class Usuario implements Serializable{
         this.usuarioContrasenia = usuarioContrasenia;
     }
 
-    
+    public Usuario() { }
 }
