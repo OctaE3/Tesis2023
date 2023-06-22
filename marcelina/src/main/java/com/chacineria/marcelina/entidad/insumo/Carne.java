@@ -1,33 +1,41 @@
 package com.chacineria.marcelina.entidad.insumo;
+import com.chacineria.marcelina.entidad.trazabilidad.PResumen_de_Trazabilidad;
 
 import java.io.Serializable;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 
-@Entity
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@Entity(name = "carnes")
 public class Carne implements Serializable{
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "carne_id")
     private Long carneId;
 
-    @Column(length = 80, nullable = false)
+    @Column(name = "carne_nombre", length = 80, nullable = false)
     private String carneNombre;
 
-    @Column(length = 30, nullable = false)
+    @Column(name = "carne_tipo", length = 30, nullable = false)
     private String carneTipo;
 
-    @Column(length = 60, nullable = false)
+    @Column(name = "carne_corte", length = 60, nullable = false)
     private String carneCorte;
 
-    @Column(nullable = false)
+    @Column(name = "carne_cantidad", nullable = false)
     private Double carneCantidad;
 
-    @Column(length = 999999999, nullable = false, unique = true)
+    @Column(name = "carne_pase_sanitario", length = 30, nullable = false, unique = true)
     private String carnePaseSanitario;
 
     public Long getCarneId() {
@@ -78,6 +86,8 @@ public class Carne implements Serializable{
         this.carnePaseSanitario = carnePaseSanitario;
     }
 
+    public Carne(){ }
+
     public Carne(Long carneId, String carneNombre, String carneTipo, String carneCorte, Double carneCantidad,
             String carnePaseSanitario) {
         this.carneId = carneId;
@@ -88,5 +98,15 @@ public class Carne implements Serializable{
         this.carnePaseSanitario = carnePaseSanitario;
     }
 
-    
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "recepcionDeMateriasPrimasCarnicasProductos")
+    @JsonIgnore
+    private Set<PRecepcion_de_Materias_Primas_Carnicas> recepcion_materias_primas_carnicas = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "diariaDeProduccionInsumosCarnicos")
+    @JsonIgnore
+    private Set<PDiaria_de_Produccion> diariaDeProduccion = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "resumenDeTrazabilidadMatPrimaCarnica")
+    @JsonIgnore
+    private Set<PResumen_de_Trazabilidad> resumenDeTrazabilidad = new HashSet<>();
 }

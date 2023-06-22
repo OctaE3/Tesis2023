@@ -8,14 +8,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-@Entity
+@Entity(name = "localidadades")
 public class Localidad implements Serializable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "localidad_id")
     private Long localidadId;
 
-    @Column(length = 40, nullable = false)
+    @Column(name = "localidad_nombre", length = 40, nullable = false)
     private String localidadNombre;
 
     public Long getLocalidadId() {
@@ -39,5 +40,5 @@ public class Localidad implements Serializable {
         this.localidadNombre = localidadNombre;
     }
 
-    
+    public Localidad() { }
 }

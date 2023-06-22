@@ -8,17 +8,18 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-@Entity
+@Entity(name = "usuarios")
 public class Usuario implements Serializable{
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "usuario_id")
     private Long usuarioId;
 
-    @Column(length = 50, nullable = false, unique = true)
+    @Column(name = "usuario_nombre", length = 50, nullable = false, unique = true)
     private String usuarioNombre;
 
-    @Column(length = 30, nullable = false, unique = true)
+    @Column(name = "usuario_contrasenia", length = 30, nullable = false, unique = true)
     private String usuarioContrasenia;
 
     public Long getUsuarioId() {
@@ -51,5 +52,5 @@ public class Usuario implements Serializable{
         this.usuarioContrasenia = usuarioContrasenia;
     }
 
-    
+    public Usuario() { }
 }

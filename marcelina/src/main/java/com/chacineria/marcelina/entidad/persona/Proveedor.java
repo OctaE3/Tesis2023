@@ -10,24 +10,25 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-@Entity
+@Entity(name = "proveedores")
 public class Proveedor implements Serializable{
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "proveedor_id")
     private Long proveedorId;
 
-    @Column(length = 30, nullable = false)
+    @Column(name = "proveedor_nombre", length = 30, nullable = false)
     private String proveedorNombre;
 
-    @Column(length = 12, nullable = false, unique = true)
+    @Column(name = "proveedor_rut", length = 12, nullable = false, unique = true)
     private String proveedorRUT;
 
-    @Column(length = 9, nullable = false, unique = true)
+    @Column(name = "proveedor_contacto", length = 9, nullable = false, unique = true)
     private String proveedorContacto;
 
     @ManyToOne
-    @JoinColumn(name = "proveedorLocalidad")
+    @JoinColumn(name = "proveedor_localidad")
     private Localidad proveedorLocalidad;
 
     public Long getProveedorId() {
@@ -79,5 +80,5 @@ public class Proveedor implements Serializable{
         this.proveedorLocalidad = proveedorLocalidad;
     }
 
-    
+    public Proveedor() { }
 }

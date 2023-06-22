@@ -1,0 +1,41 @@
+package com.chacineria.marcelina.servicio.insumo;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.chacineria.marcelina.entidad.insumo.PRecepcion_de_Materias_Primas_Carnicas;
+import com.chacineria.marcelina.repositorio.insumo.PRecepcion_de_Materias_Primas_CarnicasRepositorio;
+
+@Service
+public class PRecepcion_de_Materias_Primas_CarnicasServicioImpl implements PRecepcion_de_Materias_Primas_CarnicasServicio{
+    
+    @Autowired
+    private  PRecepcion_de_Materias_Primas_CarnicasRepositorio recepcionDeMateriasPrimasCarnicasRepositorio;
+
+    @Override
+    @Transactional
+    public Iterable< PRecepcion_de_Materias_Primas_Carnicas> findAll(){
+        return recepcionDeMateriasPrimasCarnicasRepositorio.findAll();
+    }
+
+    @Override
+    @Transactional
+    public Optional< PRecepcion_de_Materias_Primas_Carnicas> findById(Long Id){
+        return recepcionDeMateriasPrimasCarnicasRepositorio.findById(Id);
+    }
+
+    @Override
+    @Transactional
+    public  PRecepcion_de_Materias_Primas_Carnicas save( PRecepcion_de_Materias_Primas_Carnicas save){
+        return recepcionDeMateriasPrimasCarnicasRepositorio.save(save);
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(Long Id){
+        recepcionDeMateriasPrimasCarnicasRepositorio.deleteById(Id);
+    }
+}

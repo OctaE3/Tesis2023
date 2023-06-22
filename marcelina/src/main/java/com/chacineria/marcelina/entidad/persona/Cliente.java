@@ -9,24 +9,25 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-@Entity
+@Entity(name = "clientes")
 public class Cliente implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "cliente_id")
     private Long clienteId;
 
-    @Column(length = 30, nullable = false)
+    @Column(name = "cliente_nombre", length = 30, nullable = false)
     private String clienteNombre;
 
-    @Column(length = 9, nullable = false, unique = true)
+    @Column(name = "cliente_contacto", length = 9, nullable = false, unique = true)
     private String clienteContacto;
 
-    @Column(length = 150, nullable = true)
+    @Column(name = "cliente_observaciones", length = 150, nullable = true)
     private String clienteObservaciones;
 
     @ManyToOne
-    @JoinColumn(name = "clienteLocalidad")
+    @JoinColumn(name = "cliente_localidad")
     private Localidad clienteLocalidad;
 
     public Long getClienteId() {
@@ -78,5 +79,5 @@ public class Cliente implements Serializable {
         this.clienteLocalidad = clienteLocalidad;
     }
 
-    
+    public Cliente() { }
 }
