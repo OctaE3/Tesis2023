@@ -39,7 +39,7 @@ import com.chacineria.marcelina.servicio.insumo.PRecepcion_de_Materias_Primas_Ca
 import com.chacineria.marcelina.servicio.insumo.ProductoServicioImpl;
 
 @Controller
-@RequestMapping("/insumos")
+@RequestMapping("/marcelina")
 @RestController
 public class Controladora_Insumo {
     

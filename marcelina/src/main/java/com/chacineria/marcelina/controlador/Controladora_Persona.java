@@ -22,13 +22,14 @@ import com.chacineria.marcelina.entidad.persona.Cliente;
 import com.chacineria.marcelina.entidad.persona.Localidad;
 import com.chacineria.marcelina.entidad.persona.Proveedor;
 import com.chacineria.marcelina.entidad.persona.Usuario;
+import com.chacineria.marcelina.repositorio.persona.UsuarioRepositorio;
 import com.chacineria.marcelina.servicio.persona.ClienteServicioImpl;
 import com.chacineria.marcelina.servicio.persona.LocalidadServicioImpl;
 import com.chacineria.marcelina.servicio.persona.ProveedorServicioImpl;
 import com.chacineria.marcelina.servicio.persona.UsuarioServicioImpl;
 
 @Controller
-@RequestMapping("/persona")
+@RequestMapping("/marcelina")
 @RestController
 public class Controladora_Persona {
     
@@ -214,6 +215,9 @@ public class Controladora_Persona {
     @Autowired
     private UsuarioServicioImpl usuarioServicioImpl;
 
+    @Autowired
+    private UsuarioRepositorio usuarioRepositorio;
+
     @GetMapping("/listar-usuarios")
     public List<Usuario> listadoUsuario(){
         List<Usuario> usuario = StreamSupport
@@ -230,6 +234,7 @@ public class Controladora_Persona {
         }
         return ResponseEntity.ok(usuario);
     }
+    
 
     @PostMapping("/agregar-usuario")
     public ResponseEntity<?> agregarUsuario(@RequestBody Usuario usuario){

@@ -35,7 +35,7 @@ import com.chacineria.marcelina.servicio.control.PControl_de_Temperatura_de_Este
 import com.chacineria.marcelina.servicio.control.PControl_de_Temperatura_en_CamarasServicioImpl;
 
 @Controller
-@RequestMapping("/control")
+@RequestMapping("/marcelina")
 @RestController
 public class Controladora_Control {
     

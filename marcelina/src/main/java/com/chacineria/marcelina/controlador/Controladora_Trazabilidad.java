@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Controller
-@RequestMapping("/trazabilidad")
+@RequestMapping("/marcelina")
 @RestController
 public class Controladora_Trazabilidad {
     
