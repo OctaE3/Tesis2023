@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LocalidadRepositorio extends JpaRepository<Localidad, Long>{
-    
+    public Iterable<Localidad> findAllByLocalidadEliminado(Boolean eliminado);
 }

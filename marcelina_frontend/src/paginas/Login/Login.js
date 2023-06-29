@@ -54,13 +54,26 @@ const useStyles = makeStyles(theme=>({
 
 
 const Login = () => {
-    const [body, setBody] = useState({user: '', password: ''})
+    const [usuarioNombre, setUsuarioNombre] = useState("");
+    const [usuarioContrasenia, setUsuarioContrasenia] = useState("");
+    const [error, setError] = useState(null);
+
     const classes = useStyles();
-    const handleChange = event => {
-        console.log(event.target.value)
-        setBody({
-            ...body,
-            [event.target.name]: event.target.value
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        axios.post('/login', { usuarioNombre, usuarioContrasenia },
+            {
+                headers: { "Content-Type": "application/json" },
+            }
+        )
+        .then(response => {
+            window.localStorage.setItem('token', response.data.token);
+            console.log(response.data.token);
+        })
+        .catch(error => {
+            console.error(error);
         })
     }
 
@@ -75,7 +88,7 @@ const Login = () => {
                 </Avatar>
                 <Typography component='h1' variant='h5'>Iniciar sesión</Typography>
             </div>
-            <form className={classes.form}>
+            <form className={classes.form} onSubmit={handleSubmit}>
                 <TextField 
                     fullWidth
                     autoFocus
@@ -84,8 +97,8 @@ const Login = () => {
                     variant='outlined'
                     label='Usuario'
                     name='user'
-                    value={body.user}
-                    onChange={handleChange}
+                    value={usuarioNombre}
+                    onChange={(event) => setUsuarioNombre(event.target.value)}
                 />
                 <TextField 
                     fullWidth
@@ -95,11 +108,12 @@ const Login = () => {
                     variant='outlined'
                     label='Contraseña'
                     name='password'
-                    value={body.password}
-                    onChange={handleChange}
+                    value={usuarioContrasenia}
+                    onChange={(event) => setUsuarioContrasenia(event.target.value)}
                 />
                 <Button
                 fullWidth
+                type="submit"
                 variant='contained'
                 color= 'primary'
                 className={classes.button}

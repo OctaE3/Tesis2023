@@ -9,15 +9,15 @@ import java.sql.Date;
 import java.util.Set;
 import java.util.HashSet;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 
 @Entity(name = "control_de_insumos")
 public class Control_de_Insumos implements Serializable{
@@ -51,6 +51,9 @@ public class Control_de_Insumos implements Serializable{
 
     @Column(name = "control_de_insumos_fecha_vencimiento", nullable = false)
     private Date insumoFechaVencimiento;
+
+    @Column(name = "control_de_insumos_eliminado")
+    private Boolean insumoEliminado;
 
     public Long getInsumoId() {
         return insumoId;
@@ -123,9 +126,17 @@ public class Control_de_Insumos implements Serializable{
     public void setInsumoFechaVencimiento(Date insumoFechaVencimiento) {
         this.insumoFechaVencimiento = insumoFechaVencimiento;
     }
+    
+    public Boolean getInsumoEliminado() {
+        return insumoEliminado;
+    }
+
+    public void setInsumoEliminado(Boolean insumoEliminado) {
+        this.insumoEliminado = insumoEliminado;
+    }
 
     public Control_de_Insumos(Long insumoId, String insumoNombre, Date insumoFecha, Proveedor insumoProveedor, String insumoTipo,
-            String insumoNroLote, String insumoMotivoDeRechazo, String insumoResponsable, Date insumoFechaVencimiento) {
+            String insumoNroLote, String insumoMotivoDeRechazo, String insumoResponsable, Date insumoFechaVencimiento, Boolean insumoEliminado) {
         this.insumoId = insumoId;
         this.insumoNombre = insumoNombre;
         this.insumoFecha = insumoFecha;
@@ -135,6 +146,7 @@ public class Control_de_Insumos implements Serializable{
         this.insumoMotivoDeRechazo = insumoMotivoDeRechazo;
         this.insumoResponsable = insumoResponsable;
         this.insumoFechaVencimiento = insumoFechaVencimiento;
+        this.insumoEliminado = insumoEliminado;
     }
 
     public Control_de_Insumos() { }

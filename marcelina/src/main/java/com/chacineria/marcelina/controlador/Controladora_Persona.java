@@ -18,18 +18,23 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.chacineria.marcelina.configuracion.ProvedorDelAuntenticadorDeUsuario;
+import com.chacineria.marcelina.dto.UsuarioDto;
 import com.chacineria.marcelina.entidad.persona.Cliente;
 import com.chacineria.marcelina.entidad.persona.Localidad;
 import com.chacineria.marcelina.entidad.persona.Proveedor;
 import com.chacineria.marcelina.entidad.persona.Usuario;
-import com.chacineria.marcelina.repositorio.persona.UsuarioRepositorio;
 import com.chacineria.marcelina.servicio.persona.ClienteServicioImpl;
 import com.chacineria.marcelina.servicio.persona.LocalidadServicioImpl;
 import com.chacineria.marcelina.servicio.persona.ProveedorServicioImpl;
 import com.chacineria.marcelina.servicio.persona.UsuarioServicioImpl;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
 @RequestMapping("/marcelina")
+@RequiredArgsConstructor
 @RestController
 public class Controladora_Persona {
     
@@ -41,7 +46,7 @@ public class Controladora_Persona {
     @GetMapping("/listar-clientes")
     public List<Cliente> listadoCliente(){
         List<Cliente> clientes = StreamSupport
-        .stream(clienteServicioImpl.findAll().spliterator(), false)
+        .stream(clienteServicioImpl.findAllByClienteEliminado(false).spliterator(), false)
         .collect(Collectors.toList());
         return clientes;
     }
@@ -101,7 +106,7 @@ public class Controladora_Persona {
     @GetMapping("/listar-localidades")
     public List<Localidad> listadoLocalidad(){
         List<Localidad> localidad = StreamSupport
-        .stream(localidadServicioImpl.findAll().spliterator(), false)
+        .stream(localidadServicioImpl.findAllByLocalidadEliminado(false).spliterator(), false)
         .collect(Collectors.toList());
         return localidad;
     }
@@ -158,7 +163,7 @@ public class Controladora_Persona {
     @GetMapping("/listar-proveedores")
     public List<Proveedor> listadoProveedor(){
         List<Proveedor> proveedor = StreamSupport
-        .stream(proveedorServicioImpl.findAll().spliterator(), false)
+        .stream(proveedorServicioImpl.findAllByProveedorEliminado(false).spliterator(), false)
         .collect(Collectors.toList());
         return proveedor;
     }
@@ -215,13 +220,12 @@ public class Controladora_Persona {
     @Autowired
     private UsuarioServicioImpl usuarioServicioImpl;
 
-    @Autowired
-    private UsuarioRepositorio usuarioRepositorio;
+    private final ProvedorDelAuntenticadorDeUsuario provedorDelAuntenticadorDeUsuario;
 
     @GetMapping("/listar-usuarios")
     public List<Usuario> listadoUsuario(){
         List<Usuario> usuario = StreamSupport
-        .stream(usuarioServicioImpl.findAll().spliterator(), false)
+        .stream(usuarioServicioImpl.findAllByUsuarioEliminado(false).spliterator(), false)
         .collect(Collectors.toList());
         return usuario;
     }
@@ -234,7 +238,13 @@ public class Controladora_Persona {
         }
         return ResponseEntity.ok(usuario);
     }
-    
+
+    @PostMapping("/login")
+    public ResponseEntity<UsuarioDto> loginUsuario(@RequestBody Usuario usuario){
+        UsuarioDto usuarioDto = usuarioServicioImpl.login(usuario);
+        usuarioDto.setToken(provedorDelAuntenticadorDeUsuario.createToken(usuarioDto.getUsuarioNombre()));
+        return ResponseEntity.ok(usuarioDto);       
+    }
 
     @PostMapping("/agregar-usuario")
     public ResponseEntity<?> agregarUsuario(@RequestBody Usuario usuario){

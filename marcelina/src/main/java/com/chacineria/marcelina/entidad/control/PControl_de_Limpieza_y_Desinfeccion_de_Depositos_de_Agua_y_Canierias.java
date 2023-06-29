@@ -1,16 +1,16 @@
 package com.chacineria.marcelina.entidad.control;
-import com.chacineria.marcelina.entidad.persona.Usuario;
-
 import java.io.Serializable;
 import java.sql.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import com.chacineria.marcelina.entidad.persona.Usuario;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity(name = "control_de_limpieza_y_desinfeccion_de_depositos_de_agua_y_canierias")
 public class PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canierias implements Serializable{

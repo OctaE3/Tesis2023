@@ -17,8 +17,8 @@ public class Control_de_InsumosServicioImpl implements Control_de_InsumosServici
 
     @Override
     @Transactional
-    public Iterable<Control_de_Insumos> findAll(){
-        return controlDeInsumosRepositorio.findAll();
+    public Iterable<Control_de_Insumos> findAllByInsumoEliminado(Boolean eliminado){
+        return controlDeInsumosRepositorio.findAllByInsumoEliminado(eliminado);
     }
 
     @Override

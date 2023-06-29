@@ -2,11 +2,11 @@ package com.chacineria.marcelina.entidad.persona;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 @Entity(name = "usuarios")
 public class Usuario implements Serializable{
@@ -19,8 +19,11 @@ public class Usuario implements Serializable{
     @Column(name = "usuario_nombre", length = 50, nullable = false, unique = true)
     private String usuarioNombre;
 
-    @Column(name = "usuario_contrasenia", length = 30, nullable = false, unique = true)
+    @Column(name = "usuario_contrasenia", length = 150, nullable = false)
     private String usuarioContrasenia;
+
+    @Column(name = "usuario_eliminado")
+    private Boolean usuarioEliminado = false;
 
     public Long getUsuarioId() {
         return usuarioId;
@@ -46,10 +49,19 @@ public class Usuario implements Serializable{
         this.usuarioContrasenia = usuarioContrasenia;
     }
 
-    public Usuario(Long usuarioId, String usuarioNombre, String usuarioContrasenia) {
+    public Boolean getUsuarioEliminado() {
+        return usuarioEliminado;
+    }
+
+    public void setUsuarioEliminado(boolean usuarioEliminado) {
+        this.usuarioEliminado = usuarioEliminado;
+    }
+
+    public Usuario(Long usuarioId, String usuarioNombre, String usuarioContrasenia, Boolean usuarioEliminado) {
         this.usuarioId = usuarioId;
         this.usuarioNombre = usuarioNombre;
         this.usuarioContrasenia = usuarioContrasenia;
+        this.usuarioEliminado = usuarioEliminado;
     }
 
     public Usuario() { }

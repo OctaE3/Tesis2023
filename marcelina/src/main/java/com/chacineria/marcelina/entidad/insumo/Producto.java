@@ -6,13 +6,13 @@ import java.io.Serializable;
 import java.util.Set;
 import java.util.HashSet;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -26,6 +26,9 @@ public class Producto implements Serializable {
 
     @Column(name = "producto_nombre", length = 50, nullable = false)
     private String productoNombre;
+
+    @Column(name = "producto_eliminado")
+    private Boolean productoEliminado;
 
     public Long getProductoId() {
         return productoId;
@@ -43,9 +46,18 @@ public class Producto implements Serializable {
         this.productoNombre = productoNombre;
     }
 
-    public Producto(Long productoId, String productoNombre) {
+    public Boolean getProductoEliminado() {
+        return productoEliminado;
+    }
+
+    public void setProductoEliminado(Boolean productoEliminado) {
+        this.productoEliminado = productoEliminado;
+    }
+
+    public Producto(Long productoId, String productoNombre, Boolean productoEliminado) {
         this.productoId = productoId;
         this.productoNombre = productoNombre;
+        this.productoEliminado = productoEliminado;
     }
 
     public Producto() { }

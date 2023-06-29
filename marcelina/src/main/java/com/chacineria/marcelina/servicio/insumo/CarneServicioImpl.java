@@ -17,8 +17,8 @@ public class CarneServicioImpl implements CarneServicio{
 
     @Override
     @Transactional
-    public Iterable<Carne> findAll(){
-        return carneRepositorio.findAll();
+    public Iterable<Carne> findAllByCarneEliminado(Boolean eliminado){
+        return carneRepositorio.findAllByCarneEliminado(eliminado);
     }
 
     @Override

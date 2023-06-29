@@ -17,8 +17,8 @@ public class ClienteServicioImpl implements ClienteServicio{
 
     @Override
     @Transactional
-    public Iterable<Cliente> findAll(){
-        return clienteRepositorio.findAll();
+    public Iterable<Cliente> findAllByClienteEliminado(Boolean eliminado){
+        return clienteRepositorio.findAllByClienteEliminado(eliminado);
     }
 
     @Override

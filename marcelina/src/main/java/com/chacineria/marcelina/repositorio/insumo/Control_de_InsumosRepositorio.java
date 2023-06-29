@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface Control_de_InsumosRepositorio extends JpaRepository<Control_de_Insumos, Long> {
-    
+    public Iterable<Control_de_Insumos> findAllByInsumoEliminado(Boolean eliminado);
 }

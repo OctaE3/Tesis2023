@@ -4,13 +4,13 @@ import com.chacineria.marcelina.entidad.persona.Proveedor;
 import java.io.Serializable;
 import java.sql.Date;
 
-import javax.persistence.Entity;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 
 
@@ -36,6 +36,9 @@ public class Insumo implements Serializable{
 
     @Column(nullable = false)
     private Date insumoFechaVencimiento;
+
+    @Column(name = "insumo_eliminado")
+    private Boolean insumoEliminado;
 
     public Long getInsumoId() {
         return insumoId;
@@ -85,15 +88,25 @@ public class Insumo implements Serializable{
         this.insumoFechaVencimiento = insumoFechaVencimiento;
     }
 
+    public Boolean getInsumoEliminado() {
+        return insumoEliminado;
+    }
+
+    public void setInsumoEliminado(Boolean insumoEliminado) {
+        this.insumoEliminado = insumoEliminado;
+    }
+
     public Insumo(Long insumoId, String insumoNombre, Proveedor insumoProveedor, String insumoTipo,
-            String insumoNroLote, Date insumoFechaVencimiento) {
+            String insumoNroLote, Date insumoFechaVencimiento, Boolean insumoEliminado) {
         this.insumoId = insumoId;
         this.insumoNombre = insumoNombre;
         this.insumoProveedor = insumoProveedor;
         this.insumoTipo = insumoTipo;
         this.insumoNroLote = insumoNroLote;
         this.insumoFechaVencimiento = insumoFechaVencimiento;
+        this.insumoEliminado = insumoEliminado;
     }
-
+  
+    public Insumo() { }
     
 }

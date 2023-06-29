@@ -51,7 +51,7 @@ public class Controladora_Insumo {
     @GetMapping("/listar-carnes")
     public List<Carne> listadoCarne(){
         List<Carne> carnes = StreamSupport
-        .stream(carneServicioImpl.findAll().spliterator(), false)
+        .stream(carneServicioImpl.findAllByCarneEliminado(false).spliterator(), false)
         .collect(Collectors.toList());
         return carnes;
     }
@@ -112,7 +112,7 @@ public class Controladora_Insumo {
     @GetMapping("/listar-control-de-insumos")
     public List<Control_de_Insumos> listadoControlDeInsumos(){
         List<Control_de_Insumos> controlDeInsumos = StreamSupport
-        .stream(controlDeInsumosServicioImpl.findAll().spliterator(), false)
+        .stream(controlDeInsumosServicioImpl.findAllByInsumoEliminado(false).spliterator(), false)
         .collect(Collectors.toList());
         return controlDeInsumos;
     }
@@ -177,7 +177,7 @@ public class Controladora_Insumo {
     @GetMapping("/listar-lotes")
     public List<Lote> listadoLote(){
         List<Lote> lotes = StreamSupport
-        .stream(loteServicioImpl.findAll().spliterator(), false)
+        .stream(loteServicioImpl.findAllByLoteEliminado(false).spliterator(), false)
         .collect(Collectors.toList());
         return lotes;
     }
@@ -549,7 +549,7 @@ public class Controladora_Insumo {
     @GetMapping("/listar-productos")
     public List<Producto> listadoProducto(){
         List<Producto> producto = StreamSupport
-        .stream(productoServicioImpl.findAll().spliterator(), false)
+        .stream(productoServicioImpl.findAllByProductoEliminado(false).spliterator(), false)
         .collect(Collectors.toList());
         return producto;
     }
