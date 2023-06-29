@@ -5,13 +5,13 @@ import java.io.Serializable;
 import java.util.Set;
 import java.util.HashSet;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -37,6 +37,9 @@ public class Carne implements Serializable{
 
     @Column(name = "carne_pase_sanitario", length = 30, nullable = false, unique = true)
     private String carnePaseSanitario;
+
+    @Column(name = "carne_eliminado")
+    private Boolean carneEliminado;
 
     public Long getCarneId() {
         return carneId;

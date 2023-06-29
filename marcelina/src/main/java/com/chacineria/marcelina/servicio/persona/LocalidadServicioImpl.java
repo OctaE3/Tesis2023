@@ -17,8 +17,8 @@ public class LocalidadServicioImpl implements LocalidadServicio{
 
     @Override
     @Transactional
-    public Iterable<Localidad> findAll(){
-        return localidadRepositorio.findAll();
+    public Iterable<Localidad> findAllByLocalidadEliminado(Boolean eliminado){
+        return localidadRepositorio.findAllByLocalidadEliminado(eliminado);
     }
 
     @Override

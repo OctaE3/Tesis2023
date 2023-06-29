@@ -18,10 +18,10 @@ public class ServicioDeSeguridadDeUsuario implements UserDetailsService{
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var optUsuario = this.usuarioRepositorio.findUsuarioByName(username);
+        var optUsuario = this.usuarioRepositorio.findByUsuarioNombre(username);
         
-        if(optUsuario.isPresent()){
-            return new UsuarioSeguridad(optUsuario.get());
+        if(optUsuario != null){
+            return new UsuarioSeguridad(optUsuario);
         }
         throw new UsernameNotFoundException("Usuario no encontrado: " + username);
     }

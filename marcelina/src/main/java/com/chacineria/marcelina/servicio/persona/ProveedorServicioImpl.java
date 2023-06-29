@@ -17,8 +17,8 @@ public class ProveedorServicioImpl implements ProveedorServicio{
 
     @Override
     @Transactional
-    public Iterable<Proveedor> findAll(){
-        return proveedorRepositorio.findAll();
+    public Iterable<Proveedor> findAllByProveedorEliminado(Boolean eliminado){
+        return proveedorRepositorio.findAllByProveedorEliminado(eliminado);
     }
 
     @Override

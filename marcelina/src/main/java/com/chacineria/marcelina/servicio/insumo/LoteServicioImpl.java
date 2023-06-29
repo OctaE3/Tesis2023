@@ -17,8 +17,8 @@ public class LoteServicioImpl implements LoteServicio{
 
     @Override
     @Transactional
-    public Iterable<Lote> findAll(){
-        return loteRepositorio.findAll();
+    public Iterable<Lote> findAllByLoteEliminado(Boolean eliminado){
+        return loteRepositorio.findAllByLoteEliminado(eliminado);
     }
 
     @Override

@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.chacineria.marcelina.entidad.insumo.Producto;
 
 public interface ProductoServicio {
-    public Iterable<Producto> findAll();
+    public Iterable<Producto> findAllByProductoEliminado(Boolean eliminado);
     public Optional<Producto> findById(Long Id);
     public Producto save(Producto save);
     public void deleteById(Long Id);

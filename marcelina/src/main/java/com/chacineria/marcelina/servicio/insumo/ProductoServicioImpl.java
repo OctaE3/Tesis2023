@@ -17,8 +17,8 @@ public class ProductoServicioImpl implements ProductoServicio{
 
     @Override
     @Transactional
-    public Iterable<Producto> findAll(){
-        return productoRepositorio.findAll();
+    public Iterable<Producto> findAllByProductoEliminado(Boolean eliminado){
+        return productoRepositorio.findAllByProductoEliminado(eliminado);
     }
 
     @Override

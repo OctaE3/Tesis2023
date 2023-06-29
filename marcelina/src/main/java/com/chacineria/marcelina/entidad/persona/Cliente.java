@@ -1,13 +1,13 @@
 package com.chacineria.marcelina.entidad.persona;
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity(name = "clientes")
 public class Cliente implements Serializable {
@@ -29,6 +29,9 @@ public class Cliente implements Serializable {
     @ManyToOne
     @JoinColumn(name = "cliente_localidad")
     private Localidad clienteLocalidad;
+
+    @Column(name = "cliente_eliminado")
+    private Boolean clienteEliminado;
 
     public Long getClienteId() {
         return clienteId;
@@ -70,14 +73,25 @@ public class Cliente implements Serializable {
         this.clienteLocalidad = clienteLocalidad;
     }
 
+    public Boolean getClienteEliminado() {
+        return clienteEliminado;
+    }
+
+    public void setClienteEliminado(Boolean clienteEliminado) {
+        this.clienteEliminado = clienteEliminado;
+    }
+
     public Cliente(Long clienteId, String clienteNombre, String clienteContacto, String clienteObservaciones,
-            Localidad clienteLocalidad) {
+            Localidad clienteLocalidad, Boolean clienteEliminado) {
         this.clienteId = clienteId;
         this.clienteNombre = clienteNombre;
         this.clienteContacto = clienteContacto;
         this.clienteObservaciones = clienteObservaciones;
         this.clienteLocalidad = clienteLocalidad;
+        this.clienteEliminado = clienteEliminado;
     }
 
     public Cliente() { }
+
+    
 }

@@ -2,13 +2,13 @@ package com.chacineria.marcelina.entidad.persona;
 
 import java.io.Serializable;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Column;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Column;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity(name = "proveedores")
 public class Proveedor implements Serializable{
@@ -30,6 +30,9 @@ public class Proveedor implements Serializable{
     @ManyToOne
     @JoinColumn(name = "proveedor_localidad")
     private Localidad proveedorLocalidad;
+
+    @Column(name = "proveedor_eliminado")
+    private Boolean proveedorEliminado = false;
 
     public Long getProveedorId() {
         return proveedorId;
@@ -71,13 +74,22 @@ public class Proveedor implements Serializable{
         this.proveedorLocalidad = proveedorLocalidad;
     }
 
+    public Boolean getProveedorEliminado() {
+        return proveedorEliminado;
+    }
+
+    public void setProveedorEliminado(Boolean proveedorEliminado) {
+        this.proveedorEliminado = proveedorEliminado;
+    }
+
     public Proveedor(Long proveedorId, String proveedorNombre, String proveedorRUT, String proveedorContacto,
-            Localidad proveedorLocalidad) {
+            Localidad proveedorLocalidad, Boolean proveedorEliminado) {
         this.proveedorId = proveedorId;
         this.proveedorNombre = proveedorNombre;
         this.proveedorRUT = proveedorRUT;
         this.proveedorContacto = proveedorContacto;
         this.proveedorLocalidad = proveedorLocalidad;
+        this.proveedorEliminado = proveedorEliminado;
     }
 
     public Proveedor() { }

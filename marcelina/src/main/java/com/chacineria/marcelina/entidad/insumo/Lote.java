@@ -4,15 +4,15 @@ import com.chacineria.marcelina.entidad.trazabilidad.PExpedicion_de_Producto;
 import java.util.Set;
 import java.util.HashSet;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Column;
-import javax.persistence.GenerationType;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Column;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -33,6 +33,9 @@ public class Lote {
         joinColumns = @JoinColumn(name = "lote_id"),
         inverseJoinColumns = @JoinColumn(name = "producto_id"))
     private Set<Producto> loteProductos = new HashSet<>();
+
+    @Column(name = "lote_eliminado")
+    private Boolean loteEliminado;
 
     public Long getLoteId() {
         return loteId;
@@ -58,10 +61,19 @@ public class Lote {
         this.loteProductos = loteProductos;
     }
 
-    public Lote(Long loteId, Integer loteCodigo, Set<Producto> loteProductos) {
+    public Boolean getLoteEliminado() {
+        return loteEliminado;
+    }
+
+    public void setLoteEliminado(Boolean loteEliminado) {
+        this.loteEliminado = loteEliminado;
+    }
+
+    public Lote(Long loteId, Integer loteCodigo, Set<Producto> loteProductos, Boolean loteEliminado) {
         this.loteId = loteId;
         this.loteCodigo = loteCodigo;
         this.loteProductos = loteProductos;
+        this.loteEliminado = loteEliminado;
     }
 
     public Lote() { }

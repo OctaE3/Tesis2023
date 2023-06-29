@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LoteRepositorio extends JpaRepository<Lote, Long> {
-    
+    public Iterable<Lote> findAllByLoteEliminado(Boolean eliminado);
 }

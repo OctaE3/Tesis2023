@@ -2,11 +2,11 @@ package com.chacineria.marcelina.entidad.persona;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 @Entity(name = "localidadades")
 public class Localidad implements Serializable {
@@ -18,6 +18,9 @@ public class Localidad implements Serializable {
 
     @Column(name = "localidad_nombre", length = 40, nullable = false)
     private String localidadNombre;
+
+    @Column(name = "localidad_eliminado")
+    private Boolean localidadEliminado;
 
     public Long getLocalidadId() {
         return localidadId;
@@ -35,9 +38,18 @@ public class Localidad implements Serializable {
         this.localidadNombre = localidadNombre;
     }
 
-    public Localidad(Long localidadId, String localidadNombre) {
+    public Boolean getLocalidadEliminado() {
+        return localidadEliminado;
+    }
+
+    public void setLocalidadEliminado(Boolean localidadEliminado) {
+        this.localidadEliminado = localidadEliminado;
+    }
+
+    public Localidad(Long localidadId, String localidadNombre, Boolean localidadEliminado) {
         this.localidadId = localidadId;
         this.localidadNombre = localidadNombre;
+        this.localidadEliminado = localidadEliminado;
     }
 
     public Localidad() { }

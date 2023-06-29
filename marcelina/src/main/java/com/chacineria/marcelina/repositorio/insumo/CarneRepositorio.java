@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CarneRepositorio extends JpaRepository<Carne, Long>{
-    
+    public Iterable<Carne> findAllByCarneEliminado(Boolean eliminado);
 }
