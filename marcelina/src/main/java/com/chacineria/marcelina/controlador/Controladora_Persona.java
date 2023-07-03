@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -72,11 +71,16 @@ public class Controladora_Persona {
         }
     }
 
-    @DeleteMapping("/borrar-cliente/{clienteId}")
+    @PutMapping("/borrar-cliente/{clienteId}")
     public ResponseEntity<HttpStatus> eliminarCliente(@PathVariable Long clienteId){
         try{
-            clienteServicioImpl.deleteById(clienteId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            Optional<Cliente> cliente = clienteServicioImpl.findById(clienteId);
+            if(cliente.isPresent()){
+                cliente.get().setClienteEliminado(true);
+                clienteServicioImpl.save(cliente.get());
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch(Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -132,11 +136,16 @@ public class Controladora_Persona {
         }
     }
 
-    @DeleteMapping("/borrar-localidad/{localidadId}")
+    @PutMapping("/borrar-localidad/{localidadId}")
     public ResponseEntity<HttpStatus> eliminarLocalidad(@PathVariable Long localidadId){
         try{
-            localidadServicioImpl.deleteById(localidadId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            Optional<Localidad> localidad = localidadServicioImpl.findById(localidadId);
+            if(localidad.isPresent()){
+                localidad.get().setLocalidadEliminado(true);
+                localidadServicioImpl.save(localidad.get());
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch(Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -189,11 +198,16 @@ public class Controladora_Persona {
         }
     }
 
-    @DeleteMapping("/borrar-proveedor/{proveedorId}")
+    @PutMapping("/borrar-proveedor/{proveedorId}")
     public ResponseEntity<HttpStatus> eliminarProveedor(@PathVariable Long proveedorId){
         try{
-            proveedorServicioImpl.deleteById(proveedorId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            Optional<Proveedor> proveedor = proveedorServicioImpl.findById(proveedorId);
+            if(proveedor.isPresent()){
+                proveedor.get().setProveedorEliminado(true);
+                proveedorServicioImpl.save(proveedor.get());
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch(Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -258,11 +272,16 @@ public class Controladora_Persona {
         }
     }
 
-    @DeleteMapping("/borrar-usuario/{usuarioId}")
+    @PutMapping("/borrar-usuario/{usuarioId}")
     public ResponseEntity<HttpStatus> eliminarUsuario(@PathVariable Long usuarioId){
         try{
-            usuarioServicioImpl.deleteById(usuarioId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            Optional<Usuario> usuario = usuarioServicioImpl.findById(usuarioId);
+            if(usuario.isPresent()){
+                usuario.get().setUsuarioEliminado(true);
+                usuarioServicioImpl.save(usuario.get());
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch(Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

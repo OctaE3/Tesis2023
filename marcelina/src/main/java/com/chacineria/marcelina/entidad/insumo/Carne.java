@@ -89,16 +89,25 @@ public class Carne implements Serializable{
         this.carnePaseSanitario = carnePaseSanitario;
     }
 
+    public Boolean getCarneEliminado() {
+        return carneEliminado;
+    }
+
+    public void setCarneEliminado(Boolean carneEliminado) {
+        this.carneEliminado = carneEliminado;
+    }
+
     public Carne(){ }
 
     public Carne(Long carneId, String carneNombre, String carneTipo, String carneCorte, Double carneCantidad,
-            String carnePaseSanitario) {
+            String carnePaseSanitario, Boolean carneEliminado) {
         this.carneId = carneId;
         this.carneNombre = carneNombre;
         this.carneTipo = carneTipo;
         this.carneCorte = carneCorte;
         this.carneCantidad = carneCantidad;
         this.carnePaseSanitario = carnePaseSanitario;
+        this.carneEliminado = carneEliminado;
     }
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "recepcionDeMateriasPrimasCarnicasProductos")
