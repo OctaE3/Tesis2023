@@ -1,12 +1,27 @@
-import React from 'react'
+import React, { useState } from 'react';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
-import Typography from '@material-ui/core/Typography';
 import InputBase from '@material-ui/core/InputBase';
 import { alpha, makeStyles } from '@material-ui/core/styles';
 import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
+import { createTheme, Typography, ThemeProvider } from '@material-ui/core';
+import Drawer from '@material-ui/core/Drawer';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import { Link, useLocation } from 'react-router-dom';
+import '../Estilos/Estilos.css'
+
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2C2C71'
+    }
+  }
+});
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -51,7 +66,6 @@ const useStyles = makeStyles((theme) => ({
   },
   inputInput: {
     padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
     transition: theme.transitions.create('width'),
     width: '100%',
@@ -62,42 +76,85 @@ const useStyles = makeStyles((theme) => ({
       },
     },
   },
+  drawer: {
+    width: 240,
+    flexShrink: 0,
+  },
+  drawerPaper: {
+    width: 240,
+  },
 }));
 
 const Navbar = () => {
-    const classes = useStyles();
-  return (
-    <div className={classes.root}>
-    <AppBar position="static">
-      <Toolbar>
-        <IconButton
-          edge="start"
-          className={classes.menuButton}
-          color="inherit"
-          aria-label="open drawer"
-        >
-          <MenuIcon />
-        </IconButton>
-        <Typography className={classes.title} variant="h6" noWrap>
-          La Marcelina
-        </Typography>
-        <div className={classes.search}>
-          <div className={classes.searchIcon}>
-            <SearchIcon />
-          </div>
-          <InputBase
-            placeholder=""
-            classes={{
-              root: classes.inputRoot,
-              input: classes.inputInput,
-            }}
-            inputProps={{ 'aria-label': 'search' }}
-          />
-        </div>
-      </Toolbar>
-    </AppBar>
-  </div>
-  )
-}
+  const classes = useStyles();
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const isHomeRoute = location.pathname === '/';
 
-export default Navbar
+  const handleDrawerOpen = () => {
+    setOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setOpen(false);
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <div className={classes.root}>
+        <AppBar position="static" color="primary">
+          <Toolbar>
+            <IconButton
+              edge="start"
+              className={classes.menuButton}
+              color="inherit"
+              aria-label="open drawer"
+              onClick={handleDrawerOpen}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography   className={`${classes.title} custom-link`} variant="h6" noWrap component={Link} to="/">
+              La Marcelina
+            </Typography>
+            {isHomeRoute && (
+              <div className={classes.search}>
+                <div className={classes.searchIcon}>
+                  <SearchIcon />
+                </div>
+                <InputBase
+                  placeholder=""
+                  classes={{
+                    root: classes.inputRoot,
+                    input: classes.inputInput,
+                  }}
+                  inputProps={{ 'aria-label': 'search' }}
+                />
+              </div>
+            )}
+          </Toolbar>
+        </AppBar>
+        <Drawer
+          className={classes.drawer}
+          variant="temporary"
+          anchor="left"
+          open={open}
+          onClose={handleDrawerClose}
+          classes={{
+            paper: classes.drawerPaper,
+          }}
+        >
+          <List>
+          <ListItem button component={Link} to="/localidad" onClick={handleDrawerClose}>
+              <ListItemText primary="Localidades" />
+            </ListItem>
+            <ListItem button component={Link} to="/cliente" onClick={handleDrawerClose}>
+              <ListItemText primary="Clientes" />
+            </ListItem>
+          </List>
+        </Drawer>
+      </div>
+    </ThemeProvider>
+  );
+};
+
+export default Navbar;
