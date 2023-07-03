@@ -3,7 +3,8 @@ import { Container, Grid, Paper, Avatar, Typography, TextField, Button, ThemePro
 import { makeStyles } from '@material-ui/core/styles'
 import Logo from '../../assets/images/Logo.png'
 import { LockOutlined as LockOutlinedIcon} from '@material-ui/icons'
-import axios from 'axios';
+import axios from 'axios'
+
 
 const theme = createTheme({
     palette: {
