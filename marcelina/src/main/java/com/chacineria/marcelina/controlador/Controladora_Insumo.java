@@ -77,11 +77,16 @@ public class Controladora_Insumo {
         }
     }
 
-    @DeleteMapping("/borrar-carne/{carneId}")
+    @PutMapping("/borrar-carne/{carneId}")
     public ResponseEntity<HttpStatus> eliminarCarne(@PathVariable Long carneId){
         try{
-            carneServicioImpl.deleteById(carneId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            Optional<Carne> carne = carneServicioImpl.findById(carneId);
+            if(carne.isPresent()){
+                carne.get().setCarneEliminado(true);
+                carneServicioImpl.save(carne.get());
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch(Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -96,6 +101,7 @@ public class Controladora_Insumo {
             carneData.get().setCarneCorte(carne.getCarneCorte());
             carneData.get().setCarneTipo(carne.getCarneTipo());
             carneData.get().setCarnePaseSanitario(carne.getCarnePaseSanitario());
+            carneData.get().setCarneEliminado(carne.getCarneEliminado());
             return new ResponseEntity<>(carneServicioImpl.save(carneData.get()), HttpStatus.OK);
         }else{
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -138,11 +144,16 @@ public class Controladora_Insumo {
         }
     }
 
-    @DeleteMapping("/borrar-control-de-insumos/{controlDeInsumosId}")
+    @PutMapping("/borrar-control-de-insumos/{controlDeInsumosId}")
     public ResponseEntity<HttpStatus> eliminarControlDeInsumos(@PathVariable Long controlDeInsumosId){
         try{
-            carneServicioImpl.deleteById(controlDeInsumosId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            Optional<Control_de_Insumos> controlDeInsumos = controlDeInsumosServicioImpl.findById(controlDeInsumosId);
+            if(controlDeInsumos.isPresent()){
+                controlDeInsumos.get().setInsumoEliminado(true);
+                controlDeInsumosServicioImpl.save(controlDeInsumos.get());
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch(Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -203,11 +214,16 @@ public class Controladora_Insumo {
         }
     }
 
-    @DeleteMapping("/borrar-lote/{loteId}")
+    @PutMapping("/borrar-lote/{loteId}")
     public ResponseEntity<HttpStatus> eliminarLote(@PathVariable Long loteId){
         try{
-            loteServicioImpl.deleteById(loteId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            Optional<Lote> lote = loteServicioImpl.findById(loteId);
+            if(lote.isPresent()){
+                lote.get().setLoteEliminado(true);
+                loteServicioImpl.save(lote.get());
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch(Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -575,11 +591,16 @@ public class Controladora_Insumo {
         }
     }
 
-    @DeleteMapping("/borrar-producto/{productoId}")
+    @PutMapping("/borrar-producto/{productoId}")
     public ResponseEntity<HttpStatus> eliminarProducto(@PathVariable Long productoId){
         try{
-            productoServicioImpl.deleteById(productoId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            Optional<Producto> producto = productoServicioImpl.findById(productoId);
+            if(producto.isPresent()){
+                producto.get().setProductoEliminado(true);
+                productoServicioImpl.save(producto.get());
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch(Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
