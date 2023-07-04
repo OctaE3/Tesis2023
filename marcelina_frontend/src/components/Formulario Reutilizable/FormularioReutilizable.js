@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Container, Grid, Paper, Avatar, Typography, TextField, Button, ThemeProvider, createTheme, CssBaseline} from '@material-ui/core'
-import { makeStyles } from '@material-ui/core/styles'
+import { TextField, createTheme } from '@material-ui/core'
+import { makeStyles } from '@material-ui/core/styles';
+import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
+import DateFnsUtils from '@date-io/date-fns';
 
 const theme = createTheme({
   palette: {
@@ -67,22 +69,44 @@ const FormularioReutilizable = ({ fields }) => {
   return (
     <form className={classes.form} onSubmit={handleSubmit}>
       {fields.map((field, index) => (
-        <div key={index}>
-          <TextField
-            fullWidth
-            autoFocus
-             multiline={field.name === 'Obs'}
-            color="primary"
-            margin="normal"
-            variant="outlined"
-            label={field.label}
-            id={field.name}
-            type={field.type}
-            name={field.name}
-            value={formData[field.name] || ''}
-            onChange={handleChange}
-          />
-        </div>
+        field.tipo === 'fecha' ? (
+          <div key={index}>
+            <TextField
+              fullWidth
+              color="primary"
+              margin="normal"
+              variant="outlined"
+              label={field.label}
+              id={field.name}
+              type="date"
+              name={field.name}
+              value={formData[field.name] || ''}
+              onChange={handleChange}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </div>
+        ) : (
+          <div key={index}>
+            <TextField
+              fullWidth
+              autoFocus
+              multiline={field.multi === '3'}
+              rows={field.multi}
+              color="primary"
+              margin="normal"
+              variant="outlined"
+              label={field.label}
+              id={field.name}
+              type={field.type}
+              name={field.name}
+              value={formData[field.name] || ''}
+              onChange={handleChange}
+            />
+          </div>
+        )
+
       ))}
     </form>
   );

@@ -6,13 +6,14 @@ import InputBase from '@material-ui/core/InputBase';
 import { alpha, makeStyles } from '@material-ui/core/styles';
 import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
-import { createTheme, Typography, ThemeProvider } from '@material-ui/core';
+import { createTheme, Typography, ThemeProvider, Avatar, Grid } from '@material-ui/core';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { Link, useLocation } from 'react-router-dom';
-import '../Estilos/Estilos.css'
+import '../Estilos/Estilos.css';
+import Logo from "../../assets/images/LogoAzul.png";
 
 
 const theme = createTheme({
@@ -34,6 +35,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     display: 'none',
     textAlign: 'left',
+    marginLeft: 10,
     [theme.breakpoints.up('sm')]: {
       display: 'block',
     },
@@ -83,6 +85,10 @@ const useStyles = makeStyles((theme) => ({
   drawerPaper: {
     width: 240,
   },
+  logoStyle: {
+    width: 90,
+    height: 70,
+  }
 }));
 
 const Navbar = () => {
@@ -113,9 +119,9 @@ const Navbar = () => {
             >
               <MenuIcon />
             </IconButton>
-            <Typography   className={`${classes.title} custom-link`} variant="h6" noWrap component={Link} to="/">
-              La Marcelina
-            </Typography>
+            <Grid item lg={1} md={12} sm={12} xs={12}>
+              <Avatar alt="La Marcelina" src={Logo}  className={classes.logoStyle} />
+            </Grid>
             {isHomeRoute && (
               <div className={classes.search}>
                 <div className={classes.searchIcon}>
