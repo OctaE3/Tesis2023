@@ -3,20 +3,11 @@ import Navbar from '../../components/Navbar/Navbar';
 import { Container, Typography, Grid, Button, Select, MenuItem, FormControl, InputLabel, withStyles } from '@material-ui/core';
 import FormularioReutilizable from '../../components/Formulario Reutilizable/FormularioReutilizable';
 
-const CustomInputLabel = withStyles((theme) => ({
-  root: {
-    '&$focused': {
-      color: theme.palette.primary.main,
-    },
-  },
-  focused: {},
-}))(InputLabel);
-
 const Cliente = () => {
   const formFields1 = [
-    { name: 'name', label: 'Nombre', type: 'text' },
-    { name: 'contacto', label: 'Contacto', type: 'text' },
-    { name: 'Obs', label: 'Observaciones', type: 'text' },
+    { name: 'clienteNombre', label: 'Nombre', type: 'text' },
+    { name: 'clienteContacto', label: 'Contacto', type: 'text' },
+    { name: 'clienteObservaciones', label: 'Observaciones', type: 'text', multi: '3' },
   ];
 
   const [localidad, setLocalidad] = useState('');
@@ -53,7 +44,7 @@ const Cliente = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <FormControl variant="outlined" style={{ marginBottom: '16px', marginTop: '16px', width: '100%' }}>
-            <CustomInputLabel style={{ backgroundColor: '#fff' }} htmlFor="demo-customized-select-label">Localidad</CustomInputLabel>
+            <InputLabel style={{ backgroundColor: '#fff' }} htmlFor="demo-customized-select-label">Localidad</InputLabel>
             <Select
               labelId="demo-customized-select-label"
               value={localidad}
