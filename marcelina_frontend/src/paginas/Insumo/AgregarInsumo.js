@@ -1,70 +1,100 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
-import { Container, Box, Grid, Typography, Button, FormControl, InputLabel, Select, MenuItem, withStyles, makeStyles, CssBaseline, Tooltip, IconButton, createTheme } from '@material-ui/core';
+import { Container, Box, Grid, Typography, FormControl, InputLabel, Select, makeStyles, CssBaseline, Tooltip, IconButton, createTheme } from '@material-ui/core';
 import FormularioReutilizable from '../../components/Formulario Reutilizable/FormularioReutilizable';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import Logo from "../../assets/images/Logo.png";
-
-const theme = createTheme({
-    palette: {
-      primary: {
-        main: '#2C2C71'
-      }
-    }
-  });
-
-
-const useStyles = makeStyles((theme) => ({
-    root: {
-        backgroundImage: `url(${Logo})`,
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        minHeight: '100vh'
-    },
-    formControl: {
-        marginTop: theme.spacing(2),
-        minWidth: '100%',
-        marginBottom: theme.spacing(2)
-    },
-    title: {
-        fontFamily: 'Verdant'
-    }
-}));
+import axios from 'axios';
 
 const AgregarInsumo = () => {
     const formFields = [
         { name: 'insumoNombre', label: 'Nombre', type: 'text' },
-        { name: 'insumoFecha', label: 'Fecha de entrada', tipo: 'fecha' },
-        { name: 'insumoTipo', label: 'Tipo', type: 'text' },
-        { name: 'insumoLote', label: 'Lote', type: 'text' },
+        { name: 'insumoFecha', label: 'Fecha', type: 'fecha' },
+        { name: 'insumoProveedor', label: 'Proveedor', type: 'selector' },
+        { name: 'insumoTipo', label: 'Tipo', type: 'selector' },
+        { name: 'insumoNroLote', label: 'Lote', type: 'text' },
         { name: 'insumoMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3' },
-        { name: 'insumoFechaVencimiento', label: 'Fecha vencimiento', tipo: 'fecha' },
+        { name: 'insumoFechaVencimiento', label: 'Fecha Vencimiento', type: 'fecha' },
     ];
 
-    const [formData, setFormData] = useState({});
-    const [insumoTipo, setInsumoTipo] = useState('');
+    const [insumo, setInsumo] = useState({});
+    const [proveedores, setProveedores] = useState([]);
+    const [insumoProveedoresSelect, setInsumoProveedoresSelect] = useState([]);
+    const [insumoTipoSelect, setInsumoTipoSelect] = useState([
+        { value: 'Aditivo', label: 'Aditivo' },
+        { value: 'Insumo', label: 'Insumo' },
+        { value: 'Mat.Prima no Cárnica', label: 'Mat.Prima no Cárnica' },
+        { value: 'Otros', label: 'Otros' }
+    ]);
 
-    const estilos = useStyles();
+    useEffect(() => {
+        const obtenerProveedores = () => {
+            axios.get('/listar-proveedores', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(response => {
+                    setProveedores(response.data);
+                    setInsumoProveedoresSelect(
+                        response.data.map((proveedor) => ({
+                            value: proveedor.proveedorId,
+                            label: proveedor.proveedorNombre,
+                        }))
+                    );
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        };
 
-    const handleChange = (event) => {
-        const { name, value } = event.target;
-        setFormData((prevState) => ({
-            ...prevState,
-            [name]: value,
-        }));
-    };
+        obtenerProveedores();
+    }, []);
 
-    const handleDropdownChange = (event) => {
-        const selectedInsumoTipo = event.target.value;
-        if (selectedInsumoTipo === 'insumoTipo') {
-            setInsumoTipo('');
-        } else {
-            setInsumoTipo(selectedInsumoTipo);
+    const handleFormSubmit = (formData) => {
+        const proveedorSeleccionadaObj = proveedores.filter((proveedor) => proveedor.proveedorId.toString() === formData.insumoProveedor)[0];
+
+        const insumoFecha = new Date(formData.insumoFecha);
+        const insumoFechaVencimiento = new Date(formData.insumoFechaVencimiento);
+
+        const insumoFechaISO = insumoFecha.toISOString().slice(0, 10);
+        const insumoFechaVencimientoISO = insumoFechaVencimiento.toISOString().slice(0, 10);
+
+        const insumoConProveedor = {
+            ...formData,
+            insumoProveedor: proveedorSeleccionadaObj ? proveedorSeleccionadaObj : null,
+            insumoResponsable: window.localStorage.getItem('user'),
+            insumoFecha: insumoFechaISO,
+            insumoFechaVencimiento: insumoFechaVencimientoISO
+        };
+
+        setInsumo(insumoConProveedor);
+        console.log(insumoConProveedor);
+        if (insumoConProveedor.insumoTipo == null || insumoConProveedor.insumoTipo === 'Seleccionar' 
+                || insumoConProveedor.insumoProveedor == null || insumoConProveedor.insumoProveedor === 'Seleccionar') {
+            console.log("Seleccione un tipo de Insumo");
         }
-    };
+        else {
+            axios.post('/agregar-control-de-insumos', insumoConProveedor, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(response => {
+                    if (response.status === 201) {
+                        console.log("Insumo agregada con éxito!");
+                    } else {
+                        console.log("No se logro agregar el Insumo.");
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                })
+        }
+    }
 
-    return(
+
+    return (
         <div>
             <CssBaseline>
                 <Grid>
@@ -72,7 +102,7 @@ const AgregarInsumo = () => {
                     <Container style={{ marginTop: 30 }}>
                         <Box sx={{ flexGrow: 1 }}>
                             <Grid container spacing={0}>
-                                <Grid item lg={2} md={2} sm={0} xs={0} ></Grid>
+                                <Grid item lg={2} md={2} ></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} >
                                     <Typography component='h1' variant='h4'>Agregar Insumo</Typography>
                                     <Tooltip title={
@@ -81,38 +111,19 @@ const AgregarInsumo = () => {
                                         </Typography>
                                     }>
                                         <IconButton>
-                                            <HelpOutlineIcon fontSize="large" color="primary"/>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
                                         </IconButton>
                                     </Tooltip>
-                                    <FormularioReutilizable fields={formFields} formData={formData} handleChange={handleChange} />
-                                    <FormControl variant="outlined" className={estilos.formControl}>
-                                        <InputLabel htmlFor="outlined-age-native-simple">Tipo de Insumo</InputLabel>
-                                        <Select
-                                            native
-                                            value={insumoTipo}
-                                            onChange={handleDropdownChange}
-                                            label="Tipo de Insumo"
-                                            inputProps={{
-                                                name: 'insumoTipo',
-                                                id: 'outlined-age-native-simple',
-                                            }}
-                                        >
-                                            <option value="Aditivo">Aditivo</option>
-                                            <option value="Insumo">Insumo</option>
-                                            <option value="Mat.Prima No Cárnica">Mat.Prima No Cárnica</option>
-                                            <option value="Otros">Otros</option>
-                                        </Select>
-                                    </FormControl>
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        color="primary"
-
-                                    >
-                                        Agregar
-                                    </Button>
+                                    <FormularioReutilizable 
+                                        fields={formFields} 
+                                        onSubmit={handleFormSubmit} 
+                                        selectOptions={{ 
+                                            insumoProveedor: insumoProveedoresSelect,
+                                            insumoTipo: insumoTipoSelect 
+                                        }}    
+                                    />
                                 </Grid>
-                                <Grid item lg={2} md={2} sm={0} xs={0}></Grid>
+                                <Grid item lg={2} md={2}></Grid>
                             </Grid>
                         </Box>
                     </Container>

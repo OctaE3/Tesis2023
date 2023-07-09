@@ -39,7 +39,7 @@ public class Carne implements Serializable{
     private String carnePaseSanitario;
 
     @Column(name = "carne_eliminado")
-    private Boolean carneEliminado;
+    private Boolean carneEliminado = false;
 
     public Long getCarneId() {
         return carneId;

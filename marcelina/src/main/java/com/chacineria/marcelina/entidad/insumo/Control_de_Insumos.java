@@ -19,41 +19,41 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 
-@Entity(name = "control_de_insumos")
+@Entity(name = "insumos")
 public class Control_de_Insumos implements Serializable{
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "control_de_insumos_id")
+    @Column(name = "insumo_id")
     private Long insumoId;
 
-    @Column(name = "control_de_insumos_nombre", length = 50, nullable = false)
+    @Column(name = "insumo_nombre", length = 50, nullable = false)
     private String insumoNombre;
 
-    @Column(name = "control_de_insumos_fecha", nullable = false)
+    @Column(name = "insumo_fecha", nullable = false)
     private Date insumoFecha;
 
     @ManyToOne
-    @JoinColumn(name = "control_de_insumos_proveedor", nullable = false)
+    @JoinColumn(name = "insumo_proveedor", nullable = false)
     private Proveedor insumoProveedor;
 
-    @Column(name = "control_de_insumos_tipo", length = 20, nullable = false)
+    @Column(name = "insumo_tipo", length = 30, nullable = false)
     private String insumoTipo;
 
-    @Column(name = "control_de_insumos_lote", length = 30, nullable = false)
+    @Column(name = "insumo_lote", length = 30, nullable = false)
     private String insumoNroLote;
 
-    @Column(name = "control_de_insumos_motivo_rechazo", length = 150, nullable = true)
+    @Column(name = "insumo_motivo_de_rechazo", length = 150, nullable = true)
     private String insumoMotivoDeRechazo;
 
-    @Column(name = "control_de_insumos_responsable", length = 50, nullable = false)
+    @Column(name = "insumo_responsable", length = 50, nullable = false)
     private String insumoResponsable;
 
-    @Column(name = "control_de_insumos_fecha_vencimiento", nullable = false)
+    @Column(name = "insumo_fecha_vencimiento", nullable = false)
     private Date insumoFechaVencimiento;
 
-    @Column(name = "control_de_insumos_eliminado")
-    private Boolean insumoEliminado;
+    @Column(name = "insumo_eliminado")
+    private Boolean insumoEliminado = false;
 
     public Long getInsumoId() {
         return insumoId;

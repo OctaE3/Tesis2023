@@ -20,7 +20,7 @@ public class Localidad implements Serializable {
     private String localidadNombre;
 
     @Column(name = "localidad_eliminado")
-    private Boolean localidadEliminado;
+    private Boolean localidadEliminado = false;
 
     public Long getLocalidadId() {
         return localidadId;

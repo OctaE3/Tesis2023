@@ -1,21 +1,25 @@
 import React from 'react'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from '../../paginas/Home/Home';
-import Localidad from '../../paginas/Localidad/Localidad';
+import AgregarLocalidad from '../../paginas/Localidad/AgregarLocalidad';
 import Login from '../../paginas/Login/Login';
-import Cliente from '../../paginas/Cliente/Cliente';
-import Carne from "../../paginas/Carne/Carne";
+import AgregarCliente from '../../paginas/Cliente/AgregarCliente';
+import AgregarCarne from "../../paginas/Carne/AgregarCarne";
 import AgregarInsumo from '../../paginas/Insumo/AgregarInsumo';
+import AgregarProveedor from "../../paginas/Proveedor/AgregarProveedor";
 
 
 const AppRouter = () => {
     return (
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/localidad" element={<AgregarInsumo />} />
-          <Route path="/Login" element={<Login />} />
-          <Route path="/Cliente" element={<Cliente />} />
+          <Route path="/" element={<Login />} />
+          <Route path="/inicio" element={<Home />} />
+          <Route path="/localidad" element={<AgregarLocalidad />} />
+          <Route path="/cliente" element={<AgregarCliente />} />
+          <Route path="/carne" element={<AgregarCarne />} />
+          <Route path="/insumo" element={<AgregarInsumo />} />
+          <Route path="/proveedor" element={<AgregarProveedor />} />
           {/* Otras rutas */}
         </Routes>
       </Router>

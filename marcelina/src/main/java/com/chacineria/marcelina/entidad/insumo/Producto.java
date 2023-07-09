@@ -28,7 +28,7 @@ public class Producto implements Serializable {
     private String productoNombre;
 
     @Column(name = "producto_eliminado")
-    private Boolean productoEliminado;
+    private Boolean productoEliminado = false;
 
     public Long getProductoId() {
         return productoId;
