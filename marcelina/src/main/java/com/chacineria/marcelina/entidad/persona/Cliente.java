@@ -31,7 +31,7 @@ public class Cliente implements Serializable {
     private Localidad clienteLocalidad;
 
     @Column(name = "cliente_eliminado")
-    private Boolean clienteEliminado;
+    private Boolean clienteEliminado = false;
 
     public Long getClienteId() {
         return clienteId;

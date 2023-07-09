@@ -28,7 +28,7 @@ public class Proveedor implements Serializable{
     private String proveedorContacto;
 
     @ManyToOne
-    @JoinColumn(name = "proveedor_localidad")
+    @JoinColumn(name = "proveedor_localidad", nullable = false)
     private Localidad proveedorLocalidad;
 
     @Column(name = "proveedor_eliminado")

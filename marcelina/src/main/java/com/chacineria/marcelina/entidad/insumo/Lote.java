@@ -35,7 +35,7 @@ public class Lote {
     private Set<Producto> loteProductos = new HashSet<>();
 
     @Column(name = "lote_eliminado")
-    private Boolean loteEliminado;
+    private Boolean loteEliminado = false;
 
     public Long getLoteId() {
         return loteId;

@@ -1,10 +1,10 @@
 import React, {useState} from 'react'
 import { Container, Grid, Paper, Avatar, Typography, TextField, Button, ThemeProvider, createTheme, CssBaseline} from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
+import { useNavigate } from 'react-router-dom';
 import Logo from '../../assets/images/Logo.png'
 import { LockOutlined as LockOutlinedIcon} from '@material-ui/icons'
 import axios from 'axios'
-
 
 const theme = createTheme({
     palette: {
@@ -60,6 +60,11 @@ const Login = () => {
     const [error, setError] = useState(null);
 
     const classes = useStyles();
+    const navigate = useNavigate();
+
+    const redireccionar = () => {
+        navigate('/inicio');
+    } 
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -71,7 +76,9 @@ const Login = () => {
         )
         .then(response => {
             window.localStorage.setItem('token', response.data.token);
+            window.localStorage.setItem('user', response.data.usuarioNombre);
             console.log(response.data.token);
+            redireccionar();
         })
         .catch(error => {
             console.error(error);
