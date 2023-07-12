@@ -6,6 +6,20 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import Logo from "../../assets/images/Logo.png";
 import axios from 'axios';
 
+const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#2C2C71'
+      }
+    }
+  });
+  
+  const useStyles = makeStyles(theme => ({
+    title: {
+      textAlign: 'center',
+    },
+  }));
+
 const AgregarInsumo = () => {
     const formFields = [
         { name: 'insumoNombre', label: 'Nombre', type: 'text' },
@@ -17,6 +31,7 @@ const AgregarInsumo = () => {
         { name: 'insumoFechaVencimiento', label: 'Fecha Vencimiento', type: 'fecha' },
     ];
 
+    const classes = useStyles();
     const [insumo, setInsumo] = useState({});
     const [proveedores, setProveedores] = useState([]);
     const [insumoProveedoresSelect, setInsumoProveedoresSelect] = useState([]);
@@ -70,8 +85,8 @@ const AgregarInsumo = () => {
 
         setInsumo(insumoConProveedor);
         console.log(insumoConProveedor);
-        if (insumoConProveedor.insumoTipo == null || insumoConProveedor.insumoTipo === 'Seleccionar' 
-                || insumoConProveedor.insumoProveedor == null || insumoConProveedor.insumoProveedor === 'Seleccionar') {
+        if (insumoConProveedor.insumoTipo == null || insumoConProveedor.insumoTipo === 'Seleccionar'
+            || insumoConProveedor.insumoProveedor == null || insumoConProveedor.insumoProveedor === 'Seleccionar') {
             console.log("Seleccione un tipo de Insumo");
         }
         else {
@@ -103,7 +118,7 @@ const AgregarInsumo = () => {
                         <Box sx={{ flexGrow: 1 }}>
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2} ></Grid>
-                                <Grid item lg={8} md={8} sm={12} xs={12} >
+                                <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
                                     <Typography component='h1' variant='h4'>Agregar Insumo</Typography>
                                     <Tooltip title={
                                         <Typography fontSize={16}>
@@ -114,19 +129,19 @@ const AgregarInsumo = () => {
                                             <HelpOutlineIcon fontSize="large" color="primary" />
                                         </IconButton>
                                     </Tooltip>
-                                    <FormularioReutilizable 
-                                        fields={formFields} 
-                                        onSubmit={handleFormSubmit} 
-                                        selectOptions={{ 
-                                            insumoProveedor: insumoProveedoresSelect,
-                                            insumoTipo: insumoTipoSelect 
-                                        }}    
-                                    />
                                 </Grid>
                                 <Grid item lg={2} md={2}></Grid>
                             </Grid>
                         </Box>
                     </Container>
+                    <FormularioReutilizable
+                        fields={formFields}
+                        onSubmit={handleFormSubmit}
+                        selectOptions={{
+                            insumoProveedor: insumoProveedoresSelect,
+                            insumoTipo: insumoTipoSelect
+                        }}
+                    />
                 </Grid>
             </CssBaseline>
         </div>

@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
-import { Container, Typography, Grid, CssBaseline, Box, Tooltip, IconButton } from '@material-ui/core';
+import { Container, Typography, Grid, CssBaseline, Box, Tooltip, IconButton, makeStyles, createTheme } from '@material-ui/core';
 import FormularioReutilizable from '../../components/Formulario Reutilizable/FormularioReutilizable';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import axios from 'axios';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2C2C71'
+    }
+  }
+});
+
+const useStyles = makeStyles(theme => ({
+  title: {
+    textAlign: 'center',
+  },
+}));
 
 const AgregarCliente = () => {
   const formFields = [
@@ -13,6 +27,7 @@ const AgregarCliente = () => {
     { name: 'clienteLocalidad', label: 'Localidad', type: 'selector' }
   ];
 
+  const classes = useStyles();
   const [cliente, setLocalidad] = useState({});
   const [localidades, setLocalidades] = useState([]);
   const [localidadesSelect, setLocalidadesSelect] = useState([]);
@@ -47,7 +62,7 @@ const AgregarCliente = () => {
     const clienteConLocalidad = {
       ...formData,
       clienteLocalidad: localidadSeleccionadaObj ? localidadSeleccionadaObj : null
-  };
+    };
 
     setLocalidad(clienteConLocalidad);
     axios.post('/agregar-cliente', clienteConLocalidad, {
@@ -79,7 +94,7 @@ const AgregarCliente = () => {
             <Box sx={{ flexGrow: 1 }}>
               <Grid container spacing={0}>
                 <Grid item lg={2} md={2}></Grid>
-                <Grid item lg={8} md={8} sm={12} xs={12} >
+                <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                   <Typography component='h1' variant='h5'>Agregar Cliente</Typography>
                   <Tooltip title={
                     <Typography fontSize={16}>
@@ -90,16 +105,16 @@ const AgregarCliente = () => {
                       <HelpOutlineIcon fontSize="large" color="primary" />
                     </IconButton>
                   </Tooltip>
-                  <FormularioReutilizable
-                    fields={formFields}
-                    onSubmit={handleFormSubmit}
-                    selectOptions={{ clienteLocalidad: localidadesSelect }}
-                  />
                 </Grid>
                 <Grid item lg={2} md={2}></Grid>
               </Grid>
             </Box>
           </Container>
+          <FormularioReutilizable
+            fields={formFields}
+            onSubmit={handleFormSubmit}
+            selectOptions={{ clienteLocalidad: localidadesSelect }}
+          />
         </Grid>
       </CssBaseline>
     </div>

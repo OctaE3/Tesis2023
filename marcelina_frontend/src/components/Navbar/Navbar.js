@@ -119,8 +119,11 @@ const Navbar = () => {
             >
               <MenuIcon />
             </IconButton>
-            <Grid item lg={1} md={12} sm={12} xs={12}>
-              <Avatar alt="La Marcelina" src={Logo}  className={classes.logoStyle} />
+            <Grid container>
+              <Grid item lg={2} md={2} sm={2} xs={2}>
+                <Avatar alt="La Marcelina" src={Logo} className={classes.logoStyle} />
+              </Grid>
+              <Grid item lg={11} md={11} sm={11} xs={11}></Grid>
             </Grid>
             {isHomeRoute && (
               <div className={classes.search}>
@@ -150,7 +153,7 @@ const Navbar = () => {
           }}
         >
           <List>
-          <ListItem button component={Link} to="/localidad" onClick={handleDrawerClose}>
+            <ListItem button component={Link} to="/localidad" onClick={handleDrawerClose}>
               <ListItemText primary="Localidades" />
             </ListItem>
             <ListItem button component={Link} to="/cliente" onClick={handleDrawerClose}>
