@@ -6,6 +6,20 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import Logo from "../../assets/images/Logo.png";
 import axios from 'axios';
 
+const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#2C2C71'
+      }
+    }
+  });
+  
+  const useStyles = makeStyles(theme => ({
+    title: {
+      textAlign: 'center',
+    },
+  }));
+
 const AgregarCarne = () => {
 
     const formFields = [
@@ -16,8 +30,9 @@ const AgregarCarne = () => {
         { name: 'carnePaseSanitario', label: 'Pase Sanitario', type: 'text' },
     ];
 
+    const classes = useStyles();
     const [carne, setCarne] = useState({});
-    const [carneTipoSelect, setCarneTipoSelect ] = useState([
+    const [carneTipoSelect, setCarneTipoSelect] = useState([
         { value: 'Porcino', label: 'Porcino' },
         { value: 'Bovino', label: 'Bovino' }
     ]);
@@ -25,10 +40,10 @@ const AgregarCarne = () => {
     const handleFormSubmit = (formData) => {
         setCarne(formData);
         console.log(formData);
-        if(formData.carneTipo == null || formData.carneTipo === 'Seleccionar'){
+        if (formData.carneTipo == null || formData.carneTipo === 'Seleccionar') {
             console.log("Seleccione un tipo de Carne");
         }
-        else{
+        else {
             axios.post('/agregar-carne', formData, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -44,7 +59,7 @@ const AgregarCarne = () => {
                 .catch(error => {
                     console.error(error);
                 })
-        } 
+        }
     }
 
     return (
@@ -56,7 +71,7 @@ const AgregarCarne = () => {
                         <Box sx={{ flexGrow: 1 }}>
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2}></Grid>
-                                <Grid item lg={8} md={8} sm={12} xs={12} >
+                                <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
                                     <Typography component='h1' variant='h5'>Agregar Carne</Typography>
                                     <Tooltip title={
                                         <Typography fontSize={16}>
@@ -67,16 +82,16 @@ const AgregarCarne = () => {
                                             <HelpOutlineIcon fontSize="large" color="primary" />
                                         </IconButton>
                                     </Tooltip>
-                                    <FormularioReutilizable 
-                                        fields={formFields} 
-                                        onSubmit={handleFormSubmit} 
-                                        selectOptions={{ carneTipo: carneTipoSelect }}
-                                    />
                                 </Grid>
                                 <Grid item lg={2} md={2}></Grid>
                             </Grid>
                         </Box>
                     </Container>
+                    <FormularioReutilizable
+                        fields={formFields}
+                        onSubmit={handleFormSubmit}
+                        selectOptions={{ carneTipo: carneTipoSelect }}
+                    />
                 </Grid>
             </CssBaseline>
         </div>

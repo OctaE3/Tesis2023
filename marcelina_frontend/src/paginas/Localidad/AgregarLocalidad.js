@@ -1,14 +1,30 @@
 import React, { useState } from 'react'
 import Navbar from '../../components/Navbar/Navbar'
-import { Container, Typography, Grid } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Tooltip, IconButton, makeStyles, createTheme } from '@material-ui/core'
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import FormularioReutilizanle from '../../components/Formulario Reutilizable/FormularioReutilizable'
 import axios from 'axios';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2C2C71'
+    }
+  }
+});
+
+const useStyles = makeStyles(theme => ({
+  title: {
+    textAlign: 'center',
+  },
+}));
 
 const AgregarLocalidad = () => {
   const formFields = [
     { name: 'localidadNombre', label: 'Nombre', type: 'text' },
   ];
 
+  const classes = useStyles();
   const [localidad, setLocalidad] = useState({});
 
   const handleFormSubmit = (formData) => {
@@ -36,10 +52,27 @@ const AgregarLocalidad = () => {
   return (
     <Grid>
       <Navbar />
-      <Container>
-        <Typography component='h1' variant='h5'>Localidad</Typography>
-        <FormularioReutilizanle fields={formFields} onSubmit={handleFormSubmit} />
+      <Container style={{ marginTop: 30 }}>
+        <Box sx={{ flexGrow: 1 }}>
+          <Grid container spacing={0}>
+            <Grid item lg={2} md={2} ></Grid>
+            <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
+              <Typography component='h1' variant='h4'>Agregar Localidad</Typography>
+              <Tooltip title={
+                <Typography fontSize={16}>
+                  En esta pagina puedes registrar las localidades, que se asignaran a los proveedores, clientes, etc. 
+                </Typography>
+              }>
+                <IconButton>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
+              </Tooltip>
+            </Grid>
+            <Grid item lg={2} md={2}></Grid>
+          </Grid>
+        </Box>
       </Container>
+      <FormularioReutilizanle fields={formFields} onSubmit={handleFormSubmit} />
     </Grid>
   )
 }

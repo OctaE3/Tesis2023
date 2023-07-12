@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
-import { Container, Box, Grid, Typography, FormControl, InputLabel, Select, MenuItem, withStyles, makeStyles, CssBaseline, Tooltip, IconButton, createTheme } from '@material-ui/core';
+import { Container, Box, Grid, Typography, makeStyles, createTheme, CssBaseline, Tooltip, IconButton } from '@material-ui/core';
 import FormularioReutilizable from '../../components/Formulario Reutilizable/FormularioReutilizable';
 import { useNavigate } from 'react-router-dom';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
@@ -20,6 +20,9 @@ const useStyles = makeStyles((theme) => ({
         minWidth: '100%',
         marginBottom: theme.spacing(1)
     },
+    title: {
+        textAlign: 'center',
+    }
 }));
 
 const AgregarProveedor = () => {
@@ -145,7 +148,7 @@ const AgregarProveedor = () => {
                         <Box sx={{ flexGrow: 1 }}>
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2} ></Grid>
-                                <Grid item lg={8} md={8} sm={12} xs={12} >
+                                <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
                                     <Typography component='h1' variant='h5'>Agregar Proveedor</Typography>
                                     <Tooltip title={
                                         <Typography fontSize={16}>
