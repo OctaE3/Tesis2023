@@ -7,6 +7,7 @@ import AgregarCliente from '../../paginas/Cliente/AgregarCliente';
 import AgregarCarne from "../../paginas/Carne/AgregarCarne";
 import AgregarInsumo from '../../paginas/Insumo/AgregarInsumo';
 import AgregarProveedor from "../../paginas/Proveedor/AgregarProveedor";
+import ListarCarne from '../../paginas/Carne/ListarCarne';
 
 
 const AppRouter = () => {
@@ -18,6 +19,7 @@ const AppRouter = () => {
           <Route path="/localidad" element={<AgregarLocalidad />} />
           <Route path="/cliente" element={<AgregarCliente />} />
           <Route path="/carne" element={<AgregarCarne />} />
+          <Route path="/listarcarne" element={<ListarCarne />} />
           <Route path="/insumo" element={<AgregarInsumo />} />
           <Route path="/proveedor" element={<AgregarProveedor />} />
           {/* Otras rutas */}
