@@ -1,5 +1,6 @@
 package com.chacineria.marcelina.entidad.insumo;
 import com.chacineria.marcelina.entidad.persona.Proveedor;
+import com.chacineria.marcelina.entidad.persona.Usuario;
 import com.chacineria.marcelina.entidad.trazabilidad.PResumen_de_Trazabilidad;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,8 +47,9 @@ public class Control_de_Insumos implements Serializable{
     @Column(name = "insumo_motivo_de_rechazo", length = 150, nullable = true)
     private String insumoMotivoDeRechazo;
 
-    @Column(name = "insumo_responsable", length = 50, nullable = false)
-    private String insumoResponsable;
+    @ManyToOne
+    @JoinColumn(name = "insumo_responsable", nullable = false)
+    private Usuario insumoResponsable;
 
     @Column(name = "insumo_fecha_vencimiento", nullable = false)
     private Date insumoFechaVencimiento;
@@ -111,11 +113,11 @@ public class Control_de_Insumos implements Serializable{
         this.insumoMotivoDeRechazo = insumoMotivoDeRechazo;
     }
 
-    public String getInsumoResponsable() {
+    public Usuario getInsumoResponsable() {
         return insumoResponsable;
     }
 
-    public void setInsumoResponsable(String insumoResponsable) {
+    public void setInsumoResponsable(Usuario insumoResponsable) {
         this.insumoResponsable = insumoResponsable;
     }
 
@@ -136,7 +138,7 @@ public class Control_de_Insumos implements Serializable{
     }
 
     public Control_de_Insumos(Long insumoId, String insumoNombre, Date insumoFecha, Proveedor insumoProveedor, String insumoTipo,
-            String insumoNroLote, String insumoMotivoDeRechazo, String insumoResponsable, Date insumoFechaVencimiento, Boolean insumoEliminado) {
+            String insumoNroLote, String insumoMotivoDeRechazo, Usuario insumoResponsable, Date insumoFechaVencimiento, Boolean insumoEliminado) {
         this.insumoId = insumoId;
         this.insumoNombre = insumoNombre;
         this.insumoFecha = insumoFecha;

@@ -11,6 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 @Entity(name = "control_de_alarma_luminica_y_sonara_de_cloro")
 public class PControl_de_Alarma_Luminica_y_Sonora_de_Cloro implements Serializable{
@@ -21,7 +23,8 @@ public class PControl_de_Alarma_Luminica_y_Sonora_de_Cloro implements Serializab
     private Long controlDeAlarmaLuminicaYSonaraDeCloroId;
 
     @Column(name = "control_de_alarma_luminica_y_sonora_de_cloro_fecha_hora", nullable = false)
-    private LocalDateTime controlDeAlarmaLumincaYSonoraDeCloroFechaHora;
+    @Temporal(TemporalType.TIMESTAMP)
+    private LocalDateTime controlDeAlarmaLuminicaYSonoraDeCloroFechaHora;
 
     @Column(name = "control_de_alarma_luminica_y_sonora_de_cloro_alarma_luminica", nullable = false)
     private Boolean controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica;
@@ -29,12 +32,12 @@ public class PControl_de_Alarma_Luminica_y_Sonora_de_Cloro implements Serializab
     @Column(name = "control_de_alarma_luminica_y_sonora_de_cloro_alarma_sonora", nullable = false)
     private Boolean controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora;
 
-    @Column(name = "control_de_alarma_luminica_y_sonora_de_cloro_observaciones", length = 150)
+    @Column(name = "control_de_alarma_luminica_y_sonora_de_cloro_observaciones", length = 150, nullable = true)
     private String controlDeAlarmaLuminicaYSonoraDeCloroObservaciones;
 
     @ManyToOne
     @JoinColumn(name = "control_de_alarma_luminica_y_sonora_de_cloro_responsable", nullable = false)
-    private Usuario controlDeAlarmaLumincaYSonoraDeCloroResponsable;
+    private Usuario controlDeAlarmaLuminicaYSonoraDeCloroResponsable;
 
     public Long getControlDeAlarmaLuminicaYSonaraDeCloroId() {
         return controlDeAlarmaLuminicaYSonaraDeCloroId;
@@ -44,13 +47,13 @@ public class PControl_de_Alarma_Luminica_y_Sonora_de_Cloro implements Serializab
         this.controlDeAlarmaLuminicaYSonaraDeCloroId = controlDeAlarmaLuminicaYSonaraDeCloroId;
     }
 
-    public LocalDateTime getControlDeAlarmaLumincaYSonoraDeCloroFechaHora() {
-        return controlDeAlarmaLumincaYSonoraDeCloroFechaHora;
+    public LocalDateTime getControlDeAlarmaLuminicaYSonoraDeCloroFechaHora() {
+        return controlDeAlarmaLuminicaYSonoraDeCloroFechaHora;
     }
 
-    public void setControlDeAlarmaLumincaYSonoraDeCloroFechaHora(
-            LocalDateTime controlDeAlarmaLumincaYSonoraDeCloroFechaHora) {
-        this.controlDeAlarmaLumincaYSonoraDeCloroFechaHora = controlDeAlarmaLumincaYSonoraDeCloroFechaHora;
+    public void setControlDeAlarmaLuminicaYSonoraDeCloroFechaHora(
+            LocalDateTime controlDeAlarmaLuminicaYSonoraDeCloroFechaHora) {
+        this.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora = controlDeAlarmaLuminicaYSonoraDeCloroFechaHora;
     }
 
     public Boolean getControlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica() {
@@ -80,27 +83,27 @@ public class PControl_de_Alarma_Luminica_y_Sonora_de_Cloro implements Serializab
         this.controlDeAlarmaLuminicaYSonoraDeCloroObservaciones = controlDeAlarmaLuminicaYSonoraDeCloroObservaciones;
     }
 
-    public Usuario getControlDeAlarmaLumincaYSonoraDeCloroResponsable() {
-        return controlDeAlarmaLumincaYSonoraDeCloroResponsable;
+    public Usuario getControlDeAlarmaLuminicaYSonoraDeCloroResponsable() {
+        return controlDeAlarmaLuminicaYSonoraDeCloroResponsable;
     }
 
-    public void setControlDeAlarmaLumincaYSonoraDeCloroResponsable(
-            Usuario controlDeAlarmaLumincaYSonoraDeCloroResponsable) {
-        this.controlDeAlarmaLumincaYSonoraDeCloroResponsable = controlDeAlarmaLumincaYSonoraDeCloroResponsable;
+    public void setControlDeAlarmaLuminicaYSonoraDeCloroResponsable(
+            Usuario controlDeAlarmaLuminicaYSonoraDeCloroResponsable) {
+        this.controlDeAlarmaLuminicaYSonoraDeCloroResponsable = controlDeAlarmaLuminicaYSonoraDeCloroResponsable;
     }
 
     public PControl_de_Alarma_Luminica_y_Sonora_de_Cloro(Long controlDeAlarmaLuminicaYSonaraDeCloroId,
-            LocalDateTime controlDeAlarmaLumincaYSonoraDeCloroFechaHora,
+            LocalDateTime controlDeAlarmaLuminicaYSonoraDeCloroFechaHora,
             Boolean controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica,
             Boolean controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora,
             String controlDeAlarmaLuminicaYSonoraDeCloroObservaciones,
-            Usuario controlDeAlarmaLumincaYSonoraDeCloroResponsable) {
+            Usuario controlDeAlarmaLuminicaYSonoraDeCloroResponsable) {
         this.controlDeAlarmaLuminicaYSonaraDeCloroId = controlDeAlarmaLuminicaYSonaraDeCloroId;
-        this.controlDeAlarmaLumincaYSonoraDeCloroFechaHora = controlDeAlarmaLumincaYSonoraDeCloroFechaHora;
+        this.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora = controlDeAlarmaLuminicaYSonoraDeCloroFechaHora;
         this.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica = controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica;
         this.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora = controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora;
         this.controlDeAlarmaLuminicaYSonoraDeCloroObservaciones = controlDeAlarmaLuminicaYSonoraDeCloroObservaciones;
-        this.controlDeAlarmaLumincaYSonoraDeCloroResponsable = controlDeAlarmaLumincaYSonoraDeCloroResponsable;
+        this.controlDeAlarmaLuminicaYSonoraDeCloroResponsable = controlDeAlarmaLuminicaYSonoraDeCloroResponsable;
     }
 
     public PControl_de_Alarma_Luminica_y_Sonora_de_Cloro() { }

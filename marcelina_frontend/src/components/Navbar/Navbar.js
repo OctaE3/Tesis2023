@@ -171,6 +171,27 @@ const Navbar = () => {
             <ListItem button component={Link} to="/proveedor" onClick={handleDrawerClose}>
               <ListItemText primary="Proveedor" />
             </ListItem>
+            <ListItem button component={Link} to="/control-de-alarma-luminica-y-sonora-de-cloro" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Alarma Luminica y Sonora de Cloro" />
+            </ListItem>
+            <ListItem button component={Link} to="/control-de-cloro-libre" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Cloro Libre" />
+            </ListItem>
+            <ListItem button component={Link} to="/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Limpieza y Desinfeccion de Depositos de Agua y Cañerias" />
+            </ListItem>
+            <ListItem button component={Link} to="/control-de-mejoras-en-instalaciones" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Mejoras en Instalaciones" />
+            </ListItem>
+            <ListItem button component={Link} to="/control-de-reposicion-de-cloro" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Reposicion de Cloro" />
+            </ListItem>
+            <ListItem button component={Link} to="/control-de-temperatura-de-esterilizadores" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Temperatura de Esterilizadores" />
+            </ListItem>
+            <ListItem button component={Link} to="/control-de-temperatura-en-camaras" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Temperatura en Camaras" />
+            </ListItem>
           </List>
         </Drawer>
       </div>

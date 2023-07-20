@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import javax.swing.text.html.Option;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,8 @@ import com.chacineria.marcelina.entidad.control.PControl_de_Mejoras_en_Instalaci
 import com.chacineria.marcelina.entidad.control.PControl_de_Reposicion_de_Cloro;
 import com.chacineria.marcelina.entidad.control.PControl_de_Temperatura_de_Esterilizadores;
 import com.chacineria.marcelina.entidad.control.PControl_de_Temperatura_en_Camaras;
+import com.chacineria.marcelina.entidad.persona.Usuario;
+import com.chacineria.marcelina.repositorio.persona.UsuarioRepositorio;
 import com.chacineria.marcelina.servicio.control.PControl_de_Alarma_Luminica_y_Sonora_de_CloroServicioImpl;
 import com.chacineria.marcelina.servicio.control.PControl_de_Cloro_LibreServicioImpl;
 import com.chacineria.marcelina.servicio.control.PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_CanieriasServicioImpl;
@@ -38,9 +42,11 @@ import com.chacineria.marcelina.servicio.control.PControl_de_Temperatura_en_Cama
 @RequestMapping("/marcelina")
 @RestController
 public class Controladora_Control {
-    
-    //#region ABM PControl_de_Alarma_Luminica_y_Sonora_de_Cloro 
 
+    @Autowired
+    private UsuarioRepositorio usuarioRepositorio;
+
+    //#region ABM PControl_de_Alarma_Luminica_y_Sonora_de_Cloro 
 
     @Autowired
     private PControl_de_Alarma_Luminica_y_Sonora_de_CloroServicioImpl controlDeAlarmaLuminicaYSonoraDeCloroServicioImpl;
@@ -63,8 +69,19 @@ public class Controladora_Control {
     }
 
     @PostMapping("/agregar-control-de-alarma-luminica-y-sonora-de-cloro")
-    public ResponseEntity<?> agregarCarne(@RequestBody PControl_de_Alarma_Luminica_y_Sonora_de_Cloro controlDeAlarmaLuminicaYSonoraDeCloro){
+    public ResponseEntity<?> agregarControlDeAlarmaLuminicaYSonoraDeCloro(@RequestBody PControl_de_Alarma_Luminica_y_Sonora_de_Cloro controlDeAlarmaLuminicaYSonoraDeCloro){
         try{
+            Usuario responsable = controlDeAlarmaLuminicaYSonoraDeCloro.getControlDeAlarmaLuminicaYSonoraDeCloroResponsable();
+            if (responsable != null && responsable.getUsuarioNombre() != null){
+                Usuario usuarioExistente = usuarioRepositorio.findByUsuarioNombre(responsable.getUsuarioNombre());
+                if (usuarioExistente != null){
+                    controlDeAlarmaLuminicaYSonoraDeCloro.setControlDeAlarmaLuminicaYSonoraDeCloroResponsable(usuarioExistente);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Surgió un problema con el usuario, intete logearse de nuevo");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No tiene un usuario asignado");
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(controlDeAlarmaLuminicaYSonoraDeCloroServicioImpl.save(controlDeAlarmaLuminicaYSonoraDeCloro));
         }
         catch(Exception e){
@@ -88,8 +105,8 @@ public class Controladora_Control {
     public ResponseEntity<PControl_de_Alarma_Luminica_y_Sonora_de_Cloro> modificarControlDeAlarmaLuminicaYSonoraDeCloro(@RequestBody PControl_de_Alarma_Luminica_y_Sonora_de_Cloro controlDeAlarmaLuminicaYSonoraDeCloro, @PathVariable(value="controlDeAlarmaLuminicaYSonoraDeCloroId") Long controlDeAlarmaLuminicaYSonoraDeCloroId){
         Optional<PControl_de_Alarma_Luminica_y_Sonora_de_Cloro> controlDeAlarmaLuminicaYSonoraDeCloroData = controlDeAlarmaLuminicaYSonoraDeCloroServicioImpl.findById(controlDeAlarmaLuminicaYSonoraDeCloroId);
         if(controlDeAlarmaLuminicaYSonoraDeCloroData.isPresent()){
-            controlDeAlarmaLuminicaYSonoraDeCloroData.get().setControlDeAlarmaLumincaYSonoraDeCloroFechaHora(controlDeAlarmaLuminicaYSonoraDeCloro.getControlDeAlarmaLumincaYSonoraDeCloroFechaHora());
-            controlDeAlarmaLuminicaYSonoraDeCloroData.get().setControlDeAlarmaLumincaYSonoraDeCloroResponsable(controlDeAlarmaLuminicaYSonoraDeCloro.getControlDeAlarmaLumincaYSonoraDeCloroResponsable());
+            controlDeAlarmaLuminicaYSonoraDeCloroData.get().setControlDeAlarmaLuminicaYSonoraDeCloroFechaHora(controlDeAlarmaLuminicaYSonoraDeCloro.getControlDeAlarmaLuminicaYSonoraDeCloroFechaHora());
+            controlDeAlarmaLuminicaYSonoraDeCloroData.get().setControlDeAlarmaLuminicaYSonoraDeCloroResponsable(controlDeAlarmaLuminicaYSonoraDeCloro.getControlDeAlarmaLuminicaYSonoraDeCloroResponsable());
             controlDeAlarmaLuminicaYSonoraDeCloroData.get().setControlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica(controlDeAlarmaLuminicaYSonoraDeCloro.getControlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica());
             controlDeAlarmaLuminicaYSonoraDeCloroData.get().setControlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora(controlDeAlarmaLuminicaYSonoraDeCloro.getControlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora());
             controlDeAlarmaLuminicaYSonoraDeCloroData.get().setControlDeAlarmaLuminicaYSonoraDeCloroObservaciones(controlDeAlarmaLuminicaYSonoraDeCloro.getControlDeAlarmaLuminicaYSonoraDeCloroObservaciones());
@@ -126,6 +143,17 @@ public class Controladora_Control {
     @PostMapping("/agregar-control-de-cloro-libre")
     public ResponseEntity<?> agregarControlDeCloroLibre(@RequestBody PControl_de_Cloro_Libre controlDeCloroLibre){
         try{
+            Usuario responsable = controlDeCloroLibre.getControlDeCloroLibreResponsable();
+            if (responsable != null && responsable.getUsuarioNombre() != null) {
+                Usuario usuarioExistente = usuarioRepositorio.findByUsuarioNombre(responsable.getUsuarioNombre());
+                if (usuarioExistente != null) {
+                    controlDeCloroLibre.setControlDeCloroLibreResponsable(usuarioExistente);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Surgió un problema con el usuario, intete logearse de nuevo.");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No tiene un usuario asignado.");
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(controlDeCloroLibreServicioImpl.save(controlDeCloroLibre));
         }
         catch(Exception e){
@@ -187,6 +215,17 @@ public class Controladora_Control {
     @PostMapping("/agregar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-canierias")
     public ResponseEntity<?> agregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias(@RequestBody PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canierias controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias){
         try{
+            Usuario responsable = controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias.getControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable();
+            if (responsable != null && responsable.getUsuarioNombre() != null) {
+                Usuario usuarioExistente = usuarioRepositorio.findByUsuarioNombre(responsable.getUsuarioNombre());
+                if (usuarioExistente != null) {
+                    controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias.setControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable(usuarioExistente);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Surgió un problema con el usuario, intete logearse de nuevo.");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Usted no tiene un usuario asignado.");
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasServicioImpl.save(controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias));
         }
         catch(Exception e){
@@ -248,6 +287,17 @@ public class Controladora_Control {
     @PostMapping("/agregar-control-de-mejoras-en-instalaciones")
     public ResponseEntity<?> agregarControlDeMejorasEnInstalaciones(@RequestBody PControl_de_Mejoras_en_Instalaciones controlDeMejorasEnInstalaciones){
         try{
+            Usuario responsable = controlDeMejorasEnInstalaciones.getControlDeMejorasEnInstalacionesResponsable();
+            if (responsable != null && responsable.getUsuarioNombre() != null) {
+                Usuario usuarioExistente = usuarioRepositorio.findByUsuarioNombre(responsable.getUsuarioNombre());
+                if (usuarioExistente != null) {
+                    controlDeMejorasEnInstalaciones.setControlDeMejorasEnInstalacionesResponsable(usuarioExistente);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Surgió un problema con el usuario, intete logearse de nuevo.");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No tiene un usuario asignado.");
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(controlDeMejorasEnInstalacionesServicioImpl.save(controlDeMejorasEnInstalaciones));
         }
         catch(Exception e){
@@ -309,6 +359,17 @@ public class Controladora_Control {
     @PostMapping("/agregar-control-de-reposicion-de-cloro")
     public ResponseEntity<?> agregarControlDeReposicionDeCloro(@RequestBody PControl_de_Reposicion_de_Cloro controlDeReposicionDeCloro){
         try{
+            Usuario responsable = controlDeReposicionDeCloro.getControlDeReposicionDeCloroResponsable();
+            if (responsable != null && responsable.getUsuarioNombre() != null) {
+                Usuario usuarioExistente = usuarioRepositorio.findByUsuarioNombre(responsable.getUsuarioNombre());
+                if (usuarioExistente != null) {
+                    controlDeReposicionDeCloro.setControlDeReposicionDeCloroResponsable(usuarioExistente);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Surgió un problema con el usuario, intete logearse de nuevo.");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No tiene un usuario asignado.");
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(controlDeReposicionDeCloroServicioImpl.save(controlDeReposicionDeCloro));
         }
         catch(Exception e){
@@ -370,6 +431,17 @@ public class Controladora_Control {
     @PostMapping("/agregar-control-de-temperatura-de-esterilizadores")
     public ResponseEntity<?> agregarControlDeTemperaturaDeEsterilizadores(@RequestBody PControl_de_Temperatura_de_Esterilizadores controlDeTemperaturaDeEsterilizadores){
         try{
+            Usuario responsable = controlDeTemperaturaDeEsterilizadores.getControlDeTemperaturaDeEsterilizadoresResponsable();
+            if (responsable != null && responsable.getUsuarioNombre() != null) {
+                Usuario usuarioExistente = usuarioRepositorio.findByUsuarioNombre(responsable.getUsuarioNombre());
+                if (usuarioExistente != null) {
+                    controlDeTemperaturaDeEsterilizadores.setControlDeTemperaturaDeEsterilizadoresResponsable(usuarioExistente);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Surgió un problema con el usuario, intete logearse de nuevo.");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No tiene un usuario asignado.");
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(controlDeTemperaturaDeEsterilizadoresServicioImpl.save(controlDeTemperaturaDeEsterilizadores));
         }
         catch(Exception e){
