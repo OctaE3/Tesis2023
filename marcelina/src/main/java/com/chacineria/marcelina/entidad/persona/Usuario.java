@@ -64,5 +64,9 @@ public class Usuario implements Serializable{
         this.usuarioEliminado = usuarioEliminado;
     }
 
+    public Usuario(String usuarioNombre) {
+        this.usuarioNombre = usuarioNombre;
+    }
+
     public Usuario() { }
 }

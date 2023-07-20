@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { TextField, createTheme, FormControl, InputLabel, Select, Button, Grid, Box, Container, Popover, Typography } from '@material-ui/core'
+import { TextField, createTheme, FormControl, InputLabel, Button, Grid, Box, Container, Typography, Select } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
+import Modal from '@material-ui/core/Modal';
+import Backdrop from '@material-ui/core/Backdrop';
+import Fade from '@material-ui/core/Fade';
+import InputAdornment from '@material-ui/core/InputAdornment';
 
 const theme = createTheme({
   palette: {
@@ -23,10 +27,14 @@ const useStyles = makeStyles(theme => ({
     height: '60%',
     marginTop: theme.spacing(10),
     [theme.breakpoints.down(400 + theme.spacing(2) + 2)]: {
-      marginTop: 0,
       width: '100%',
       height: '100%',
     }
+  },
+  containerForm: {
+    [theme.breakpoints.down('sm')]: {
+      padding: 0,
+    },
   },
   div: {
     marginTop: theme.spacing(8),
@@ -50,58 +58,95 @@ const useStyles = makeStyles(theme => ({
     minWidth: '100%',
     marginBottom: theme.spacing(1)
   },
+  modal: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paper: {
+    backgroundColor: theme.palette.background.paper,
+    border: '2px solid #000',
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(2, 4, 3),
+    maxWidth: '40%',
+    width: '100%',
+    maxHeight: '80vh',
+    [theme.breakpoints.down('sm')]: {
+      maxWidth: '90%',
+    },
+    textAlign: 'center',
+  },
   select: {
     width: '100%',
-  },
-  button: {
-    margin: theme.spacing(3, 0, 2)
-  },
-  addButton: {
-    height: '5vh',
-    width: '4vh',
-    marginLeft: 10,
-    marginTop: 6,
   },
   selectContainer: {
     display: 'flex',
     alignItems: 'center',
   },
-  campos: {
-    margin: 10,
-    minWidth: '70vh'
+  addButton: {
+    justifyContent: 'flex-start',
   },
-  titlePopover: {
-    minWidth: '100%',
-    textAlign: 'center',
-    marginTop: 10,
+  iconButton: {
+    minWidth: '50px',
   },
-  buttonPopover: {
-    minWidth: '100%',
+  modalButton: {
+    marginTop: 8,
+  },
+  sendButton: {
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  checkboxBorder: {
+    border: '1px solid #999999',
+    borderRadius: '4px',
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1),
+  },
+  title: {
+    marginTop: 3,
+    marginLeft: 6,
+    fontWeight: 'normal'
+  },
+  checkbox: {
+    marginLeft: 4,
   }
 }));
 
-const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitPopover }) => {
+const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal }) => {
 
   const classes = useStyles();
   const [formData, setFormData] = useState({});
-  const [formDataPopover, setFormDataPopover] = useState({});
+  const [formDataModal, setFormDataModal] = useState({});
   const [open, setOpen] = useState(false);
+  const [checked, setChecked] = useState([]);
+
 
   const handleChange = event => {
     const { name, value } = event.target;
     setFormData(prevState => ({
       ...prevState,
-      [name]: value
+      [name]: value,
+    }));
+    console.log(formData);
+  };
+
+  const handleChangeLista = event => {
+    const { name, options } = event.target;
+    const selectedValues = Array.from(options)
+      .filter(option => option.selected)
+      .map(option => option.value);
+
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: selectedValues,
     }));
   };
 
-  const handleChangePopover = event => {
+  const handleChangeModal = event => {
     const { name, value } = event.target;
-    setFormDataPopover(prevState => ({
+    setFormDataModal(prevState => ({
       ...prevState,
       [name]: value
     }));
@@ -112,29 +157,32 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitPopov
     onSubmit(formData);
   };
 
-  const handleSubmitPopover = event => {
+  const handleSubmitModal = event => {
     event.preventDefault();
-    onSubmitPopover(formDataPopover);
+    onSubmitModal(formDataModal);
+    setOpen(false);
   };
 
-  const handleOpenPopover = () => {
+  const handleOpenModal = () => {
     setOpen(true);
   }
 
-  const handleClosePopover = () => {
+  const handleCloseModal = () => {
     setOpen(false);
   }
 
   return (
     <form className={classes.form}>
-      <Container style={{ marginTop: 30 }}>
-        <Box sx={{ flexGrow: 1 }}>
-          <Grid container spacing={0}>
-            <Grid item lg={2} md={2} sm={1} xs={1}></Grid>
-            <Grid item lg={8} md={8} sm={10} xs={10} >
-              {fields.map((field, index) => (
-                field.type === 'fecha' ? (
-                  <div key={index}>
+      <Container className={classes.containerForm} style={{ marginTop: 20 }}>
+        <Box>
+          {fields.map((field, index) => (
+            field.type === 'date' || field.type === 'datetime-local' ? (
+              <div key={index}>
+                <Grid
+                  container
+                >
+                  <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                  <Grid item lg={8} md={8} sm={8} xs={8}>
                     <TextField
                       fullWidth
                       color="primary"
@@ -142,90 +190,111 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitPopov
                       variant="outlined"
                       label={field.label}
                       id={field.name}
-                      type="date"
+                      type={field.type}
                       name={field.name}
                       value={formData[field.name] || ''}
-                      format={'yyyy-MM-dd'}
+                      format={field.format}
                       onChange={handleChange}
                       InputLabelProps={{
                         shrink: true,
                       }}
                     />
-                  </div>
-                ) : field.type === 'selector' && selectOptions && selectOptions[field.name] ? (
-                  <div key={index} className={classes.selectContainer}>
+                  </Grid>
+                  <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                </Grid>
+              </div>
+            ) : field.type === 'selector' && selectOptions && selectOptions[field.name] ? (
+              <div key={index}>
+                <Grid
+                  container
+                  justifyContent='flex-start'
+                  alignItems="center"
+                >
+                  <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                  <Grid item lg={8} md={8} sm={8} xs={8}>
                     <FormControl variant="outlined" className={classes.formControl} >
                       <InputLabel htmlFor={`outlined-${field.name}-native-simple`}>{field.label}</InputLabel>
                       <Select
                         className={classes.select}
                         native
                         value={formData[field.name] || ''}
-                        onChange={handleChange}
+                        onChange={field.multiple ? handleChangeLista : handleChange}
                         label={field.label}
                         inputProps={{
                           name: field.name,
                           id: `outlined-${field.name}-native-simple`,
+                          multiple: field.multiple,
                         }}
                       >
                         <option value="Seleccionar" > Seleccionar </option>
                         {selectOptions[field.name].map((option, ind) => (
-                          <option key={ind} value={option.value} > {option.label} </option>
+                          <option key={ind} value={option.value}>
+                            {option.label}
+                          </option>
                         ))}
                       </Select>
                     </FormControl>
+                  </Grid>
+                  <Grid item lg={2} md={2} sm={2} xs={2}>
                     {field.alta === 'si' && (
-                      <div>
-                        <Button className={classes.addButton} onClick={handleOpenPopover}>
-                          <AddIcon color='primary' fontSize='large' />
-                        </Button>
-
-                        <Popover
-                          open={open}
-                          onClose={handleClosePopover}
-                          className={classes.popover}
-                          anchorOrigin={{
-                            vertical: 'center',
-                            horizontal: 'center'
-                          }}
-                          transformOrigin={{
-                            vertical: 'center',
-                            horizontal: 'center'
-                          }}
-                        >
-                          <form style={{ display: 'flex', flexDirection: 'column' }}>
-                            <Grid className={classes.titlePopover}>
-                              <Typography component='h1' variant='h5'>Agregar {field.label}</Typography>
-                            </Grid>
-                            {field.altaCampos.map((altaCampo, index) => (
-                              <div key={index}>
-                                <Grid container>
-                                <TextField
-                                  fullWidth
-                                  autoFocus
-                                  color="primary"
-                                  margin="normal"
-                                  variant="outlined"
-                                  className={classes.campos}
-                                  label={altaCampo.label}
-                                  id={altaCampo.name}
-                                  type={altaCampo.type}
-                                  name={altaCampo.name}
-                                  value={formDataPopover[altaCampo.name] || ''}
-                                  onChange={handleChangePopover}
-                                />
-                                </Grid>
+                      <div key={index}>
+                        <Grid className={`${classes.addButton} align-left`}>
+                          <Button className={classes.iconButton} onClick={handleOpenModal}>
+                            <AddIcon color='primary' fontSize='large' />
+                          </Button>
+                        </Grid>
+                        <Grid>
+                          <Modal
+                            aria-labelledby="transition-modal-title"
+                            aria-describedby="transition-modal-description"
+                            className={classes.modal}
+                            open={open}
+                            onClose={handleCloseModal}
+                            closeAfterTransition
+                            BackdropComponent={Backdrop}
+                            BackdropProps={{
+                              timeout: 500,
+                            }}
+                          >
+                            <Fade in={open}>
+                              <div className={classes.paper}>
+                                <Typography component='h1' variant='h5'>Agregar {field.label}</Typography>
+                                {field.altaCampos.map((altaCampo, index) => (
+                                  <div key={index}>
+                                    <TextField
+                                      fullWidth
+                                      autoFocus
+                                      color="primary"
+                                      margin="normal"
+                                      variant="outlined"
+                                      className={classes.campos}
+                                      label={altaCampo.label}
+                                      id={altaCampo.name}
+                                      type={altaCampo.type}
+                                      name={altaCampo.name}
+                                      value={formDataModal[altaCampo.name] || ''}
+                                      onChange={handleChangeModal}
+                                    />
+                                  </div>
+                                ))}
+                                <Button className={classes.modalButton} type="submit" variant="contained" color="primary" onClick={handleSubmitModal}>Enviar</Button>
                               </div>
-                            ))}
-                            <Grid className={classes.buttonPopover}>
-                              <Button type="submit" variant="contained" color="primary" onClick={handleSubmitPopover}>Enviar</Button>
-                            </Grid>
-                          </form>
-                        </Popover>
+                            </Fade>
+                          </Modal>
+                        </Grid>
                       </div>
+
                     )}
-                  </div>
-                ) : (
-                  <div key={index}>
+                  </Grid>
+                </Grid>
+              </div>
+            ) : (
+              <div key={index}>
+                <Grid
+                  container
+                >
+                  <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                  <Grid item lg={8} md={8} sm={8} xs={8}>
                     <TextField
                       fullWidth
                       autoFocus
@@ -240,18 +309,27 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitPopov
                       name={field.name}
                       value={formData[field.name] || ''}
                       onChange={handleChange}
+                      InputProps={field.adornment === 'si' ? { startAdornment: <InputAdornment position="start">{field.unit}</InputAdornment>, } : {}}
                     />
-                  </div>
-                )
+                  </Grid>
+                  <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                </Grid>
+              </div>
+            )
 
-              ))}
+          ))}
+          <Grid
+            container
+          >
+            <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+            <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
               <Button type="submit" variant="contained" color="primary" onClick={handleSubmit}>Enviar</Button>
             </Grid>
-            <Grid item lg={2} md={2} sm={1} xs={1}></Grid>
+            <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
           </Grid>
         </Box>
       </Container>
-    </form>
+    </form >
   );
 };
 

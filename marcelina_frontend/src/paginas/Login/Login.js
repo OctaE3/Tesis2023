@@ -77,7 +77,7 @@ const Login = () => {
         .then(response => {
             window.localStorage.setItem('token', response.data.token);
             window.localStorage.setItem('user', response.data.usuarioNombre);
-            console.log(response.data.token);
+            console.log(window.localStorage.getItem('user'));
             redireccionar();
         })
         .catch(error => {

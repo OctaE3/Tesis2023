@@ -26,7 +26,7 @@ const AgregarCarne = () => {
         { name: 'carneNombre', label: 'Nombre', type: 'text' },
         { name: 'carneTipo', label: 'Tipo de Carne', type: 'selector' },
         { name: 'carneCorte', label: 'Corte', type: 'text' },
-        { name: 'carneCantidad', label: 'Cantidad', type: 'number' },
+        { name: 'carneCantidad', label: 'Cantidad', type: 'number', adornment: 'si', unit: 'Kg' },
         { name: 'carnePaseSanitario', label: 'Pase Sanitario', type: 'text' },
     ];
 

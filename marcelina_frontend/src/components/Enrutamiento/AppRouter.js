@@ -8,7 +8,13 @@ import AgregarCarne from "../../paginas/Carne/AgregarCarne";
 import AgregarInsumo from '../../paginas/Insumo/AgregarInsumo';
 import AgregarProveedor from "../../paginas/Proveedor/AgregarProveedor";
 import ListarCarne from '../../paginas/Carne/ListarCarne';
-
+import AgregarControlDeAlarmaLuminicaYSonoraDeCloro from '../../paginas/Control_de_Alarma_Luminica_y_Sonora_de_Cloro/AgregarControlDeAlarmaLuminicaYSonoraDeCloro';
+import AgregarControlDeCloroLibre from '../../paginas/Control_de_Cloro_Libre/AgregarControlDeCloroLibre';
+import AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias from '../../paginas/Control_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Cañerias/AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias';
+import AgregarControlDeMejorasEnInstalaciones from '../../paginas/Control_de_Mejoras_en_Insatalaciones/AgregarControlDeMejorasEnInstalaciones';
+import AgregarControlDeReposicionDeCloro from '../../paginas/Control_de_Reposicion_de_Cloro/AgregarControlDeReposicionDeCloro';
+import AgregarControlDeTemperaturaDeEsterilizadores from '../../paginas/Control_de_Temperatura_de_Estirilizadores/AgregarControlDeTemperaturaDeEsterilizadores';
+import AgregarControlDeTemperaturaEnCamaras from '../../paginas/Control_de_Temperatura_en_Camaras/AgregarControlDeTemperaturaEnCamaras';
 
 const AppRouter = () => {
     return (
@@ -22,6 +28,13 @@ const AppRouter = () => {
           <Route path="/listarcarne" element={<ListarCarne />} />
           <Route path="/insumo" element={<AgregarInsumo />} />
           <Route path="/proveedor" element={<AgregarProveedor />} />
+          <Route path="/control-de-alarma-luminica-y-sonora-de-cloro" element={<AgregarControlDeAlarmaLuminicaYSonoraDeCloro />} />
+          <Route path="/control-de-cloro-libre" element={<AgregarControlDeCloroLibre />} />
+          <Route path="/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" element={<AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
+          <Route path="/control-de-mejoras-en-instalaciones" element={<AgregarControlDeMejorasEnInstalaciones />} />
+          <Route path="/control-de-reposicion-de-cloro" element={<AgregarControlDeReposicionDeCloro />} />
+          <Route path="/control-de-temperatura-de-esterilizadores" element={<AgregarControlDeTemperaturaDeEsterilizadores />} />
+          <Route path="/control-de-temperatura-en-camaras" element={<AgregarControlDeTemperaturaEnCamaras />} />
           {/* Otras rutas */}
         </Routes>
       </Router>

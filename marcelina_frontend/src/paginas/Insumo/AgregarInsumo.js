@@ -23,12 +23,12 @@ const theme = createTheme({
 const AgregarInsumo = () => {
     const formFields = [
         { name: 'insumoNombre', label: 'Nombre', type: 'text' },
-        { name: 'insumoFecha', label: 'Fecha', type: 'fecha' },
+        { name: 'insumoFecha', label: 'Fecha', type: 'date', format: 'yyyy-MM-dd' },
         { name: 'insumoProveedor', label: 'Proveedor', type: 'selector' },
         { name: 'insumoTipo', label: 'Tipo', type: 'selector' },
         { name: 'insumoNroLote', label: 'Lote', type: 'text' },
         { name: 'insumoMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3' },
-        { name: 'insumoFechaVencimiento', label: 'Fecha Vencimiento', type: 'fecha' },
+        { name: 'insumoFechaVencimiento', label: 'Fecha Vencimiento', type: 'date', format: 'yyyy-MM-dd' },
     ];
 
     const classes = useStyles();
