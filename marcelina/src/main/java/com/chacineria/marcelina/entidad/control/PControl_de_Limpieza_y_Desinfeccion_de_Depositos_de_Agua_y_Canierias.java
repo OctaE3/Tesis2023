@@ -12,28 +12,28 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-@Entity(name = "control_de_limpieza_y_desinfeccion_de_depositos_de_agua_y_canierias")
+@Entity(name = "control_de_limpieza_y_desinfeccion")
 public class PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canierias implements Serializable{
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "control_de_limpieza_y_desinfeccion_de_depositos_de_agua_y_canierias_id")
+    @Column(name = "control_de_limpieza_y_desinfeccion_id")
     private Long controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId;
 
-    @Column(name = "control_de_limpieza_y_desinfeccion_de_depositos_de_agua_y_canierias_fecha", nullable = false)
+    @Column(name = "control_de_limpieza_y_desinfeccion_fecha", nullable = false)
     private Date controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
 
-    @Column(name = "control_de_limpieza_y_desinfeccion_de_depositos_de_agua_y_canierias_deposito", length = 30 ,nullable = false)
+    @Column(name = "control_de_limpieza_y_desinfeccion_deposito", length = 30 ,nullable = false)
     private String controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito;
 
-    @Column(name = "control_de_limpieza_y_desinfeccion_de_depositos_de_agua_y_canierias_canierias", length = 30, nullable = false)
+    @Column(name = "control_de_limpieza_y_desinfeccion_canierias", length = 30, nullable = false)
     private String controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias;
 
-    @Column(name = "control_de_limpieza_y_desinfeccion_de_depositos_de_agua_y_canierias_observaciones", length = 150)
+    @Column(name = "control_de_limpieza_y_desinfeccion_observaciones", length = 150)
     private String controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones;
 
     @ManyToOne
-    @JoinColumn(name = "control_de_limpieza_y_desinfeccion_de_depositos_de_agua_y_canierias_responsable", nullable = false)
+    @JoinColumn(name = "control_de_limpieza_y_desinfeccion_responsable", nullable = false)
     private Usuario controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable;
 
     public Long getControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId() {

@@ -22,9 +22,9 @@ const useStyles = makeStyles(theme => ({
 const AgregarControlDeTemperaturaDeEsterilizadores = () => {
   const formFields = [
     { name: 'controlDeTemperaturaDeEsterilizadoresFecha', label: 'Fecha y Hora', type: 'datetime-local' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura1', label: 'Temperatura 1', type: 'number' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura2', label: 'Temperatura 2', type: 'number' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura3', label: 'Temperatura 3', type: 'number' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura1', label: 'Temperatura 1', type: 'number', adornment: 'si', unit: '°C' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura2', label: 'Temperatura 2', type: 'number', adornment: 'si', unit: '°C' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura3', label: 'Temperatura 3', type: 'number', adornment: 'si', unit: '°C' },
     { name: 'controlDeTemperaturaDeEsterilizadoresObservaciones', label: 'Observaciones', type: 'text', multi: '3' },
   ];
 

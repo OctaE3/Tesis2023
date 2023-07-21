@@ -16,10 +16,22 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(1),
   },
   select: {
-    marginRight: theme.spacing(2),
-    minWidth: '150px',
+    minWidth: '100%',
+  },
+  textField: {
+    minWidth: '100%'
   },
   container: {
+    marginTop: theme.spacing(2),
+  },
+  filters: {
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
+  },
+  sendButton: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: theme.spacing(2),
   },
 }));
@@ -43,11 +55,11 @@ function FiltroReutilizable({ filters, handleFilter }) {
   return (
     <Container className={classes.root}>
       <Box className={classes.container}>
-        <Grid container alignItems="center" justifyContent="center">
+        <Grid container justifyContent='center' alignContent='center'>
           {filters.map((filter) => (
             <React.Fragment key={filter.id}>
               {filter.type === 'select' ? (
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+                <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
                   <FormControl variant="outlined" className={classes.select}>
                     <InputLabel htmlFor={`outlined-${filter.name}-native-simple`}>
                       {filter.label}
@@ -62,7 +74,7 @@ function FiltroReutilizable({ filters, handleFilter }) {
                         id: `outlined-${filter.name}-native-simple`,
                       }}
                     >
-                      <option value="">Seleccionar</option>
+                      <option value="Seleccionar">Seleccionar</option>
                       {filter.options.map((option, ind) => (
                         <option key={ind} value={option}>
                           {option}
@@ -72,7 +84,7 @@ function FiltroReutilizable({ filters, handleFilter }) {
                   </FormControl>
                 </Grid>
               ) : (
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+                <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
                   <TextField
                     className={classes.textField}
                     variant="outlined"
@@ -84,10 +96,14 @@ function FiltroReutilizable({ filters, handleFilter }) {
               )}
             </React.Fragment>
           ))}
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <Button variant="contained" color="primary" onClick={handleApplyFilter}>
-              Aplicar filtro
-            </Button>
+          <Grid
+            container
+          >
+            <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+            <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
+              <Button type="submit" variant="contained" color="primary" onClick={handleApplyFilter}>Aplicar Filtro</Button>
+            </Grid>
+            <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
           </Grid>
         </Grid>
       </Box>

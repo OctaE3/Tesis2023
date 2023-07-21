@@ -22,8 +22,8 @@ const useStyles = makeStyles(theme => ({
 const AgregarControlDeReposicionDeCloro = () => {
   const formFields = [
     { name: 'controlDeReposicionDeCloroFecha', label: 'Fecha', type: 'date' },
-    { name: 'controlDeReposicionDeCloroCantidadDeAgua', label: 'Cantidad de Agua', type: 'text' },
-    { name: 'controlDeReposicionDeCloroCantidadDeCloroAdicionado', label: 'Cloro Adicionado', type: 'text' },
+    { name: 'controlDeReposicionDeCloroCantidadDeAgua', label: 'Cantidad de Agua', type: 'number', adornment: 'si', unit: 'L' },
+    { name: 'controlDeReposicionDeCloroCantidadDeCloroAdicionado', label: 'Cloro Adicionado', type: 'number', adornment: 'si', unit: 'L' },
     { name: 'controlDeReposicionDeCloroObservaciones', label: 'Mejora Realizada', type: 'text', multi: '3' },
   ];
 

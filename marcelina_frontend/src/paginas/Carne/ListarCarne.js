@@ -3,10 +3,30 @@ import axios from 'axios';
 import ListaReutilizable from '../../components/Formulario Reutilizable/ListaReutilizable';
 import Navbar from '../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../components/Formulario Reutilizable/FiltroReutilizable';
+import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2C2C71'
+    }
+  }
+});
+
+const useStyles = makeStyles(theme => ({
+  title: {
+    textAlign: 'center',
+  },
+  container: {
+    marginTop: theme.spacing(2),
+  }
+}));
 
 function ListarCarne() {
   const [data, setData] = useState([]);
   const [filtros, setFiltros] = useState({});
+  const classes = useStyles();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,7 +80,7 @@ function ListarCarne() {
       carneCantidad: item.carneCantidad,
       carnePaseSanitario: item.carnePaseSanitario.toLowerCase(),
     };
-  
+
     if (
       (!filtros.nombre || lowerCaseItem.carneNombre.startsWith(filtros.nombre)) &&
       (!filtros.tipo || lowerCaseItem.carneTipo.startsWith(filtros.tipo)) &&
@@ -72,11 +92,27 @@ function ListarCarne() {
     }
     return false;
   });
-  
+
 
   return (
     <div>
       <Navbar />
+      <Grid container justifyContent='center' alignContent='center' className={classes.container} >
+        <Grid item lg={2} md={2}></Grid>
+        <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
+          <Typography component='h1' variant='h5'>Lista de Carnes</Typography>
+          <Tooltip title={
+            <Typography fontSize={16}>
+              En esta pagina puedes comprobar todas la carnes almacenadas en el sistema y puedes simplificar tu busqueda atraves de los filtros.
+            </Typography>
+          }>
+            <IconButton>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
+          </Tooltip>
+        </Grid>
+        <Grid item lg={2} md={2}></Grid>
+      </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable data={filteredData} tableHeadCells={tableHeadCells} title="Carnes" />
     </div>
