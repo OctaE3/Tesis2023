@@ -22,7 +22,7 @@ const useStyles = makeStyles(theme => ({
 const AgregarControlDeCloroLibre = () => {
   const formFields = [
     { name: 'controlDeCloroLibreFecha', label: 'Fecha y Hora', type: 'datetime-local' },
-    { name: 'controlDeCloroLibreGrifoPico', label: 'Pico del Grifo', type: 'number' },
+    { name: 'controlDeCloroLibreGrifoPico', label: 'Número del Grifo', type: 'number' },
     { name: 'controlDeCloroLibreResultado', label: 'Resultado', type: 'number' },
     { name: 'controlDeCloroLibreObservaciones', label: 'Observaciones', type: 'text', multi: '3' },
   ];

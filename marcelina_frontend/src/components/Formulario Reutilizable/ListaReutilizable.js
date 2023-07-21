@@ -51,6 +51,10 @@ const useStyles = makeStyles((theme) => ({
   title: {
     flex: '1 1 100%',
   },
+  button: {
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1)
+  }
 }));
 
 function EnhancedTableHead(props) {
@@ -171,11 +175,11 @@ function ListaReutilizable({ data, tableHeadCells, title }) {
                       </TableCell>
                     ))}
                     <TableCell align="right">
-                      <Button variant="contained" color="primary" onClick={() => handleButtonClick(row)}>
-                        <EditIcon/>
+                      <Button className={classes.button} variant="contained" color="primary" onClick={() => handleButtonClick(row)}>
+                        <EditIcon />
                       </Button>
-                      <Button variant="contained" color="secondary" onClick={() => handleButtonClick(row)}>
-                        <DeleteIcon/>
+                      <Button className={classes.button} variant="contained" color="secondary" onClick={() => handleButtonClick(row)}>
+                        <DeleteIcon />
                       </Button>
                     </TableCell>
                   </TableRow>

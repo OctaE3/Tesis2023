@@ -2,6 +2,7 @@ package com.chacineria.marcelina.entidad.control;
 
 import java.io.Serializable;
 import java.sql.Date;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,15 +11,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 @Entity(name = "control_de_temperatura_en_camaras")
-public class PControl_de_Temperatura_en_Camaras implements Serializable{
-    
+public class PControl_de_Temperatura_en_Camaras implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "control_de_temperatura_en_camara_id")
     private Long controlDeTemperaturaEnCamarasId;
 
     @Column(name = "control_de_temperatura_en_camara_nro_camara", nullable = false)
-    private Integer controlDeTemperaturaEnCamarasNroCamara;
+    private List<String> controlDeTemperaturaEnCamarasNroCamara;
 
     @Column(name = "control_de_temperatura_en_camara_fecha", nullable = false)
     private Date controlDeTemperaturaEnCamarasFecha;
@@ -40,11 +41,11 @@ public class PControl_de_Temperatura_en_Camaras implements Serializable{
         this.controlDeTemperaturaEnCamarasId = controlDeTemperaturaEnCamarasId;
     }
 
-    public Integer getControlDeTemperaturaEnCamarasNroCamara() {
+    public List<String> getControlDeTemperaturaEnCamarasNroCamara() {
         return controlDeTemperaturaEnCamarasNroCamara;
     }
 
-    public void setControlDeTemperaturaEnCamarasNroCamara(Integer controlDeTemperaturaEnCamarasNroCamara) {
+    public void setControlDeTemperaturaEnCamarasNroCamara(List<String> controlDeTemperaturaEnCamarasNroCamara) {
         this.controlDeTemperaturaEnCamarasNroCamara = controlDeTemperaturaEnCamarasNroCamara;
     }
 
@@ -81,7 +82,7 @@ public class PControl_de_Temperatura_en_Camaras implements Serializable{
     }
 
     public PControl_de_Temperatura_en_Camaras(Long controlDeTemperaturaEnCamarasId,
-            Integer controlDeTemperaturaEnCamarasNroCamara, Date controlDeTemperaturaEnCamarasFecha,
+            List<String> controlDeTemperaturaEnCamarasNroCamara, Date controlDeTemperaturaEnCamarasFecha,
             Integer controlDeTemperaturaEnCamarasHora, Integer controlDeTemperaturaEnCamarasTempInterna,
             Integer controlDeTemperaturaEnCamaraTempExterna) {
         this.controlDeTemperaturaEnCamarasId = controlDeTemperaturaEnCamarasId;
@@ -92,5 +93,6 @@ public class PControl_de_Temperatura_en_Camaras implements Serializable{
         this.controlDeTemperaturaEnCamaraTempExterna = controlDeTemperaturaEnCamaraTempExterna;
     }
 
-    public PControl_de_Temperatura_en_Camaras() { }
+    public PControl_de_Temperatura_en_Camaras() {
+    }
 }
