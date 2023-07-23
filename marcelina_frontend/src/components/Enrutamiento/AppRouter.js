@@ -1,20 +1,20 @@
 import React from 'react'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from '../../paginas/Home/Home';
-import AgregarLocalidad from '../../paginas/Localidad/AgregarLocalidad';
-import Login from '../../paginas/Login/Login';
-import AgregarCliente from '../../paginas/Cliente/AgregarCliente';
-import AgregarCarne from "../../paginas/Carne/AgregarCarne";
-import AgregarInsumo from '../../paginas/Insumo/AgregarInsumo';
-import AgregarProveedor from "../../paginas/Proveedor/AgregarProveedor";
-import ListarCarne from '../../paginas/Carne/ListarCarne';
-import AgregarControlDeAlarmaLuminicaYSonoraDeCloro from '../../paginas/Control_de_Alarma_Luminica_y_Sonora_de_Cloro/AgregarControlDeAlarmaLuminicaYSonoraDeCloro';
-import AgregarControlDeCloroLibre from '../../paginas/Control_de_Cloro_Libre/AgregarControlDeCloroLibre';
-import AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias from '../../paginas/Control_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Cañerias/AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias';
-import AgregarControlDeMejorasEnInstalaciones from '../../paginas/Control_de_Mejoras_en_Insatalaciones/AgregarControlDeMejorasEnInstalaciones';
-import AgregarControlDeReposicionDeCloro from '../../paginas/Control_de_Reposicion_de_Cloro/AgregarControlDeReposicionDeCloro';
-import AgregarControlDeTemperaturaDeEsterilizadores from '../../paginas/Control_de_Temperatura_de_Estirilizadores/AgregarControlDeTemperaturaDeEsterilizadores';
-import AgregarControlDeTemperaturaEnCamaras from '../../paginas/Control_de_Temperatura_en_Camaras/AgregarControlDeTemperaturaEnCamaras';
+import AgregarLocalidad from '../../paginas/Persona/Localidad/AgregarLocalidad';
+import Login from '../../paginas/Persona/Login/Login';
+import AgregarCliente from '../../paginas/Persona/Cliente/AgregarCliente';
+import AgregarCarne from "../../paginas/Insumo/Carne/AgregarCarne";
+import AgregarInsumo from '../../paginas/Insumo/Control_de_Insumo/AgregarInsumo';
+import AgregarProveedor from "../../paginas/Persona/Proveedor/AgregarProveedor";
+import ListarCarne from "../../paginas/Insumo/Carne/ListarCarne";
+import AgregarControlDeAlarmaLuminicaYSonoraDeCloro from '../../paginas/Control/Control_de_Alarma_Luminica_y_Sonora_de_Cloro/AgregarControlDeAlarmaLuminicaYSonoraDeCloro';
+import AgregarControlDeCloroLibre from '../../paginas/Control/Control_de_Cloro_Libre/AgregarControlDeCloroLibre';
+import AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias from '../../paginas/Control/Control_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Cañerias/AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias';
+import AgregarControlDeMejorasEnInstalaciones from '../../paginas/Control/Control_de_Mejoras_en_Insatalaciones/AgregarControlDeMejorasEnInstalaciones';
+import AgregarControlDeReposicionDeCloro from '../../paginas/Control/Control_de_Reposicion_de_Cloro/AgregarControlDeReposicionDeCloro';
+import AgregarControlDeTemperaturaDeEsterilizadores from '../../paginas/Control/Control_de_Temperatura_de_Estirilizadores/AgregarControlDeTemperaturaDeEsterilizadores';
+import AgregarControlDeTemperaturaEnCamaras from '../../paginas/Control/Control_de_Temperatura_en_Camaras/AgregarControlDeTemperaturaEnCamaras';
 
 const AppRouter = () => {
     return (

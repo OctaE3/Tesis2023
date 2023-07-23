@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TextField, createTheme, FormControl, InputLabel, Button, Grid, Box, Container, Typography, Select } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
+import CloseIcon from '@material-ui/icons/Close';
 import Modal from '@material-ui/core/Modal';
 import Backdrop from '@material-ui/core/Backdrop';
 import Fade from '@material-ui/core/Fade';
@@ -120,7 +121,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const [formData, setFormData] = useState({});
   const [formDataModal, setFormDataModal] = useState({});
   const [open, setOpen] = useState(false);
-  const [checked, setChecked] = useState([]);
+  const [telefonos, setTelefonos] = useState([{ telefono: "" }]);
 
 
   const handleChange = event => {
@@ -142,6 +143,39 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
       ...prevState,
       [name]: selectedValues,
     }));
+  };
+
+  const handleAddTelefono = () => {
+    setTelefonos([...telefonos, { telefono: "" }]);
+  };
+
+  const handleChangeTelefono = (index, telefono) => {
+    setTelefonos(prevTelefonos => {
+      const nuevosTelefonos = [...prevTelefonos];
+      nuevosTelefonos[index] = { telefono };
+      return nuevosTelefonos;
+    });
+
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      [fields.find(field => field.type === 'phone').name]: telefonos.map(tel => tel.telefono),
+    }));
+    console.log(formData);
+  };
+
+  const handleRemoveTelefono = (index) => {
+    const nuevosTelefonos = [...telefonos];
+    nuevosTelefonos.splice(index, 1);
+
+    setTelefonos(nuevosTelefonos);
+
+    console.log(nuevosTelefonos);
+
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      [fields.find(field => field.type === 'phone').name]: nuevosTelefonos,
+    }));
+    console.log(formData);
   };
 
   const handleChangeModal = event => {
@@ -288,6 +322,51 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                   </Grid>
                 </Grid>
               </div>
+            ) : field.type === 'phone' ? (
+              <div key={index}>
+                {telefonos.map((tel, idx) => (
+                  <Grid
+                    container
+                    justifyContent='flex-start'
+                    alignItems="center"
+                    key={idx}>
+                    <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                    <Grid item lg={8} md={8} sm={8} xs={8}>
+                      <TextField
+                        fullWidth
+                        autoFocus
+                        color="primary"
+                        margin="normal"
+                        variant="outlined"
+                        label={field.label}
+                        id={`${field.name}-${idx}`}
+                        type="text"
+                        name={field.name}
+                        value={tel.telefono || ''}
+                        onChange={(e) => handleChangeTelefono(idx, e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item lg={2} md={2} sm={2} xs={2}>
+                      {idx === 0 && (
+                        <Grid className={`${classes.addButton} align-left`}>
+                          <Button className={classes.iconButton} onClick={handleAddTelefono}>
+                            <AddIcon color='primary' fontSize='large' />
+                          </Button>
+                        </Grid>
+                      )}
+
+                      {idx !== 0 && (
+                        <Grid className={`${classes.addButton} align-left`}>
+                          <Button className={classes.iconButton} onClick={() => handleRemoveTelefono(idx)}>
+                            <CloseIcon color='primary' fontSize='large' />
+                          </Button>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Grid>
+                ))}
+
+              </div>
             ) : (
               <div key={index}>
                 <Grid
@@ -316,7 +395,6 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                 </Grid>
               </div>
             )
-
           ))}
           <Grid
             container

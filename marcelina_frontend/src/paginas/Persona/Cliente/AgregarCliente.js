@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../../components/Navbar/Navbar';
+import Navbar from '../../../components/Navbar/Navbar';
 import { Container, Typography, Grid, CssBaseline, Box, Tooltip, IconButton, makeStyles, createTheme } from '@material-ui/core';
-import FormularioReutilizable from '../../components/Formulario Reutilizable/FormularioReutilizable';
+import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import axios from 'axios';
 
@@ -22,7 +22,8 @@ const useStyles = makeStyles(theme => ({
 const AgregarCliente = () => {
   const formFields = [
     { name: 'clienteNombre', label: 'Nombre', type: 'text' },
-    { name: 'clienteContacto', label: 'Contacto', type: 'text' },
+    { name: 'clienteEmail', label: 'Email', type: 'email' },
+    { name: 'clienteContacto', label: 'Contacto', type: 'phone' },
     { name: 'clienteObservaciones', label: 'Observaciones', type: 'text', multi: '3' },
     { name: 'clienteLocalidad', label: 'Localidad', type: 'selector' }
   ];

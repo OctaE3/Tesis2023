@@ -1,10 +1,13 @@
 package com.chacineria.marcelina.entidad.persona;
 
 import java.io.Serializable;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -24,8 +27,10 @@ public class Proveedor implements Serializable{
     @Column(name = "proveedor_rut", length = 12, nullable = false, unique = true)
     private String proveedorRUT;
 
-    @Column(name = "proveedor_contacto", length = 9, nullable = false, unique = true)
-    private String proveedorContacto;
+    @ElementCollection
+    @CollectionTable(name = "proveedor_telefono", joinColumns = @JoinColumn(name = "proveedor_id"))
+    @Column(name = "proveedor_contacto")
+    private List<String> proveedorContacto;
 
     @ManyToOne
     @JoinColumn(name = "proveedor_localidad", nullable = false)
@@ -58,11 +63,11 @@ public class Proveedor implements Serializable{
         this.proveedorRUT = proveedorRUT;
     }
 
-    public String getProveedorContacto() {
+    public List<String> getProveedorContacto() {
         return proveedorContacto;
     }
 
-    public void setProveedorContacto(String proveedorContacto) {
+    public void setProveedorContacto(List<String> proveedorContacto) {
         this.proveedorContacto = proveedorContacto;
     }
 
@@ -82,7 +87,7 @@ public class Proveedor implements Serializable{
         this.proveedorEliminado = proveedorEliminado;
     }
 
-    public Proveedor(Long proveedorId, String proveedorNombre, String proveedorRUT, String proveedorContacto,
+    public Proveedor(Long proveedorId, String proveedorNombre, String proveedorRUT, List<String> proveedorContacto,
             Localidad proveedorLocalidad, Boolean proveedorEliminado) {
         this.proveedorId = proveedorId;
         this.proveedorNombre = proveedorNombre;

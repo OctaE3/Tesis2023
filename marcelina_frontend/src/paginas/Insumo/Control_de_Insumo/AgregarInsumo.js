@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../../components/Navbar/Navbar';
+import Navbar from '../../../components/Navbar/Navbar';
 import { Container, Box, Grid, Typography, FormControl, InputLabel, Select, makeStyles, CssBaseline, Tooltip, IconButton, createTheme } from '@material-ui/core';
-import FormularioReutilizable from '../../components/Formulario Reutilizable/FormularioReutilizable';
+import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import Logo from "../../assets/images/Logo.png";
+import Logo from "../../../assets/images/Logo.png";
 import axios from 'axios';
 
 const theme = createTheme({

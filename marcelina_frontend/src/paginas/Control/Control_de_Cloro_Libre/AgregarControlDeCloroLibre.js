@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import Navbar from '../../components/Navbar/Navbar'
+import Navbar from '../../../components/Navbar/Navbar'
 import { Container, Typography, Grid, Box, Tooltip, IconButton, makeStyles, createTheme } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import FormularioReutilizanle from '../../components/Formulario Reutilizable/FormularioReutilizable'
+import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import axios from 'axios';
 
 const theme = createTheme({
@@ -19,28 +19,35 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const AgregarLocalidad = () => {
+const AgregarControlDeCloroLibre = () => {
   const formFields = [
-    { name: 'localidadNombre', label: 'Nombre', type: 'text' },
+    { name: 'controlDeCloroLibreFecha', label: 'Fecha y Hora', type: 'datetime-local' },
+    { name: 'controlDeCloroLibreGrifoPico', label: 'Número del Grifo', type: 'number' },
+    { name: 'controlDeCloroLibreResultado', label: 'Resultado', type: 'number' },
+    { name: 'controlDeCloroLibreObservaciones', label: 'Observaciones', type: 'text', multi: '3' },
   ];
 
   const classes = useStyles();
-  const [localidad, setLocalidad] = useState({});
+  const [controlDeCloroLibre, setControlDeCloroLibre] = useState({});
 
   const handleFormSubmit = (formData) => {
-    setLocalidad(formData);
-    console.log(formData);
-    axios.post('/agregar-localidad', formData, {
+    const controlDeCloroLibreConResponsable = {
+      ...formData,
+      controlDeCloroLibreResponsable: window.localStorage.getItem('user'),
+    }                                                               
+    setControlDeCloroLibre(controlDeCloroLibreConResponsable);
+    console.log(controlDeCloroLibreConResponsable);
+    axios.post('/agregar-control-de-cloro-libre', controlDeCloroLibreConResponsable, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         "Content-Type": "application/json"
       }
-    })
+    }) 
       .then(response => {
         if (response.status === 201) {
-          console.log("Localidad agregada con éxito!");
+          console.log("Se registro el control de cloro libre con éxito!");
         } else {
-          console.log("No se logro agregar la localidad");
+          console.log("No se logro regristrar el control de cloro libre, revise los datos");
         }
       })
       .catch(error => {
@@ -57,10 +64,10 @@ const AgregarLocalidad = () => {
           <Grid container spacing={0}>
             <Grid item lg={2} md={2} ></Grid>
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-              <Typography component='h1' variant='h4'>Agregar Localidad</Typography>
+              <Typography component='h1' variant='h4'>Control de Cloro Libre</Typography>
               <Tooltip title={
                 <Typography fontSize={16}>
-                  En esta pagina puedes registrar las localidades, que se asignaran a los proveedores, clientes, etc. 
+                  En esta página puedes Control de Cloro Libre.
                 </Typography>
               }>
                 <IconButton>
@@ -72,9 +79,12 @@ const AgregarLocalidad = () => {
           </Grid>
         </Box>
       </Container>
-      <FormularioReutilizanle fields={formFields} onSubmit={handleFormSubmit} />
+      <FormularioReutilizanle
+        fields={formFields}
+        onSubmit={handleFormSubmit}
+      />
     </Grid>
   )
 }
 
-export default AgregarLocalidad;
+export default AgregarControlDeCloroLibre;
