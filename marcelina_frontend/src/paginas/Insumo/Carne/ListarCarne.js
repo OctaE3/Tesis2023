@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import ListaReutilizable from '../../components/Formulario Reutilizable/ListaReutilizable';
-import Navbar from '../../components/Navbar/Navbar';
-import FiltroReutilizable from '../../components/Formulario Reutilizable/FiltroReutilizable';
+import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
+import Navbar from '../../../components/Navbar/Navbar';
+import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 

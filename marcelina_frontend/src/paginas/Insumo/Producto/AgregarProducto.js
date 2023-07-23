@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import Navbar from '../../components/Navbar/Navbar'
+import Navbar from '../../../components/Navbar/Navbar'
 import { Container, Typography, Grid } from '@material-ui/core'
-import FormularioReutilizanle from '../../components/Formulario Reutilizable/FormularioReutilizable'
+import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import axios from 'axios';
 
 const theme = createTheme({

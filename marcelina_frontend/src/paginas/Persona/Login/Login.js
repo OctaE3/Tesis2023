@@ -2,7 +2,7 @@ import React, {useState} from 'react'
 import { Container, Grid, Paper, Avatar, Typography, TextField, Button, ThemeProvider, createTheme, CssBaseline} from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import { useNavigate } from 'react-router-dom';
-import Logo from '../../assets/images/Logo.png'
+import Logo from '../../../assets/images/Logo.png'
 import { LockOutlined as LockOutlinedIcon} from '@material-ui/icons'
 import axios from 'axios'
 
