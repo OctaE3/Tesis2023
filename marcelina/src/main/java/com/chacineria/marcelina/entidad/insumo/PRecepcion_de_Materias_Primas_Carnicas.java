@@ -5,6 +5,7 @@ import com.chacineria.marcelina.entidad.persona.Usuario;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
 import java.sql.Date;
 
 import jakarta.persistence.Column;
@@ -38,7 +39,7 @@ public class PRecepcion_de_Materias_Primas_Carnicas implements Serializable{
         name = "recepcion_materias_primas_carnicas_carnes",
         joinColumns = @JoinColumn(name = "recepcion_materias_primas_carnicas_id"),
         inverseJoinColumns = @JoinColumn(name = "carne_id"))
-    private Set<Carne> recepcionDeMateriasPrimasCarnicasProductos = new HashSet<>();
+    private List<Carne> recepcionDeMateriasPrimasCarnicasProductos;
 
     @Column(name = "recepcion_materias_primas_carnicas_paseSanitario", nullable = false, unique = true)
     private String recepcionDeMateriasPrimasCarnicasPaseSanitario;
@@ -77,11 +78,11 @@ public class PRecepcion_de_Materias_Primas_Carnicas implements Serializable{
         this.recepcionDeMateriasPrimasCarnicasProveedor = recepcionDeMateriasPrimasCarnicasProveedor;
     }
 
-    public Set<Carne> getRecepcionDeMateriasPrimasCarnicasProductos() {
+    public List<Carne> getRecepcionDeMateriasPrimasCarnicasProductos() {
         return recepcionDeMateriasPrimasCarnicasProductos;
     }
 
-    public void setRecepcionDeMateriasPrimasCarnicasProductos(Set<Carne> recepcionDeMateriasPrimasCarnicasProductos) {
+    public void setRecepcionDeMateriasPrimasCarnicasProductos(List<Carne> recepcionDeMateriasPrimasCarnicasProductos) {
         this.recepcionDeMateriasPrimasCarnicasProductos = recepcionDeMateriasPrimasCarnicasProductos;
     }
 
@@ -120,7 +121,7 @@ public class PRecepcion_de_Materias_Primas_Carnicas implements Serializable{
 
     public PRecepcion_de_Materias_Primas_Carnicas(Long recepcionDeMateriasPrimasCarnicasId,
             Date recepcionDeMateriasPrimasCarnicasFecha, Proveedor recepcionDeMateriasPrimasCarnicasProveedor,
-            Set<Carne> recepcionDeMateriasPrimasCarnicasProductos,
+            List<Carne> recepcionDeMateriasPrimasCarnicasProductos,
             String recepcionDeMateriasPrimasCarnicasPaseSanitario, String recepcionDeMateriasPrimasCarnicasTemperatura,
             String recepcionDeMateriasPrimasCarnicasMotivoDeRechazo,
             Usuario recepcionDeMateriasPrimasCarnicasResponsable) {

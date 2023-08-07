@@ -92,6 +92,7 @@ public class Controladora_Persona {
         if(clienteData.isPresent()){
             clienteData.get().setClienteNombre(cliente.getClienteNombre());
             clienteData.get().setClienteLocalidad(cliente.getClienteLocalidad());
+            clienteData.get().setClienteEmail(cliente.getClienteEmail());
             clienteData.get().setClienteContacto(cliente.getClienteContacto());
             clienteData.get().setClienteObservaciones(cliente.getClienteObservaciones());
             return new ResponseEntity<>(clienteServicioImpl.save(clienteData.get()), HttpStatus.OK);
@@ -155,7 +156,8 @@ public class Controladora_Persona {
     public ResponseEntity<Localidad> modificarLocalidad(@RequestBody Localidad localidad, @PathVariable(value="localidadId") Long localidadId){
         Optional<Localidad> localidadData = localidadServicioImpl.findById(localidadId);
         if(localidadData.isPresent()){
-            localidadData.get().setLocalidadNombre(localidad.getLocalidadNombre());
+            localidadData.get().setLocalidadCiudad(localidad.getLocalidadCiudad());
+            localidadData.get().setLocalidadDepartamento(localidad.getLocalidadCiudad());
             return new ResponseEntity<>(localidadServicioImpl.save(localidadData.get()), HttpStatus.OK);
         }else{
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -219,6 +221,7 @@ public class Controladora_Persona {
         if(proveedorData.isPresent()){
             proveedorData.get().setProveedorNombre(proveedor.getProveedorNombre());
             proveedorData.get().setProveedorRUT(proveedor.getProveedorRUT());
+            proveedorData.get().setProveedorEmail(proveedor.getProveedorEmail());
             proveedorData.get().setProveedorContacto(proveedor.getProveedorContacto());
             proveedorData.get().setProveedorLocalidad(proveedor.getProveedorLocalidad());
             return new ResponseEntity<>(proveedorServicioImpl.save(proveedorData.get()), HttpStatus.OK);

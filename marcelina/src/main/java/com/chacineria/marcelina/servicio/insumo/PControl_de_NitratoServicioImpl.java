@@ -38,4 +38,13 @@ public class PControl_de_NitratoServicioImpl implements PControl_de_NitratoServi
     public void deleteById(Long Id){
         controlDeNitratoRepositorio.deleteById(Id);
     }
+
+    public PControl_de_Nitrato findLastNitrato() {
+        return controlDeNitratoRepositorio.findLastNitrato();
+    }
+
+    @Transactional
+    public Integer updateStockNitrato(Double Stock, Long Id) {
+        return controlDeNitratoRepositorio.updateStockNitrato(Stock, Id);
+    }
 }

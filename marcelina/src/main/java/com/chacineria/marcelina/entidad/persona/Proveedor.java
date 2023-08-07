@@ -14,8 +14,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity(name = "proveedores")
-public class Proveedor implements Serializable{
-    
+public class Proveedor implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "proveedor_id")
@@ -26,6 +26,9 @@ public class Proveedor implements Serializable{
 
     @Column(name = "proveedor_rut", length = 12, nullable = false, unique = true)
     private String proveedorRUT;
+
+    @Column(name = "proveedor_email", length = 50, nullable = true)
+    private String proveedorEmail;
 
     @ElementCollection
     @CollectionTable(name = "proveedor_telefono", joinColumns = @JoinColumn(name = "proveedor_id"))
@@ -63,6 +66,14 @@ public class Proveedor implements Serializable{
         this.proveedorRUT = proveedorRUT;
     }
 
+    public String getProveedorEmail() {
+        return proveedorEmail;
+    }
+
+    public void setProveedorEmail(String proveedorEmail) {
+        this.proveedorEmail = proveedorEmail;
+    }
+
     public List<String> getProveedorContacto() {
         return proveedorContacto;
     }
@@ -87,15 +98,17 @@ public class Proveedor implements Serializable{
         this.proveedorEliminado = proveedorEliminado;
     }
 
-    public Proveedor(Long proveedorId, String proveedorNombre, String proveedorRUT, List<String> proveedorContacto,
-            Localidad proveedorLocalidad, Boolean proveedorEliminado) {
+    public Proveedor(Long proveedorId, String proveedorNombre, String proveedorRUT, String proveedorEmail,
+            List<String> proveedorContacto, Localidad proveedorLocalidad, Boolean proveedorEliminado) {
         this.proveedorId = proveedorId;
         this.proveedorNombre = proveedorNombre;
         this.proveedorRUT = proveedorRUT;
+        this.proveedorEmail = proveedorEmail;
         this.proveedorContacto = proveedorContacto;
         this.proveedorLocalidad = proveedorLocalidad;
         this.proveedorEliminado = proveedorEliminado;
     }
 
-    public Proveedor() { }
+    public Proveedor() {
+    }
 }

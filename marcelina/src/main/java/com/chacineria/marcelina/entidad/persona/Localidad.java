@@ -16,8 +16,11 @@ public class Localidad implements Serializable {
     @Column(name = "localidad_id")
     private Long localidadId;
 
-    @Column(name = "localidad_nombre", length = 40, nullable = false)
-    private String localidadNombre;
+    @Column(name = "localidad_departamento", length = 40, nullable = false)
+    private String localidadDepartamento;
+
+    @Column(name = "localidad_ciudad", length = 50, nullable = false)
+    private String localidadCiudad;
 
     @Column(name = "localidad_eliminado")
     private Boolean localidadEliminado = false;
@@ -30,12 +33,20 @@ public class Localidad implements Serializable {
         this.localidadId = localidadId;
     }
 
-    public String getLocalidadNombre() {
-        return localidadNombre;
+    public String getLocalidadDepartamento() {
+        return localidadDepartamento;
     }
 
-    public void setLocalidadNombre(String localidadNombre) {
-        this.localidadNombre = localidadNombre;
+    public void setLocalidadDepartamento(String localidadDepartamento) {
+        this.localidadDepartamento = localidadDepartamento;
+    }
+
+    public String getLocalidadCiudad() {
+        return localidadCiudad;
+    }
+
+    public void setLocalidadCiudad(String localidadCiudad) {
+        this.localidadCiudad = localidadCiudad;
     }
 
     public Boolean getLocalidadEliminado() {
@@ -46,11 +57,15 @@ public class Localidad implements Serializable {
         this.localidadEliminado = localidadEliminado;
     }
 
-    public Localidad(Long localidadId, String localidadNombre, Boolean localidadEliminado) {
+    public Localidad(Long localidadId, String localidadDepartamento, String localidadCiudad,
+            Boolean localidadEliminado) {
         this.localidadId = localidadId;
-        this.localidadNombre = localidadNombre;
+        this.localidadDepartamento = localidadDepartamento;
+        this.localidadCiudad = localidadCiudad;
         this.localidadEliminado = localidadEliminado;
     }
 
-    public Localidad() { }
+    public Localidad() {
+    }
+    
 }

@@ -35,7 +35,7 @@ public class Carne implements Serializable{
     @Column(name = "carne_cantidad", nullable = false)
     private Double carneCantidad;
 
-    @Column(name = "carne_pase_sanitario", length = 30, nullable = false, unique = true)
+    @Column(name = "carne_pase_sanitario", length = 30, nullable = false)
     private String carnePaseSanitario;
 
     @Column(name = "carne_eliminado")

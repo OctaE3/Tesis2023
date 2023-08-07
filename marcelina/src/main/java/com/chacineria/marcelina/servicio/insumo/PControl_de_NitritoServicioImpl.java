@@ -38,4 +38,12 @@ public class PControl_de_NitritoServicioImpl implements PControl_de_NitritoServi
     public void deleteById(Long Id){
         controlDeNitritoRepositorio.deleteById(Id);
     }
+
+    public PControl_de_Nitrito findLastNitrito() {
+        return controlDeNitritoRepositorio.findLastNitrito();
+    }
+
+    public Integer updateStockNitrito(Double Stock, Long Id) {
+        return controlDeNitritoRepositorio.updateStockNitrito(Stock, Id);
+    }
 }

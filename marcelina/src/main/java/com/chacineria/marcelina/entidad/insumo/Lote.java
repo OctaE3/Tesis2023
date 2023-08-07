@@ -11,8 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -27,12 +27,12 @@ public class Lote {
     @Column(name = "lote_codigo", nullable = false, unique = true)
     private Integer loteCodigo;
 
-    @ManyToMany
-    @JoinTable(
-        name = "lote_productos",
-        joinColumns = @JoinColumn(name = "lote_id"),
-        inverseJoinColumns = @JoinColumn(name = "producto_id"))
-    private Set<Producto> loteProductos = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "lote_producto", nullable = false)
+    private Producto loteProducto;
+
+    @Column(name = "lote_cantidad", nullable = false)
+    private Integer loteCantidad;
 
     @Column(name = "lote_eliminado")
     private Boolean loteEliminado = false;
@@ -53,12 +53,20 @@ public class Lote {
         this.loteCodigo = loteCodigo;
     }
 
-    public Set<Producto> getLoteProductos() {
-        return loteProductos;
+    public Producto getLoteProducto() {
+        return loteProducto;
     }
 
-    public void setLoteProductos(Set<Producto> loteProductos) {
-        this.loteProductos = loteProductos;
+    public void setLoteProducto(Producto loteProducto) {
+        this.loteProducto = loteProducto;
+    }
+
+    public Integer getLoteCantidad() {
+        return loteCantidad;
+    }
+
+    public void setLoteCantidad(Integer loteCantidad) {
+        this.loteCantidad = loteCantidad;
     }
 
     public Boolean getLoteEliminado() {
@@ -69,10 +77,11 @@ public class Lote {
         this.loteEliminado = loteEliminado;
     }
 
-    public Lote(Long loteId, Integer loteCodigo, Set<Producto> loteProductos, Boolean loteEliminado) {
+    public Lote(Long loteId, Integer loteCodigo, Producto loteProducto, Integer loteCantidad, Boolean loteEliminado) {
         this.loteId = loteId;
         this.loteCodigo = loteCodigo;
-        this.loteProductos = loteProductos;
+        this.loteProducto = loteProducto;
+        this.loteCantidad = loteCantidad;
         this.loteEliminado = loteEliminado;
     }
 

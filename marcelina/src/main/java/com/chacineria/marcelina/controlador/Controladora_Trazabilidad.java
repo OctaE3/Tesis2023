@@ -1,10 +1,13 @@
 package com.chacineria.marcelina.controlador;
 
+import com.chacineria.marcelina.dto.ExpedicionCantidadDto;
+import com.chacineria.marcelina.entidad.persona.Usuario;
 import com.chacineria.marcelina.entidad.trazabilidad.PAnual_de_Insumos_Carnicos;
 import com.chacineria.marcelina.entidad.trazabilidad.PExpedicion_de_Producto;
 import com.chacineria.marcelina.entidad.trazabilidad.PMonitoreo_de_SSOP_Operativo;
 import com.chacineria.marcelina.entidad.trazabilidad.PMonitoreo_de_SSOP_PreOperativo;
 import com.chacineria.marcelina.entidad.trazabilidad.PResumen_de_Trazabilidad;
+import com.chacineria.marcelina.repositorio.persona.UsuarioRepositorio;
 import com.chacineria.marcelina.servicio.trazabilidad.PAnual_de_Insumos_CarnicosServicioImpl;
 import com.chacineria.marcelina.servicio.trazabilidad.PExpedicion_de_ProductoServicioImpl;
 import com.chacineria.marcelina.servicio.trazabilidad.PMonitoreo_de_SSOP_OperativoServicioImpl;
@@ -35,6 +38,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class Controladora_Trazabilidad {
     
+    @Autowired
+    private UsuarioRepositorio usuarioRepositorio;
+
     //#region ABM PAnual_de_Insumos_Carnicos 
 
     @Autowired
@@ -109,11 +115,16 @@ public class Controladora_Trazabilidad {
     private PExpedicion_de_ProductoServicioImpl expedicionDeProductoServicioImpl;
 
     @GetMapping("/listar-expedicion-de-productos")
-    public List<PExpedicion_de_Producto> listadoExpedicionDeProducto(){
-        List<PExpedicion_de_Producto> expedicionDeProducto = StreamSupport
+    public ResponseEntity<List<PExpedicion_de_Producto>> listadoExpedicionDeProducto(){
+        try{
+            List<PExpedicion_de_Producto> expedicionDeProducto = StreamSupport
         .stream(expedicionDeProductoServicioImpl.findAll().spliterator(), false)
         .collect(Collectors.toList());
-        return expedicionDeProducto;
+        
+        return ResponseEntity.ok(expedicionDeProducto);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/buscar-expedicion-de-producto/{expedicionDeProductoId}")
@@ -126,9 +137,25 @@ public class Controladora_Trazabilidad {
     }
 
     @PostMapping("/agregar-expedicion-de-producto")
-    public ResponseEntity<?> agregarExpedicionDeProducto(@RequestBody PExpedicion_de_Producto expedicionDeProducto){
+    public ResponseEntity<?> agregarExpedicionDeProducto(@RequestBody ExpedicionCantidadDto dto){
         try{
-            return ResponseEntity.status(HttpStatus.CREATED).body(expedicionDeProductoServicioImpl.save(expedicionDeProducto));
+            Usuario responsable = dto.getExpedicionDeProducto().getExpedicionDeProductoUsuario();
+            if (responsable != null && responsable.getUsuarioNombre() != null) {
+                Usuario usuarioExistente = usuarioRepositorio.findByUsuarioNombre(responsable.getUsuarioNombre());
+                if (usuarioExistente != null) {
+                    dto.getExpedicionDeProducto().setExpedicionDeProductoUsuario(usuarioExistente);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Surgio un problema con el usuario, intete lograrse de nuevo.");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No tiene un usuario asignado.");
+            }
+            
+            if (dto.getExpedicionDeProducto() != null && dto.getListaCantidad() != null) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(expedicionDeProductoServicioImpl.saveExpCantidad(dto.getExpedicionDeProducto(), dto.getListaCantidad()));
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la expedicon de producto eviada o en la lista");
+            }
         }
         catch(Exception e){
             HashMap<String, String> error = new HashMap<>();
@@ -155,8 +182,8 @@ public class Controladora_Trazabilidad {
             expedicionDeProductoData.get().setExpedicionDeProductoDocumento(expedicionDeProducto.getExpedicionDeProductoDocumento());
             expedicionDeProductoData.get().setExpedicionDeProductoFecha(expedicionDeProducto.getExpedicionDeProductoFecha());
             expedicionDeProductoData.get().setExpedicionDeProductoLotes(expedicionDeProducto.getExpedicionDeProductoLotes());
+            expedicionDeProductoData.get().setExpedicionDeProductoCantidad(expedicionDeProducto.getExpedicionDeProductoCantidad());
             expedicionDeProductoData.get().setExpedicionDeProductoProductos(expedicionDeProducto.getExpedicionDeProductoProductos());
-            expedicionDeProductoData.get().setExpedicionDeProductoUsuario(expedicionDeProducto.getExpedicionDeProductoUsuario());
             return new ResponseEntity<>(expedicionDeProductoServicioImpl.save(expedicionDeProductoData.get()), HttpStatus.OK);
         }else{
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -240,7 +267,7 @@ public class Controladora_Trazabilidad {
         return monitoreoDeSSOPPreOperativo;
     }
 
-    @GetMapping("/buscar-carne/{monitoreoDeSSOPPreOperativoId}")
+    @GetMapping("/buscar-monitoreo-de-ssop-pre-operativo/{monitoreoDeSSOPPreOperativoId}")
     public ResponseEntity<?> buscarMonitoreoDeSSOPPreOperativoPorId(@PathVariable(value="monitoreoDeSSOPPreOperativoId") Long monitoreoDeSSOPPreOperativoId){
         Optional<PMonitoreo_de_SSOP_PreOperativo> monitoreoDeSSOPPreOperativo = monitoreoDeSSOPPreOperativoServicioImpl.findById(monitoreoDeSSOPPreOperativoId);
         if(!monitoreoDeSSOPPreOperativo.isPresent()){

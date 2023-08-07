@@ -3,6 +3,7 @@ import Navbar from '../../../components/Navbar/Navbar';
 import { Container, Typography, Grid, CssBaseline, Box, Tooltip, IconButton, makeStyles, createTheme } from '@material-ui/core';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -20,18 +21,31 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AgregarCliente = () => {
+  const formFieldsModal = [
+    { name: 'localidadDepartamento', label: 'Departamento', type: 'text' },
+    { name: 'localidadCiudad', label: 'Ciudad', type: 'text' },
+  ];
+
   const formFields = [
-    { name: 'clienteNombre', label: 'Nombre', type: 'text' },
-    { name: 'clienteEmail', label: 'Email', type: 'email' },
-    { name: 'clienteContacto', label: 'Contacto', type: 'phone' },
+    { name: 'clienteNombre', label: 'Nombre', type: 'text', validation: 'text' },
+    { name: 'clienteEmail', label: 'Email', type: 'email', validation: 'email' },
+    { name: 'clienteContacto', label: 'Contacto', type: 'phone', validation: 'phone' },
     { name: 'clienteObservaciones', label: 'Observaciones', type: 'text', multi: '3' },
-    { name: 'clienteLocalidad', label: 'Localidad', type: 'selector' }
+    { name: 'clienteLocalidad', label: 'Localidad', type: 'selector', alta: 'si', altaCampos: formFieldsModal, validation: 'select' }
   ];
 
   const classes = useStyles();
-  const [cliente, setLocalidad] = useState({});
+  const [cliente, setCliente] = useState({});
+  const [localidad, setLocalidad] = useState({});
   const [localidades, setLocalidades] = useState([]);
   const [localidadesSelect, setLocalidadesSelect] = useState([]);
+  const [reloadLocalidades, setReloadLocalidades] = useState(false);
+
+  const navigate = useNavigate();
+
+    const redireccionar = () => {
+        navigate('/proveedor');
+    }
 
   useEffect(() => {
     const obtenerLocalidades = () => {
@@ -45,7 +59,7 @@ const AgregarCliente = () => {
           setLocalidadesSelect(
             response.data.map((localidad) => ({
               value: localidad.localidadId,
-              label: localidad.localidadNombre,
+              label: localidad.localidadCiudad,
             }))
           );
         })
@@ -55,7 +69,12 @@ const AgregarCliente = () => {
     };
 
     obtenerLocalidades();
-  }, []);
+
+    if (reloadLocalidades) {
+      obtenerLocalidades();
+      setReloadLocalidades(false);
+    }
+  }, [reloadLocalidades]);
 
   const handleFormSubmit = (formData) => {
     const localidadSeleccionadaObj = localidades.filter((localidad) => localidad.localidadId.toString() === formData.clienteLocalidad)[0];
@@ -65,7 +84,7 @@ const AgregarCliente = () => {
       clienteLocalidad: localidadSeleccionadaObj ? localidadSeleccionadaObj : null
     };
 
-    setLocalidad(clienteConLocalidad);
+    setCliente(clienteConLocalidad);
     axios.post('/agregar-cliente', clienteConLocalidad, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -77,6 +96,31 @@ const AgregarCliente = () => {
           console.log("Cliente agregado con éxito!");
         } else {
           console.log("No se logro agregar el cliente");
+        }
+      })
+      .catch(error => {
+        console.error(error);
+      })
+
+  }
+
+  const handleFormSubmitModal = (formDataModal) => {
+    setLocalidad(formDataModal);
+    console.log(formDataModal);
+    axios.post('/agregar-localidad', formDataModal, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 201) {
+          console.log("Localidad agregada con éxito!");
+          setReloadLocalidades(true);
+          redireccionar();
+
+        } else {
+          console.log("No se logro agregar la localidad");
         }
       })
       .catch(error => {
@@ -114,6 +158,7 @@ const AgregarCliente = () => {
           <FormularioReutilizable
             fields={formFields}
             onSubmit={handleFormSubmit}
+            onSubmitModal={handleFormSubmitModal}
             selectOptions={{ clienteLocalidad: localidadesSelect }}
           />
         </Grid>

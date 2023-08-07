@@ -27,15 +27,16 @@ const useStyles = makeStyles((theme) => ({
 
 const AgregarProveedor = () => {
 
-    const formFieldsPopover = [
-        { name: 'localidadNombre', label: 'Nombre', type: 'text' }
+    const formFieldsModal = [
+        { name: 'localidadDepartamento', label: 'Departamento', type: 'text' },
+        { name: 'localidadCiudad', label: 'Ciudad', type: 'text' },
     ];
 
     const formFields = [
         { name: 'proveedorNombre', label: 'Nombre', type: 'text' },
         { name: 'proveedorRUT', label: 'RUT', type: 'text' },
-        { name: 'proveedorContacto', label: 'Contacto', type: 'text' },
-        { name: 'proveedorLocalidad', label: 'Localidad', type: 'selector', alta: 'si', altaCampos: formFieldsPopover },
+        { name: 'proveedorContacto', label: 'Contacto', type: 'phone' },
+        { name: 'proveedorLocalidad', label: 'Localidad', type: 'selector', alta: 'si', altaCampos: formFieldsModal },
     ];
 
     const [proveedor, setProveedor] = useState({});
@@ -50,7 +51,7 @@ const AgregarProveedor = () => {
 
     const redireccionar = () => {
         navigate('/proveedor');
-    } 
+    }
 
     useEffect(() => {
         const obtenerLocalidades = () => {
@@ -64,7 +65,7 @@ const AgregarProveedor = () => {
                     setLocalidadesSelect(
                         response.data.map((localidad) => ({
                             value: localidad.localidadId,
-                            label: localidad.localidadNombre,
+                            label: localidad.localidadCiudad,
                         }))
                     );
                 })
@@ -75,7 +76,7 @@ const AgregarProveedor = () => {
 
         obtenerLocalidades();
 
-        if(reloadLocalidades){
+        if (reloadLocalidades) {
             obtenerLocalidades();
             setReloadLocalidades(false);
         }
@@ -114,30 +115,30 @@ const AgregarProveedor = () => {
         }
     }
 
-    const handleFormSubmitPopover = (formDataPopover) => {
-        setLocalidad(formDataPopover);
-        console.log(formDataPopover);
-        axios.post('/agregar-localidad', formDataPopover, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            "Content-Type": "application/json"
-          }
-        })
-          .then(response => {
-            if (response.status === 201) {
-              console.log("Localidad agregada con éxito!");
-              setReloadLocalidades(true);
-              redireccionar();
-              
-            } else {
-              console.log("No se logro agregar la localidad");
+    const handleFormSubmitModal = (formDataModal) => {
+        setLocalidad(formDataModal);
+        console.log(formDataModal);
+        axios.post('/agregar-localidad', formDataModal, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                "Content-Type": "application/json"
             }
-          })
-          .catch(error => {
-            console.error(error);
-          })
-    
-      }
+        })
+            .then(response => {
+                if (response.status === 201) {
+                    console.log("Localidad agregada con éxito!");
+                    setReloadLocalidades(true);
+                    redireccionar();
+
+                } else {
+                    console.log("No se logro agregar la localidad");
+                }
+            })
+            .catch(error => {
+                console.error(error);
+            })
+
+    }
 
     return (
         <div>
@@ -167,7 +168,7 @@ const AgregarProveedor = () => {
                     <FormularioReutilizable
                         fields={formFields}
                         onSubmit={handleFormSubmit}
-                        onSubmitPopover={handleFormSubmitPopover}
+                        onSubmitModal={handleFormSubmitModal}
                         selectOptions={{ proveedorLocalidad: localidadesSelect }}
                     />
                 </Grid>

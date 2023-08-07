@@ -27,6 +27,9 @@ public class Producto implements Serializable {
     @Column(name = "producto_nombre", length = 50, nullable = false)
     private String productoNombre;
 
+    @Column(name = "producto_codigo", nullable = false)
+    private Integer productoCodigo;
+
     @Column(name = "producto_eliminado")
     private Boolean productoEliminado = false;
 
@@ -46,6 +49,14 @@ public class Producto implements Serializable {
         this.productoNombre = productoNombre;
     }
 
+    public Integer getProductoCodigo() {
+        return productoCodigo;
+    }
+
+    public void setProductoCodigo(Integer productoCodigo) {
+        this.productoCodigo = productoCodigo;
+    }
+
     public Boolean getProductoEliminado() {
         return productoEliminado;
     }
@@ -54,15 +65,16 @@ public class Producto implements Serializable {
         this.productoEliminado = productoEliminado;
     }
 
-    public Producto(Long productoId, String productoNombre, Boolean productoEliminado) {
+    public Producto(Long productoId, String productoNombre, Integer productoCodigo, Boolean productoEliminado) {
         this.productoId = productoId;
         this.productoNombre = productoNombre;
+        this.productoCodigo = productoCodigo;
         this.productoEliminado = productoEliminado;
     }
 
     public Producto() { }
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "loteProductos")
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "loteProducto")
     @JsonIgnore
     private Set<Lote> lotes = new HashSet<>();
     
