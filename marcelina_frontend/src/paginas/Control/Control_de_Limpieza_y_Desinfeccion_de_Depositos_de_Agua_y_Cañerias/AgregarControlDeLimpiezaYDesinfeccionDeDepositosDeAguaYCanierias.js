@@ -22,7 +22,7 @@ const useStyles = makeStyles(theme => ({
 const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
   const formFields = [
     { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha', label: 'Fecha', type: 'date' },
-    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', label: 'Depositos', type: 'selector', multiple: true },
+    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', label: 'Depositos', type: 'selector', multiple: 'si' },
     { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias', label: 'Cañerias', type: 'text' },
     { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones', label: 'Observaciones', type: 'text', multi: '3' },
   ];

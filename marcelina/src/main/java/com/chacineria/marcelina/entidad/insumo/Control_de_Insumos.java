@@ -41,6 +41,12 @@ public class Control_de_Insumos implements Serializable{
     @Column(name = "insumo_tipo", length = 30, nullable = false)
     private String insumoTipo;
 
+    @Column(name = "insumo_cantidad", length = 30, nullable = false)
+    private Integer insumoCantidad;
+
+    @Column(name = "insumo_unidad", length = 20, nullable = false)
+    private String insumoUnidad;
+
     @Column(name = "insumo_lote", length = 30, nullable = false)
     private String insumoNroLote;
 
@@ -51,7 +57,7 @@ public class Control_de_Insumos implements Serializable{
     @JoinColumn(name = "insumo_responsable", nullable = false)
     private Usuario insumoResponsable;
 
-    @Column(name = "insumo_fecha_vencimiento", nullable = false)
+    @Column(name = "insumo_fecha_vencimiento")
     private Date insumoFechaVencimiento;
 
     @Column(name = "insumo_eliminado")
@@ -97,6 +103,22 @@ public class Control_de_Insumos implements Serializable{
         this.insumoTipo = insumoTipo;
     }
 
+    public Integer getInsumoCantidad() {
+        return insumoCantidad;
+    }
+
+    public void setInsumoCantidad(Integer insumoCantidad) {
+        this.insumoCantidad = insumoCantidad;
+    }
+
+    public String getInsumoUnidad() {
+        return insumoUnidad;
+    }
+
+    public void setInsumoUnidad(String insumoUnidad) {
+        this.insumoUnidad = insumoUnidad;
+    }
+
     public String getInsumoNroLote() {
         return insumoNroLote;
     }
@@ -128,7 +150,7 @@ public class Control_de_Insumos implements Serializable{
     public void setInsumoFechaVencimiento(Date insumoFechaVencimiento) {
         this.insumoFechaVencimiento = insumoFechaVencimiento;
     }
-    
+
     public Boolean getInsumoEliminado() {
         return insumoEliminado;
     }
@@ -137,13 +159,17 @@ public class Control_de_Insumos implements Serializable{
         this.insumoEliminado = insumoEliminado;
     }
 
-    public Control_de_Insumos(Long insumoId, String insumoNombre, Date insumoFecha, Proveedor insumoProveedor, String insumoTipo,
-            String insumoNroLote, String insumoMotivoDeRechazo, Usuario insumoResponsable, Date insumoFechaVencimiento, Boolean insumoEliminado) {
+    public Control_de_Insumos(Long insumoId, String insumoNombre, Date insumoFecha, Proveedor insumoProveedor,
+            String insumoTipo, Integer insumoCantidad, String insumoUnidad, String insumoNroLote,
+            String insumoMotivoDeRechazo, Usuario insumoResponsable, Date insumoFechaVencimiento,
+            Boolean insumoEliminado) {
         this.insumoId = insumoId;
         this.insumoNombre = insumoNombre;
         this.insumoFecha = insumoFecha;
         this.insumoProveedor = insumoProveedor;
         this.insumoTipo = insumoTipo;
+        this.insumoCantidad = insumoCantidad;
+        this.insumoUnidad = insumoUnidad;
         this.insumoNroLote = insumoNroLote;
         this.insumoMotivoDeRechazo = insumoMotivoDeRechazo;
         this.insumoResponsable = insumoResponsable;

@@ -1,5 +1,6 @@
 package com.chacineria.marcelina.entidad.trazabilidad;
 import com.chacineria.marcelina.entidad.insumo.Producto;
+import com.chacineria.marcelina.entidad.auxiliares.Detalle_Cantidad_Lote;
 import com.chacineria.marcelina.entidad.insumo.Lote;
 import com.chacineria.marcelina.entidad.persona.Cliente;
 import com.chacineria.marcelina.entidad.persona.Usuario;
@@ -19,6 +20,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 @Entity(name = "expedicion_de_productos")
 public class PExpedicion_de_Producto implements Serializable{
@@ -41,6 +43,13 @@ public class PExpedicion_de_Producto implements Serializable{
         joinColumns = @JoinColumn(name = "expedicion_de_producto_id"),
         inverseJoinColumns = @JoinColumn(name = "lote_id"))
     private Set<Lote> expedicionDeProductoLotes = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "expedicion_de_producto_cantidad",
+        joinColumns = @JoinColumn(name = "expedicion_de_producto_id"),
+        inverseJoinColumns = @JoinColumn(name = "detalle_cantidad_lote_id"))
+    private Set<Detalle_Cantidad_Lote> expedicionDeProductoCantidad = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "expedicion_de_producto_cliente", nullable = false)
@@ -80,6 +89,14 @@ public class PExpedicion_de_Producto implements Serializable{
         this.expedicionDeProductoLotes = expedicionDeProductoLotes;
     }
 
+    public Set<Detalle_Cantidad_Lote> getExpedicionDeProductoCantidad() {
+        return expedicionDeProductoCantidad;
+    }
+
+    public void setExpedicionDeProductoCantidad(Set<Detalle_Cantidad_Lote> expedicionDeProductoCantidad) {
+        this.expedicionDeProductoCantidad = expedicionDeProductoCantidad;
+    }
+
     public Cliente getExpedicionDeProductoCliente() {
         return expedicionDeProductoCliente;
     }
@@ -113,17 +130,21 @@ public class PExpedicion_de_Producto implements Serializable{
     }
 
     public PExpedicion_de_Producto(Long expedicionDeProductoId, Set<Producto> expedicionDeProductoProductos,
-            Set<Lote> expedicionDeProductoLotes, Cliente expedicionDeProductoCliente,
-            Integer expedicionDeProductoDocumento, Usuario expedicionDeProductoUsuario,
-            Date expedicionDeProductoFecha) {
+            Set<Lote> expedicionDeProductoLotes, Set<Detalle_Cantidad_Lote> expedicionDeProductoCantidad,
+            Cliente expedicionDeProductoCliente, Integer expedicionDeProductoDocumento,
+            Usuario expedicionDeProductoUsuario, Date expedicionDeProductoFecha) {
         this.expedicionDeProductoId = expedicionDeProductoId;
         this.expedicionDeProductoProductos = expedicionDeProductoProductos;
         this.expedicionDeProductoLotes = expedicionDeProductoLotes;
+        this.expedicionDeProductoCantidad = expedicionDeProductoCantidad;
         this.expedicionDeProductoCliente = expedicionDeProductoCliente;
         this.expedicionDeProductoDocumento = expedicionDeProductoDocumento;
         this.expedicionDeProductoUsuario = expedicionDeProductoUsuario;
         this.expedicionDeProductoFecha = expedicionDeProductoFecha;
     }
 
-    public PExpedicion_de_Producto() { }
+    public PExpedicion_de_Producto() {
+    }
+
+
 }

@@ -21,7 +21,8 @@ const useStyles = makeStyles(theme => ({
 
 const AgregarLocalidad = () => {
   const formFields = [
-    { name: 'localidadNombre', label: 'Nombre', type: 'text' },
+    { name: 'localidadDepartamento', label: 'Departamento', type: 'text' },
+    { name: 'localidadCiudad', label: 'Ciudad', type: 'text' },
   ];
 
   const classes = useStyles();
@@ -46,7 +47,6 @@ const AgregarLocalidad = () => {
       .catch(error => {
         console.error(error);
       })
-
   }
 
   return (

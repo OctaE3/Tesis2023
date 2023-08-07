@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-MarcelinaApplication<marcelina>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.chacineria.marcelina.MarcelinaApplication",
+            "projectName": "marcelina",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

@@ -15,6 +15,10 @@ import AgregarControlDeMejorasEnInstalaciones from '../../paginas/Control/Contro
 import AgregarControlDeReposicionDeCloro from '../../paginas/Control/Control_de_Reposicion_de_Cloro/AgregarControlDeReposicionDeCloro';
 import AgregarControlDeTemperaturaDeEsterilizadores from '../../paginas/Control/Control_de_Temperatura_de_Estirilizadores/AgregarControlDeTemperaturaDeEsterilizadores';
 import AgregarControlDeTemperaturaEnCamaras from '../../paginas/Control/Control_de_Temperatura_en_Camaras/AgregarControlDeTemperaturaEnCamaras';
+import AgregarControlDeNitrato from '../../paginas/Insumo/Control_de_Nitrato/AgregarControlDeNitrato';
+import AgregarExpedicionDeProducto from '../../paginas/Trazabilidad/Expedicion_de_Producto/AgregarExpedicionDeProducto';
+import AgregarControlDeProductosQuimicos from '../../paginas/Insumo/Control_de_Productos_Quimicos/AgregarControlDeProductosQuimicos';
+import AgregarRecepcionDeMateriasPrimasCarnicas from '../../paginas/Insumo/Recepcion_de_Materias_Primas_Carnicas/AgregarRecepcionDeMateriasPrimasCarnicas';
 
 const AppRouter = () => {
     return (
@@ -35,6 +39,10 @@ const AppRouter = () => {
           <Route path="/control-de-reposicion-de-cloro" element={<AgregarControlDeReposicionDeCloro />} />
           <Route path="/control-de-temperatura-de-esterilizadores" element={<AgregarControlDeTemperaturaDeEsterilizadores />} />
           <Route path="/control-de-temperatura-en-camaras" element={<AgregarControlDeTemperaturaEnCamaras />} />
+          <Route path="/control-de-nitratos" element={<AgregarControlDeNitrato />} />
+          <Route path="/expedicion-de-producto" element={<AgregarExpedicionDeProducto />} />
+          <Route path="/control-de-productos-quimicos" element={<AgregarControlDeProductosQuimicos />} />
+          <Route path="/recepcion-de-materias-primas-carnicas" element={<AgregarRecepcionDeMateriasPrimasCarnicas />} />
           {/* Otras rutas */}
         </Routes>
       </Router>

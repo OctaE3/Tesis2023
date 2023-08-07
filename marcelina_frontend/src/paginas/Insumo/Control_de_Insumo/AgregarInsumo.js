@@ -26,6 +26,8 @@ const AgregarInsumo = () => {
         { name: 'insumoFecha', label: 'Fecha', type: 'date', format: 'yyyy-MM-dd' },
         { name: 'insumoProveedor', label: 'Proveedor', type: 'selector' },
         { name: 'insumoTipo', label: 'Tipo', type: 'selector' },
+        { name: 'insumoCantidad', label: 'Cantidad', type: 'number' },
+        { name: 'insumoUnidad', label: 'Unidad', type: 'selector' },
         { name: 'insumoNroLote', label: 'Lote', type: 'text' },
         { name: 'insumoMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3' },
         { name: 'insumoFechaVencimiento', label: 'Fecha Vencimiento', type: 'date', format: 'yyyy-MM-dd' },
@@ -40,6 +42,11 @@ const AgregarInsumo = () => {
         { value: 'Insumo', label: 'Insumo' },
         { value: 'Mat.Prima no Cárnica', label: 'Mat.Prima no Cárnica' },
         { value: 'Otros', label: 'Otros' }
+    ]);
+    const [insumoUnidadSelect, setInsumoUnidadSelect] = useState([
+        { value: 'Kg', label: 'Kg' },
+        { value: 'Metros', label: 'Metros' },
+        { value: 'Litros', label: 'Litros' },
     ]);
 
     useEffect(() => {
@@ -139,7 +146,8 @@ const AgregarInsumo = () => {
                         onSubmit={handleFormSubmit}
                         selectOptions={{
                             insumoProveedor: insumoProveedoresSelect,
-                            insumoTipo: insumoTipoSelect
+                            insumoTipo: insumoTipoSelect,
+                            insumoUnidad: insumoUnidadSelect
                         }}
                     />
                 </Grid>

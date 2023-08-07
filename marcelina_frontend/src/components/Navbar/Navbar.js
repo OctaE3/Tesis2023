@@ -192,6 +192,18 @@ const Navbar = () => {
             <ListItem button component={Link} to="/control-de-temperatura-en-camaras" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Temperatura en Camaras" />
             </ListItem>
+            <ListItem button component={Link} to="/control-de-nitratos" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Nitratos" />
+            </ListItem>
+            <ListItem button component={Link} to="/expedicion-de-producto" onClick={handleDrawerClose}>
+              <ListItemText primary="Expedición de Producto" />
+            </ListItem>
+            <ListItem button component={Link} to="/control-de-productos-quimicos" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Productos Quimicos" />
+            </ListItem>
+            <ListItem button component={Link} to="/recepcion-de-materias-primas-carnicas" onClick={handleDrawerClose}>
+              <ListItemText primary="Recepcion de Materias Primas Carnicas" />
+            </ListItem>
           </List>
         </Drawer>
       </div>

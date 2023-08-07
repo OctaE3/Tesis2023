@@ -23,7 +23,7 @@ public class Cliente implements Serializable {
     @Column(name = "cliente_nombre", length = 30, nullable = false)
     private String clienteNombre;
 
-    @Column(name = "cliente_email", length = 30, nullable = false)
+    @Column(name = "cliente_email", length = 50, nullable = false)
     private String clienteEmail;
 
     @ElementCollection
