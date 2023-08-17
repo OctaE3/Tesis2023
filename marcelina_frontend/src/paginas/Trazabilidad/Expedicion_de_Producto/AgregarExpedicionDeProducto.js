@@ -50,8 +50,7 @@ const AgregarExpedicionDeProducto = () => {
           setLoteSelect(
             response.data.map((lote) => ({
               value: lote.loteId,
-              label: lote.loteCodigo,
-              label2: lote.loteProducto.productoNombre,
+              label: `${lote.loteCodigo} - ${lote.loteCantidad} Kg - ${lote.loteProducto.productoNombre}`,
             }))
           );
         })
@@ -87,43 +86,71 @@ const AgregarExpedicionDeProducto = () => {
 
   const handleFormSubmit = (formData) => {
     const { cantidad, ...formDataWithoutCantidad } = formData;
-    console.log(expedicionDeProducto);
+    //console.log(expedicionDeProducto);
     const cantidadValue = formData.cantidad;
-
+    //console.log(cantidad);
+    console.log(cantidadValue);
     const selectValues = cantidadValue.map(item => item.selectValue);
 
     const lotesCompletos = lotes.filter(lote => selectValues.includes(lote.loteId.toString()));
     const productosCompletos = lotesCompletos.map(lote => lote.loteProducto);
 
-    const clienteCompleto = clientes.filter((cliente) => cliente.clienteId.toString() === formDataWithoutCantidad.expedicionDeProductoCliente)[0];
-    console.log(clienteCompleto);
+    console.log(lotesCompletos);
+    const resultado = lotesCompletos.map(lote => {
+      const cantidaValueEncontrada = cantidadValue.find(cv => cv.selectValue === lote.loteId.toString());
+      console.log(cantidaValueEncontrada);
+      if (cantidaValueEncontrada) {
+        const cantidad = cantidaValueEncontrada.textFieldValue;
+        console.log(cantidad);
+        if (cantidad > lote.loteCantidad) {
+          console.log(lote);
+          return `${lote.loteCodigo} - ${lote.loteCantidad} Kg - ${lote.loteProducto.productoNombre} /`;
+        }
+      }
+      return null;
+    })
+
+    console.log(resultado);
+
+    const elementoUndefined = resultado.some(elemento => elemento === null);
+    console.log(elementoUndefined);
+    if (!elementoUndefined) {
+      const clienteCompleto = clientes.filter((cliente) => cliente.clienteId.toString() === formDataWithoutCantidad.expedicionDeProductoCliente)[0];
+    //console.log(clienteCompleto);
 
     const listaDetalleCantidaLote = [];
+    const lotesCompletosConCantidadRestada = [];
     lotesCompletos.forEach((lote, index) => {
       const cantidadLote = cantidadValue[index].textFieldValue;
+      const loteActualizado = {...lote, loteCantidad: lote.loteCantidad - cantidadLote };
+      lotesCompletosConCantidadRestada.push(loteActualizado);
+      console.log(loteActualizado);
       const detalleCantidadLote = {
-        detalleCantidadLoteLote: lote,
+        detalleCantidadLoteLote: loteActualizado,
         detalleCantidadLoteCantidadVendida: cantidadLote,
       };
       listaDetalleCantidaLote.push(detalleCantidadLote);
     });
 
+    console.log(lotesCompletos);
+    console.log(lotesCompletosConCantidadRestada);
+
     const updateFormData = {
       ...formDataWithoutCantidad,
       expedicionDeProductoCliente: clienteCompleto,
       expedicionDeProductoProductos: productosCompletos,
-      expedicionDeProductoLotes: lotesCompletos,
-      expedicionDeProductoUsuario: window.localStorage.getItem('user'),
+      expedicionDeProductoLotes: lotesCompletosConCantidadRestada,
+      //expedicionDeProductoUsuario: window.localStorage.getItem('user'),
     }
-    console.log(updateFormData);
-    console.log(listaDetalleCantidaLote);
+    //console.log(updateFormData);
+    //console.log(listaDetalleCantidaLote);
 
     const data = {
       expedicionDeProducto: updateFormData,
       listaCantidad: listaDetalleCantidaLote,
     }
 
-    console.log(data);
+    //console.log(data);
 
     axios.post('/agregar-expedicion-de-producto', data, {
       headers: {
@@ -142,6 +169,9 @@ const AgregarExpedicionDeProducto = () => {
       .catch(error => {
         console.error(error);
       })
+    } else {
+      console.log(`El/Los lotes: ${resultado} tienen una cantidad a vender mayor al la que hay del lote`)
+    }
   }
 
   return (

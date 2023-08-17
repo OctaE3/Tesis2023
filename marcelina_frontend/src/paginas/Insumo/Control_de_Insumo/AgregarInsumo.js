@@ -76,18 +76,10 @@ const AgregarInsumo = () => {
     const handleFormSubmit = (formData) => {
         const proveedorSeleccionadaObj = proveedores.filter((proveedor) => proveedor.proveedorId.toString() === formData.insumoProveedor)[0];
 
-        const insumoFecha = new Date(formData.insumoFecha);
-        const insumoFechaVencimiento = new Date(formData.insumoFechaVencimiento);
-
-        const insumoFechaISO = insumoFecha.toISOString().slice(0, 10);
-        const insumoFechaVencimientoISO = insumoFechaVencimiento.toISOString().slice(0, 10);
-
         const insumoConProveedor = {
             ...formData,
             insumoProveedor: proveedorSeleccionadaObj ? proveedorSeleccionadaObj : null,
             insumoResponsable: window.localStorage.getItem('user'),
-            insumoFecha: insumoFechaISO,
-            insumoFechaVencimiento: insumoFechaVencimientoISO
         };
 
         setInsumo(insumoConProveedor);

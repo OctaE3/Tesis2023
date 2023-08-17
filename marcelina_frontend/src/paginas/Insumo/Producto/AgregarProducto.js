@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Tooltip, IconButton, makeStyles, createTheme } from '@material-ui/core'
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import axios from 'axios';
 
@@ -21,6 +22,7 @@ const useStyles = makeStyles(theme => ({
 const AgregarProducto = () => {
     const formFields = [
       { name: 'productoNombre', label: 'Nombre', type: 'text' },
+      { name: 'productoCodigo', label: 'Codigo', type: 'text' },
     ];
   
     const classes = useStyles();

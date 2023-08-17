@@ -20,18 +20,18 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AgregarControlDeNitrato = () => {
-  const [nitratoStock, setNitratoStock] = useState(0);
   const formFields = [
     { name: 'controlDeNitratoFecha', label: 'Fecha', type: 'date' },
     { name: 'controlDeNitratoProductoLote', label: 'Producto / Lote', type: 'text' },
     { name: 'controlDeNitratoCantidadUtilizada', label: 'Cantidad Utilizada', type: 'number' },
-    { name: 'controlDeNitratoStock', label: 'Stock', type: 'text', disabled: 'si', value: nitratoStock },
+    { name: 'controlDeNitratoStock', label: 'Stock', type: 'text', disabled: 'si' },
     { name: 'controlDeNitratoObservaciones', label: 'Observaciones', type: 'text', multi: '3' },
   ];
 
   const classes = useStyles();
   const [nitrato, setNitrato] = useState({});
   const [listaN, setListaN] = useState([]);
+  const [nitratoStock, setNitratoStock] = useState(0);
 
   useEffect(() => {
     const obtenerNitratos = () => {
@@ -53,14 +53,23 @@ const AgregarControlDeNitrato = () => {
     };
 
     obtenerNitratos();
-  });
+  }, []);
 
   const handleFormSubmit = (formData) => {
+    const { stock, ...formDataWithoutStock } = formData;
+
+    console.log(stock);
+    console.log(formDataWithoutStock.controlDeNitratoCantidadUtilizada);
+
+    const stockRestante = parseInt(stock) - parseInt(formDataWithoutStock.controlDeNitratoCantidadUtilizada);
+
+    console.log(stockRestante);
+
     const controlDeNitratoConResponsable = {
-      ...formData,
+      ...formDataWithoutStock,
+      controlDeNitratoStock: stockRestante,
       controlDeNitratoResponsable: window.localStorage.getItem('user'),
     }
-    setNitrato(controlDeNitratoConResponsable);
     console.log(controlDeNitratoConResponsable);
     axios.post('/agregar-control-de-nitrato', controlDeNitratoConResponsable, {
       headers: {
@@ -89,7 +98,7 @@ const AgregarControlDeNitrato = () => {
           <Grid container spacing={0}>
             <Grid item lg={2} md={2} ></Grid>
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-              <Typography component='h1' variant='h4'>Agregar Control de Nitrato</Typography>
+              <Typography component='h1' variant='h4'>Agregar Control de Nitrato </Typography>
               <Tooltip title={
                 <Typography fontSize={16}>
                   En esta pagina puedes registrar los productos que realizan la marcelina.
@@ -106,7 +115,9 @@ const AgregarControlDeNitrato = () => {
       </Container>
       <FormularioReutilizable
         fields={formFields}
-        onSubmit={handleFormSubmit} />
+        onSubmit={handleFormSubmit} 
+        selectOptions={{ controlDeNitratoStock: nitratoStock, }}
+      />
     </Grid>
   )
 }

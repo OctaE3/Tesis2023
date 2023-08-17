@@ -3,6 +3,7 @@ package com.chacineria.marcelina.controlador;
 import com.chacineria.marcelina.dto.Control_de_NitratoDto;
 import com.chacineria.marcelina.dto.Control_de_NitritoDto;
 import com.chacineria.marcelina.dto.DiariaDeProdCarneInsumoCantidadDto;
+import com.chacineria.marcelina.dto.ListadoCarnesDto;
 import com.chacineria.marcelina.dto.RecepcionConCarnesDto;
 import com.chacineria.marcelina.entidad.insumo.Carne;
 import com.chacineria.marcelina.entidad.insumo.Control_de_Insumos;
@@ -16,6 +17,8 @@ import com.chacineria.marcelina.entidad.insumo.Producto;
 import com.chacineria.marcelina.entidad.persona.Usuario;
 import com.chacineria.marcelina.repositorio.persona.UsuarioRepositorio;
 
+import java.sql.Date;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -133,6 +136,15 @@ public class Controladora_Insumo {
         return controlDeInsumos;
     }
 
+    @GetMapping("/listar-aditivos")
+    public List<Control_de_Insumos> listadoAditivos() {
+        List<Control_de_Insumos> controlDeInsumos = StreamSupport
+                .stream(controlDeInsumosServicioImpl.findAllByInsumoEliminadoAndInsumoTipo(false, "Aditivo")
+                        .spliterator(), false)
+                .collect(Collectors.toList());
+        return controlDeInsumos;
+    }
+
     @GetMapping("/buscar-control-de-insumos/{controlDeInsumosId}")
     public ResponseEntity<?> buscarControlDeInsumosPorId(
             @PathVariable(value = "controlDeInsumosId") Long controlDeInsumosId) {
@@ -146,6 +158,18 @@ public class Controladora_Insumo {
     @PostMapping("/agregar-control-de-insumos")
     public ResponseEntity<?> agregarControlDeInsumos(@RequestBody Control_de_Insumos controlDeInsumos) {
         try {
+            Usuario resposable = controlDeInsumos.getInsumoResponsable();
+            if (resposable != null && resposable.getUsuarioNombre() != null) {
+                Usuario usuarioExistente = usuarioRepositorio.findByUsuarioNombre(resposable.getUsuarioNombre());
+                if (usuarioExistente != null) {
+                    controlDeInsumos.setInsumoResponsable(usuarioExistente);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Surgió un problema con el usuario, intete logearse de nuevo.");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No tiene un usuario asignado.");
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(controlDeInsumosServicioImpl.save(controlDeInsumos));
         } catch (Exception e) {
             HashMap<String, String> error = new HashMap<>();
@@ -497,7 +521,8 @@ public class Controladora_Insumo {
                 if (usuarioExistente != null) {
                     controlDeProductosQuimicos.setControlDeProductosQuimicosResponsable(usuarioExistente);
                 } else {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Surgio un problema intente logearse de nuevo.");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Surgio un problema intente logearse de nuevo.");
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No tiene un usuario asignado.");
@@ -574,6 +599,16 @@ public class Controladora_Insumo {
         return ResponseEntity.ok(diariaDeProduccion);
     }
 
+    @GetMapping("/buscar-diaria-de-produccion-lote/{loteId}")
+    public ResponseEntity<?> buscarDiariaDeProduccionPorLote(
+            @PathVariable(value = "loteId") Long loteId) {
+        PDiaria_de_Produccion diaria = diariaDeProduccionServicioImpl.findByDiariaDeProduccionLote(loteId);
+        if (diaria == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(diaria);
+    }
+
     @PostMapping("/agregar-diaria-de-produccion")
     public ResponseEntity<?> agregarDiariaDeProduccion(@RequestBody DiariaDeProdCarneInsumoCantidadDto dto) {
         try {
@@ -593,7 +628,8 @@ public class Controladora_Insumo {
             if (dto.getDiariaDeProduccion() != null && dto.getListaCarneCantidad() != null
                     && dto.getListaInsumoCantidad() != null) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(diariaDeProduccionServicioImpl.saveDiariaCantidad(
-                        dto.getDiariaDeProduccion(), dto.getListaCarneCantidad(), dto.getListaInsumoCantidad()));
+                        dto.getDiariaDeProduccion(), dto.getListaCarneCantidad(), dto.getListaInsumoCantidad(),
+                        dto.getLote()));
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Error en la expedicon de producto eviada o en la lista");
@@ -675,23 +711,28 @@ public class Controladora_Insumo {
     public ResponseEntity<?> agregarRecepcionDeMateriasPrimasCarnicas(
             @RequestBody RecepcionConCarnesDto dto) {
         try {
-            Usuario responsable = dto.getRecepcionDeMateriasPrimasCarnicas().getRecepcionDeMateriasPrimasCarnicasResponsable();
+            Usuario responsable = dto.getRecepcionDeMateriasPrimasCarnicas()
+                    .getRecepcionDeMateriasPrimasCarnicasResponsable();
             if (responsable != null && responsable.getUsuarioNombre() != null) {
                 Usuario usuarioExistente = usuarioRepositorio.findByUsuarioNombre(responsable.getUsuarioNombre());
                 if (usuarioExistente != null) {
-                    dto.getRecepcionDeMateriasPrimasCarnicas().setRecepcionDeMateriasPrimasCarnicasResponsable(usuarioExistente);
+                    dto.getRecepcionDeMateriasPrimasCarnicas()
+                            .setRecepcionDeMateriasPrimasCarnicasResponsable(usuarioExistente);
                 } else {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Surgio un problema intente logearse de nuevo.");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Surgio un problema intente logearse de nuevo.");
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No tiene un usuario asignado.");
             }
-            
+
             if (dto.getListaCarne() != null && dto.getRecepcionDeMateriasPrimasCarnicas() != null) {
                 return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(recepcionDeMateriasPrimasCarnicasServicioImpl.saveRecepcionCarnes(dto.getRecepcionDeMateriasPrimasCarnicas(), dto.getListaCarne()));
+                        .body(recepcionDeMateriasPrimasCarnicasServicioImpl
+                                .saveRecepcionCarnes(dto.getRecepcionDeMateriasPrimasCarnicas(), dto.getListaCarne()));
             } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la expedicon de producto eviada o en la lista");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Error en la expedicon de producto eviada o en la lista");
             }
         } catch (Exception e) {
             HashMap<String, String> error = new HashMap<>();

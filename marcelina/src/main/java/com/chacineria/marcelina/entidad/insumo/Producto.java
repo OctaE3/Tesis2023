@@ -77,10 +77,6 @@ public class Producto implements Serializable {
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "loteProducto")
     @JsonIgnore
     private Set<Lote> lotes = new HashSet<>();
-    
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "resumenDeTrazabilidadProductos")
-    @JsonIgnore
-    private Set<PResumen_de_Trazabilidad> resumenDeTrazabilidad = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "expedicionDeProductoProductos")
     @JsonIgnore

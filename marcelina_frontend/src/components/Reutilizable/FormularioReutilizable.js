@@ -101,6 +101,7 @@ const useStyles = makeStyles(theme => ({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 5,
+    marginBottom: 10,
   },
   checkboxBorder: {
     border: '1px solid #999999',
@@ -127,7 +128,9 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const [formErrors, setFormErrors] = useState({});
   const [open, setOpen] = useState(false);
   const [telefonos, setTelefonos] = useState([{ telefono: "" }]);
-  const [dynamicMultiple, setDynamicMultiple] = useState([{ selectValue: "", textFieldValue: "" }]);
+  const [dynamicMultipleLote, setDynamicMultipleLote] = useState([{ selectValue: "", textFieldValue: "" }]);
+  const [dynamicMultipleCarne, setDynamicMultipleCarne] = useState([{ selectValue: "", textFieldValue: "" }]);
+  const [dynamicMultipleAditivo, setDynamicMultipleAditivo] = useState([{ selectValue: "", textFieldValue: "" }]);
   const campoReadOnly = useRef();
   const [stockAgregado, setStockAgregado] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState([]);
@@ -140,17 +143,40 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   });
 
   const [carneCorteOptions, setCarneCorteOptions] = useState([]);
+  const [desactivadoCategoria, setDesactivadoCategoria] = useState(false);
+
+  const [stock, setStock] = useState(0);
 
   const fieldsWithValidation = fields.filter((field) => field.validation);
   const validationSchema = ValidacionReutilizable(fieldsWithValidation);
 
   useEffect(() => {
-    if (formDataModal['carneTipo'] === 'Porcino') {
-      setCarneCorteOptions(selectOptions.carneCortePorcino);
-    } else if (formDataModal['carneTipo'] === 'Bovino') {
-      setCarneCorteOptions(selectOptions.carneCorteBovino);
+    if (selectOptions.controlDeNitratoStock) {
+      setStock(selectOptions.controlDeNitratoStock);
     }
-  }, [formDataModal['carneTipo']]);
+    else if (selectOptions.controlDeNitritoStock) {
+      setStock(selectOptions.controlDeNitritoStock);
+    }
+
+    if (formDataModal['carneTip']) {
+      if (formDataModal['carneTipo'] === 'Porcino') {
+        setCarneCorteOptions(selectOptions.carneCortePorcino);
+        setDesactivadoCategoria(false);
+      } else if (formDataModal['carneTipo'] === 'Bovino') {
+        setCarneCorteOptions(selectOptions.carneCorteBovino);
+        setDesactivadoCategoria(false);
+      } else if (formDataModal['carneTipo'] === 'Sangre') {
+        setCarneCorteOptions(selectOptions.carneCorteSangre);
+        setDesactivadoCategoria(true);
+      } else if (formDataModal['carneTipo'] === 'Tripas') {
+        setCarneCorteOptions(selectOptions.carneCorteTripas);
+        setDesactivadoCategoria(true);
+      } else if (formDataModal['carneTipo'] === 'Higado') {
+        setCarneCorteOptions(selectOptions.carneCorteHigado);
+        setDesactivadoCategoria(true);
+      }
+    }
+  }, [formDataModal['carneTipo'], formDataModal['carneCategoria'], selectOptions]);
 
   const handleChange = event => {
     const { name, value } = event.target;
@@ -209,32 +235,92 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
     console.log(formData);
   };
 
-  const handleAddDynamic = () => {
-    setDynamicMultiple([...dynamicMultiple, { selectValue: "", textFieldValue: "" }]);
+  const getDynamicMultipleForField = (fieldName) => {
+    if (fieldName === 'diariaDeProduccionInsumosCarnicos') {
+      return dynamicMultipleCarne;
+    }
+    else if (fieldName === 'diariaDeProduccionAditivos') {
+      return dynamicMultipleAditivo
+    } else {
+      return dynamicMultipleLote;
+    }
   }
 
-  const handleChangeDynamic = (index, field, value) => {
-    setDynamicMultiple(prevDynamicMultiple => {
-      const updateFields = [...prevDynamicMultiple];
-      updateFields[index][field] = value;
-      return updateFields;
-    })
-    setFormData(prevFormData => ({
-      ...prevFormData,
-      'cantidad': dynamicMultiple,
-    }));
+  const handleAddDynamic = (fieldName) => {
+    if (fieldName === 'diariaDeProduccionInsumosCarnicos') {
+      setDynamicMultipleCarne([...dynamicMultipleCarne, { selectValue: "", textFieldValue: "" }]);
+    }
+    else if (fieldName === 'diariaDeProduccionAditivos') {
+      setDynamicMultipleAditivo([...dynamicMultipleAditivo, { selectValue: "", textFieldValue: "" }]);
+    } else {
+      setDynamicMultipleLote([...dynamicMultipleLote, { selectValue: "", textFieldValue: "" }]);
+    }
+  }
+
+  const handleChangeDynamic = (fieldName, index, field, value) => {
+    if (fieldName === 'diariaDeProduccionInsumosCarnicos') {
+      setDynamicMultipleCarne((prevDynamicMultiple) => {
+        const updatedFields = [...prevDynamicMultiple];
+        updatedFields[index][field] = value;
+        return updatedFields;
+      });
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        'cantidadCarne': dynamicMultipleCarne,
+      }));
+    } else if (fieldName === 'diariaDeProduccionAditivos') {
+      setDynamicMultipleAditivo((prevDynamicMultiple) => {
+        const updatedFields = [...prevDynamicMultiple];
+        updatedFields[index][field] = value;
+        return updatedFields;
+      });
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        'cantidadAditivo': dynamicMultipleAditivo,
+      }));
+    } else {
+      setDynamicMultipleLote((prevDynamicMultiple) => {
+        const updatedFields = [...prevDynamicMultiple];
+        updatedFields[index][field] = value;
+        return updatedFields;
+      });
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        'cantidad': dynamicMultipleLote,
+      }));
+    }
     console.log(formData);
   }
 
-  const handleRemoveDynamic = (index) => {
-    const updatedFields = [...dynamicMultiple];
-    updatedFields.splice(index, 1);
-    setDynamicMultiple(updatedFields);
+  const handleRemoveDynamic = (fieldName, index) => {
+    if (fieldName === 'diariaDeProduccionInsumosCarnicos') {
+      const updatedFields = [...dynamicMultipleCarne];
+      updatedFields.splice(index, 1);
+      setDynamicMultipleCarne(updatedFields);
 
-    setFormData(prevFormData => ({
-      ...prevFormData,
-      'cantidad': dynamicMultiple,
-    }));
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        'cantidadCarne': updatedFields,
+      }));
+    } else if (fieldName === 'diariaDeProduccionAditivos') {
+      const updatedFields = [...dynamicMultipleAditivo];
+      updatedFields.splice(index, 1);
+      setDynamicMultipleAditivo(updatedFields);
+
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        'cantidadAditivo': updatedFields,
+      }));
+    } else {
+      const updatedFields = [...dynamicMultipleLote];
+      updatedFields.splice(index, 1);
+      setDynamicMultipleLote(updatedFields);
+
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        'cantidad': updatedFields,
+      }));
+    }
     console.log(formData);
   };
 
@@ -252,17 +338,8 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   };
 
   const handleChangeSelectMultiple = (fieldName, newValue) => {
-    if (newValue.label !== undefined) {
-      setSelectedOptions(newValue);
-
-      setFormData(prevState => ({
-        ...prevState,
-        [fieldName]: newValue,
-      }));
-      console.log(formData);
-    } else {
-      console.log("No intente usar las opciones, no son validas.");
-    }
+    const filteredOptions = newValue.filter(option => option.label !== ' ');
+    setSelectedOptions(filteredOptions);
   };
 
   const handleChangeSelectModal = event => {
@@ -299,7 +376,6 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const handleSubmit = async event => {
     event.preventDefault();
     try {
-      await validationSchema.validateSync(formData, { abortEarly: false });
       onSubmit(formData);
     } catch (error) {
       console.error('Error de validacion: ', error.message);
@@ -322,6 +398,17 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   }
 
   const handleCloseModal = () => {
+    setOpen(false);
+  }
+
+  const handleCloseModalStock = () => {
+    setStock(prevStock => prevStock + parseInt(stockAgregado));
+    const stockSumado = parseInt(stock) + parseInt(stockAgregado);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      'stock': stockSumado,
+    }));
+    console.log(formData);
     setOpen(false);
   }
 
@@ -573,6 +660,31 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                         </Select>
                                       </FormControl>
                                     </div>
+                                  ) : altaCampo.name === 'carneCategoria' ? (
+                                    <div key={index}>
+                                      <FormControl variant="outlined" className={classes.formControl} >
+                                        <InputLabel htmlFor={`outlined-${altaCampo.name}-native-simple`}>{altaCampo.label}</InputLabel>
+                                        <Select
+                                          className={classes.select}
+                                          native
+                                          value={formDataModal[altaCampo.name] || ''}
+                                          onChange={handleChangeSelectModal}
+                                          label={altaCampo.label}
+                                          inputProps={{
+                                            name: altaCampo.name,
+                                            id: `outlined-${altaCampo.name}-native-simple`,
+                                          }}
+                                          disabled={desactivadoCategoria}
+                                        >
+                                          <option value="Seleccionar" > Seleccionar </option>
+                                          {selectOptions[altaCampo.name].map((option, ind) => (
+                                            <option key={ind} value={option.value}>
+                                              {option.label}
+                                            </option>
+                                          ))}
+                                        </Select>
+                                      </FormControl>
+                                    </div>
                                   ) : (
                                     <div key={index}>
                                       <TextField
@@ -672,7 +784,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       id={field.name}
                       type={field.type}
                       name={field.name}
-                      value={field.disabled === 'si' ? field.value : formData[field.name] || ''}
+                      value={stock}
                       InputProps={field.adornment === 'si' ? { startAdornment: <InputAdornment position="start">{field.unit}</InputAdornment>, } : {}}
                     />
                   </Grid>
@@ -714,7 +826,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                 onChange={handleChangeModalStock}
                               />
                             </div>
-                            <Button className={classes.modalButton} type="submit" variant="contained" color="primary" onClick={handleCloseModal}>Enviar</Button>
+                            <Button className={classes.modalButton} type="submit" variant="contained" color="primary" onClick={handleCloseModalStock}>Enviar</Button>
                           </div>
                         </Fade>
                       </Modal>
@@ -724,7 +836,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
               </div>
             ) : field.type === 'cantidadMultiple' && selectOptions && selectOptions[field.name] ? (
               <div key={index}>
-                {dynamicMultiple.map((dynamic, idx) => (
+                {getDynamicMultipleForField(field.name).map((dynamic, idx) => (
                   <Grid
                     container
                     justifyContent='flex-start'
@@ -738,7 +850,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                           className={classes.select}
                           native
                           value={dynamic.selectValue}
-                          onChange={(e) => handleChangeDynamic(idx, "selectValue", e.target.value)}
+                          onChange={(e) => handleChangeDynamic(field.name, idx, "selectValue", e.target.value)}
                           label={field.label}
                           inputProps={{
                             name: field.name,
@@ -748,7 +860,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                           <option value="Seleccionar" > Seleccionar </option>
                           {selectOptions[field.name].map((option, ind) => (
                             <option key={ind} value={option.value}>
-                              {`${option.label} - ${option.label2}`}
+                              {option.label}
                             </option>
                           ))}
                         </Select>
@@ -757,7 +869,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                     <Grid item lg={2} md={2} sm={2} xs={2}>
                       {idx === 0 && (
                         <Grid className={`${classes.addButton} align-left`}>
-                          <Button className={classes.iconButton} onClick={handleAddDynamic}>
+                          <Button className={classes.iconButton} onClick={() => handleAddDynamic(field.name)}>
                             <AddIcon color='primary' fontSize='large' />
                           </Button>
                         </Grid>
@@ -765,7 +877,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
 
                       {idx !== 0 && (
                         <Grid className={`${classes.addButton} align-left`}>
-                          <Button className={classes.iconButton} onClick={() => handleRemoveDynamic(idx)}>
+                          <Button className={classes.iconButton} onClick={() => handleRemoveDynamic(field.name, idx)}>
                             <CloseIcon color='primary' fontSize='large' />
                           </Button>
                         </Grid>
@@ -784,7 +896,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                         type="text"
                         name={field.campo.name}
                         value={dynamic.textFieldValue}
-                        onChange={(e) => handleChangeDynamic(idx, "textFieldValue", e.target.value)}
+                        onChange={(e) => handleChangeDynamic(field.name, idx, "textFieldValue", e.target.value)}
                         InputProps={{ startAdornment: <InputAdornment position="start">Kg</InputAdornment>, }}
                       />
                     </Grid>

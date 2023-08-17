@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PDiaria_de_ProduccionRepositorio extends JpaRepository<PDiaria_de_Produccion, Long>{
-    
+
 }

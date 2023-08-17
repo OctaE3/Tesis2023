@@ -1,6 +1,8 @@
 package com.chacineria.marcelina.servicio.insumo;
 
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,12 @@ public class Control_de_InsumosServicioImpl implements Control_de_InsumosServici
     @Transactional
     public Iterable<Control_de_Insumos> findAllByInsumoEliminado(Boolean eliminado){
         return controlDeInsumosRepositorio.findAllByInsumoEliminado(eliminado);
+    }
+
+    @Override
+    @Transactional
+    public Iterable<Control_de_Insumos> findAllByInsumoEliminadoAndInsumoTipo(Boolean eliminado, String tipo){
+        return controlDeInsumosRepositorio.findAllByInsumoEliminadoAndInsumoTipo(eliminado, tipo);
     }
 
     @Override

@@ -28,8 +28,8 @@ public class PAnual_de_Insumos_Carnicos implements Serializable{
     @Column(name = "anual_de_insumos_carnicos_carne_bovina_ch", nullable = false)
     private Integer anualDeInsumosCarnicosCarneBovinaCH;
 
-    @Column(name = "anual_de_insumos_carnicos_carne_bovina_higado", nullable = false)
-    private Integer anualDeInsumosCarnicosCarneBovinaHigado;
+    @Column(name = "anual_de_insumos_carnicos_higado", nullable = false)
+    private Integer anualDeInsumosCarnicosHigado;
 
     @Column(name = "anual_de_insumos_carnicos_carne_porcina_sh", nullable = false)
     private Integer anualDeInsumosCarnicosCarnePorcinaSH;
@@ -46,11 +46,6 @@ public class PAnual_de_Insumos_Carnicos implements Serializable{
     @Column(name = "anual_de_insumos_carnicos_litros_sangre", nullable = false)
     private Integer anualDeInsumosCarnicosLitrosSangre;
 
-    @Column(name = "anual_de_insumos_carnicos_carne_ave_sh", nullable = false)
-    private Integer anualDeInsumosCarnicosCarneAveSH;
-
-    @Column(name = "anual_de_insumos_carnicos_carne_ave_ch", nullable = false)
-    private Integer anualDeInsumosCarnicosCarneAveCH;
 
     public Long getAnualDeInsumosCarnicosId() {
         return anualDeInsumosCarnicosId;
@@ -92,12 +87,12 @@ public class PAnual_de_Insumos_Carnicos implements Serializable{
         this.anualDeInsumosCarnicosCarneBovinaCH = anualDeInsumosCarnicosCarneBovinaCH;
     }
 
-    public Integer getAnualDeInsumosCarnicosCarneBovinaHigado() {
-        return anualDeInsumosCarnicosCarneBovinaHigado;
+    public Integer getAnualDeInsumosCarnicosHigado() {
+        return anualDeInsumosCarnicosHigado;
     }
 
-    public void setAnualDeInsumosCarnicosCarneBovinaHigado(Integer anualDeInsumosCarnicosCarneBovinaHigado) {
-        this.anualDeInsumosCarnicosCarneBovinaHigado = anualDeInsumosCarnicosCarneBovinaHigado;
+    public void setAnualDeInsumosCarnicosHigado(Integer anualDeInsumosCarnicosHigado) {
+        this.anualDeInsumosCarnicosHigado = anualDeInsumosCarnicosHigado;
     }
 
     public Integer getAnualDeInsumosCarnicosCarnePorcinaSH() {
@@ -140,25 +135,9 @@ public class PAnual_de_Insumos_Carnicos implements Serializable{
         this.anualDeInsumosCarnicosLitrosSangre = anualDeInsumosCarnicosLitrosSangre;
     }
 
-    public Integer getAnualDeInsumosCarnicosCarneAveSH() {
-        return anualDeInsumosCarnicosCarneAveSH;
-    }
-
-    public void setAnualDeInsumosCarnicosCarneAveSH(Integer anualDeInsumosCarnicosCarneAveSH) {
-        this.anualDeInsumosCarnicosCarneAveSH = anualDeInsumosCarnicosCarneAveSH;
-    }
-
-    public Integer getAnualDeInsumosCarnicosCarneAveCH() {
-        return anualDeInsumosCarnicosCarneAveCH;
-    }
-
-    public void setAnualDeInsumosCarnicosCarneAveCH(Integer anualDeInsumosCarnicosCarneAveCH) {
-        this.anualDeInsumosCarnicosCarneAveCH = anualDeInsumosCarnicosCarneAveCH;
-    }
-
     public PAnual_de_Insumos_Carnicos(Long anualDeInsumosCarnicosId, String anualDeInsumosCarnicosMes,
             Integer anualDeInsumosCarnicosAnio, Integer anualDeInsumosCarnicosCarneBovinaSH,
-            Integer anualDeInsumosCarnicosCarneBovinaCH, Integer anualDeInsumosCarnicosCarneBovinaHigado,
+            Integer anualDeInsumosCarnicosCarneBovinaCH, Integer anualDeInsumosCarnicosHigado,
             Integer anualDeInsumosCarnicosCarnePorcinaSH, Integer anualDeInsumosCarnicosCarnePorcinaCH,
             Integer anualDeInsumosCarnicosCarnePorcinaGrasa, Integer anualDeInsumosCarnicosTripasMadejas,
             Integer anualDeInsumosCarnicosLitrosSangre, Integer anualDeInsumosCarnicosCarneAveSH,
@@ -168,14 +147,12 @@ public class PAnual_de_Insumos_Carnicos implements Serializable{
         this.anualDeInsumosCarnicosAnio = anualDeInsumosCarnicosAnio;
         this.anualDeInsumosCarnicosCarneBovinaSH = anualDeInsumosCarnicosCarneBovinaSH;
         this.anualDeInsumosCarnicosCarneBovinaCH = anualDeInsumosCarnicosCarneBovinaCH;
-        this.anualDeInsumosCarnicosCarneBovinaHigado = anualDeInsumosCarnicosCarneBovinaHigado;
+        this.anualDeInsumosCarnicosHigado = anualDeInsumosCarnicosHigado;
         this.anualDeInsumosCarnicosCarnePorcinaSH = anualDeInsumosCarnicosCarnePorcinaSH;
         this.anualDeInsumosCarnicosCarnePorcinaCH = anualDeInsumosCarnicosCarnePorcinaCH;
         this.anualDeInsumosCarnicosCarnePorcinaGrasa = anualDeInsumosCarnicosCarnePorcinaGrasa;
         this.anualDeInsumosCarnicosTripasMadejas = anualDeInsumosCarnicosTripasMadejas;
         this.anualDeInsumosCarnicosLitrosSangre = anualDeInsumosCarnicosLitrosSangre;
-        this.anualDeInsumosCarnicosCarneAveSH = anualDeInsumosCarnicosCarneAveSH;
-        this.anualDeInsumosCarnicosCarneAveCH = anualDeInsumosCarnicosCarneAveCH;
     }
 
     public PAnual_de_Insumos_Carnicos() { }

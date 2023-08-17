@@ -168,6 +168,9 @@ const Navbar = () => {
             <ListItem button component={Link} to="/insumo" onClick={handleDrawerClose}>
               <ListItemText primary="Insumo" />
             </ListItem>
+            <ListItem button component={Link} to="/producto" onClick={handleDrawerClose}>
+              <ListItemText primary="Producto" />
+            </ListItem>
             <ListItem button component={Link} to="/proveedor" onClick={handleDrawerClose}>
               <ListItemText primary="Proveedor" />
             </ListItem>
@@ -203,6 +206,12 @@ const Navbar = () => {
             </ListItem>
             <ListItem button component={Link} to="/recepcion-de-materias-primas-carnicas" onClick={handleDrawerClose}>
               <ListItemText primary="Recepcion de Materias Primas Carnicas" />
+            </ListItem>
+            <ListItem button component={Link} to="/diaria-de-produccion" onClick={handleDrawerClose}>
+              <ListItemText primary="Diaria de Producción" />
+            </ListItem>
+            <ListItem button component={Link} to="/resumen-de-trazabilidad" onClick={handleDrawerClose}>
+              <ListItemText primary="Resumen de Trazabilidad" />
             </ListItem>
           </List>
         </Drawer>
