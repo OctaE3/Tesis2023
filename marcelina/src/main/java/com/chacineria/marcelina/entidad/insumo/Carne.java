@@ -2,6 +2,7 @@ package com.chacineria.marcelina.entidad.insumo;
 import com.chacineria.marcelina.entidad.trazabilidad.PResumen_de_Trazabilidad;
 
 import java.io.Serializable;
+import java.sql.Date;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -32,8 +33,14 @@ public class Carne implements Serializable{
     @Column(name = "carne_corte", length = 60, nullable = false)
     private String carneCorte;
 
+    @Column(name = "carne_categoria", length = 30, nullable = false)
+    private String carneCategoria;
+
     @Column(name = "carne_cantidad", nullable = false)
     private Double carneCantidad;
+
+    @Column(name = "carne_fecha", nullable = false)
+    private Date carneFecha;
 
     @Column(name = "carne_pase_sanitario", length = 30, nullable = false)
     private String carnePaseSanitario;
@@ -72,6 +79,22 @@ public class Carne implements Serializable{
     public void setCarneCorte(String carneCorte) {
         this.carneCorte = carneCorte;
     }
+    
+    public String getCarneCategoria() {
+        return carneCategoria;
+    }
+
+    public void setCarneCategoria(String carneCategoria) {
+        this.carneCategoria = carneCategoria;
+    }
+
+    public Date getCarneFecha() {
+        return carneFecha;
+    }
+
+    public void setCarneFecha(Date carneFecha) {
+        this.carneFecha = carneFecha;
+    }
 
     public Double getCarneCantidad() {
         return carneCantidad;
@@ -99,12 +122,14 @@ public class Carne implements Serializable{
 
     public Carne(){ }
 
-    public Carne(Long carneId, String carneNombre, String carneTipo, String carneCorte, Double carneCantidad,
-            String carnePaseSanitario, Boolean carneEliminado) {
+    public Carne(Long carneId, String carneNombre, String carneTipo, String carneCategoria, String carneCorte, Double carneCantidad,
+            Date carneFecha, String carnePaseSanitario, Boolean carneEliminado) {
         this.carneId = carneId;
         this.carneNombre = carneNombre;
         this.carneTipo = carneTipo;
+        this.carneCategoria = carneCategoria;
         this.carneCorte = carneCorte;
+        this.carneFecha = carneFecha;
         this.carneCantidad = carneCantidad;
         this.carnePaseSanitario = carnePaseSanitario;
         this.carneEliminado = carneEliminado;

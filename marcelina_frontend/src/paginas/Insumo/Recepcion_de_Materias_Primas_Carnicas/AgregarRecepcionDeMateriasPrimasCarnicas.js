@@ -30,7 +30,8 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
     const formFieldsModal = [
         { name: 'carneNombre', label: 'Nombre', type: 'text' },
         { name: 'carneTipo', label: 'Tipo', type: 'select' },
-        { name: 'carneCorte', label: 'Corte', type: 'text' },
+        { name: 'carneCorte', label: 'Corte', type: 'select' },
+        { name: 'carneCategoria', label: 'Categoria', type: 'select' },
         { name: 'carneCantidad', label: 'Cantidad', type: 'text' },
     ];
 
@@ -43,12 +44,14 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
         { name: 'recepcionDeMateriasPrimasCarnicasMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3' },
     ];
 
-    const [materiasPrimas, setMateriasPrimas] = useState({});
     const [proveedores, setProveedores] = useState([]);
     const [proveedoresSelect, setProveedoresSelect] = useState('');
     const [carneTipoSelect, setCarneTipoSelect] = useState([
         { value: 'Porcino', label: 'Porcino' },
-        { value: 'Bovino', label: 'Bovino' }
+        { value: 'Bovino', label: 'Bovino' },
+        { value: 'Sangre', label: 'Sangre' },
+        { value: 'Tripas', label: 'Tripas' },
+        { value: 'Higado', label: 'Higado' },
     ]);
     const [carneCortePorcino, setCarneCortePorcino] = useState([
         { value: 'Carcasa', label: 'Carcasa' },
@@ -67,10 +70,20 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
         { value: 'Menudencias', label: 'Menudencias' },
         { value: 'Subproductos', label: 'Subproductos' },
     ]);
-    const [carneTipo, setCarneTipo] = useState('');
-
-    const [carneCorteOptions, setCarneCorteOptions] = useState([]);
-
+    const [carneCorteSangre, setCarneCorteSangre] = useState([
+        { value: 'Sangre', label: 'Sangre' },
+    ]);
+    const [carneCorteTripas, setCarneCorteTripas] = useState([
+        { value: 'Tripas', label: 'Tripas' },
+    ]);
+    const [carneCorteHigado, setCarneCorteHigado] = useState([
+        { value: 'Higado', label: 'Higado' },
+    ]);
+    const [carneCategoria, setCarneCategoria] = useState([
+        { value: 'CarneSH', label: 'Carne S/H' },
+        { value: 'CarneCH', label: 'Carne C/H' },
+        { value: 'Grasa', label: 'Grasa' },
+    ]);
 
     const classes = useStyles();
 
@@ -95,30 +108,26 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                 });
         };
 
-        const obtenerCarneCorteOptions = (tipoCarne) => {
-            if (tipoCarne === 'Porcino') {
-                setCarneCorteOptions(carneCortePorcino);
-            } else if (tipoCarne === 'Bovino') {
-                setCarneCorteOptions(carneCorteBovino);
-            } else {
-                setCarneCorteOptions([]);
-            }
-        };
-
-        obtenerCarneCorteOptions(carneTipo);
         obtenerProveedores();
 
     }, []);
 
     const handleFormSubmit = (formData) => {
-        const { carnesAgregadas, ...formDataWithoutCarnesAgregadas} = formData;
+        const { carnesAgregadas, ...formDataWithoutCarnesAgregadas } = formData;
 
         const listaCarne = formData.carnesAgregadas
 
         const carnes = listaCarne.map(carne => ({
             ...carne,
+            carneCategoria: carne.carneTipo === "Sangre" ? "Sangre" : 
+                            carne.carneTipo === "Higado" ? "Higado" : 
+                            carne.carneTipo === "Tripas" ? "Tripas" : 
+                            carne.carneCategoria,
             carnePaseSanitario: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasPaseSanitario,
+            carneFecha: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasFecha,
         }));
+
+        console.log(carnes);
 
         const proveedorSeleccionadaObj = proveedores.filter((proveedor) => proveedor.proveedorId.toString() === formData.recepcionDeMateriasPrimasCarnicasProveedor)[0];
 
@@ -183,11 +192,15 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                     <FormularioReutilizable
                         fields={formFields}
                         onSubmit={handleFormSubmit}
-                        selectOptions={{ 
+                        selectOptions={{
                             recepcionDeMateriasPrimasCarnicasProveedor: proveedoresSelect,
                             carneTipo: carneTipoSelect,
+                            carneCategoria: carneCategoria,
                             carneCortePorcino: carneCortePorcino,
-                            carneCorteBovino: carneCorteBovino, 
+                            carneCorteBovino: carneCorteBovino,
+                            carneCorteSangre: carneCorteSangre,
+                            carneCorteTripas: carneCorteTripas,
+                            carneCorteHigado: carneCorteHigado,
                         }}
                     />
                 </Grid>

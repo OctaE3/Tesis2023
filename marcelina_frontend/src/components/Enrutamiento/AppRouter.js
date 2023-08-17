@@ -19,6 +19,9 @@ import AgregarControlDeNitrato from '../../paginas/Insumo/Control_de_Nitrato/Agr
 import AgregarExpedicionDeProducto from '../../paginas/Trazabilidad/Expedicion_de_Producto/AgregarExpedicionDeProducto';
 import AgregarControlDeProductosQuimicos from '../../paginas/Insumo/Control_de_Productos_Quimicos/AgregarControlDeProductosQuimicos';
 import AgregarRecepcionDeMateriasPrimasCarnicas from '../../paginas/Insumo/Recepcion_de_Materias_Primas_Carnicas/AgregarRecepcionDeMateriasPrimasCarnicas';
+import AgregarDiariaDeProduccion from '../../paginas/Insumo/Diaria_de_Produccion/AgregarDiariaDeProduccion';
+import AgregarResumenDeTrazabilidad from '../../paginas/Trazabilidad/Resumen_de_Trazabilidad/AgregarResumenDeTrazabilidad';
+import AgregarProducto from '../../paginas/Insumo/Producto/AgregarProducto';
 
 const AppRouter = () => {
     return (
@@ -31,6 +34,7 @@ const AppRouter = () => {
           <Route path="/carne" element={<AgregarCarne />} />
           <Route path="/listarcarne" element={<ListarCarne />} />
           <Route path="/insumo" element={<AgregarInsumo />} />
+          <Route path="/producto" element={<AgregarProducto />} />
           <Route path="/proveedor" element={<AgregarProveedor />} />
           <Route path="/control-de-alarma-luminica-y-sonora-de-cloro" element={<AgregarControlDeAlarmaLuminicaYSonoraDeCloro />} />
           <Route path="/control-de-cloro-libre" element={<AgregarControlDeCloroLibre />} />
@@ -43,6 +47,8 @@ const AppRouter = () => {
           <Route path="/expedicion-de-producto" element={<AgregarExpedicionDeProducto />} />
           <Route path="/control-de-productos-quimicos" element={<AgregarControlDeProductosQuimicos />} />
           <Route path="/recepcion-de-materias-primas-carnicas" element={<AgregarRecepcionDeMateriasPrimasCarnicas />} />
+          <Route path="/diaria-de-produccion" element={<AgregarDiariaDeProduccion />} />
+          <Route path="/resumen-de-trazabilidad" element={<AgregarResumenDeTrazabilidad />} />
           {/* Otras rutas */}
         </Routes>
       </Router>

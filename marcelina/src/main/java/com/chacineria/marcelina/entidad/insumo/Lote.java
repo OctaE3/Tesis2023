@@ -24,8 +24,8 @@ public class Lote {
     @Column(name = "lote_id")
     private Long loteId;
 
-    @Column(name = "lote_codigo", nullable = false, unique = true)
-    private Integer loteCodigo;
+    @Column(name = "lote_codigo", length = 70, nullable = false, unique = true)
+    private String loteCodigo;
 
     @ManyToOne
     @JoinColumn(name = "lote_producto", nullable = false)
@@ -45,11 +45,11 @@ public class Lote {
         this.loteId = loteId;
     }
 
-    public Integer getLoteCodigo() {
+    public String getLoteCodigo() {
         return loteCodigo;
     }
 
-    public void setLoteCodigo(Integer loteCodigo) {
+    public void setLoteCodigo(String loteCodigo) {
         this.loteCodigo = loteCodigo;
     }
 
@@ -77,7 +77,7 @@ public class Lote {
         this.loteEliminado = loteEliminado;
     }
 
-    public Lote(Long loteId, Integer loteCodigo, Producto loteProducto, Integer loteCantidad, Boolean loteEliminado) {
+    public Lote(Long loteId, String loteCodigo, Producto loteProducto, Integer loteCantidad, Boolean loteEliminado) {
         this.loteId = loteId;
         this.loteCodigo = loteCodigo;
         this.loteProducto = loteProducto;

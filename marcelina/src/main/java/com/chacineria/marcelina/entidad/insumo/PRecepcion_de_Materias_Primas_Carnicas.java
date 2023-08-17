@@ -3,8 +3,6 @@ import com.chacineria.marcelina.entidad.persona.Proveedor;
 import com.chacineria.marcelina.entidad.persona.Usuario;
 
 import java.io.Serializable;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.List;
 import java.sql.Date;
 
