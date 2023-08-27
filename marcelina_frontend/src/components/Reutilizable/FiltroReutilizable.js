@@ -25,8 +25,7 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2),
   },
   filters: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
+    margin: theme.spacing(1),
   },
   sendButton: {
     display: 'flex',
@@ -49,8 +48,22 @@ function FiltroReutilizable({ filters, handleFilter }) {
   };
 
   const handleApplyFilter = () => {
-    handleFilter(filterValues);
+    const validFilterValues = Object.keys(filterValues).reduce((acc, key) => {
+      if (filterValues[key] && filterValues[key] !== 'Seleccionar') {
+        if (key.includes('fecha')) {
+          // Realizar la conversión del formato de fecha aquí
+          const formattedDate = filterValues[key].replace('T', ' ');
+          acc[key] = formattedDate;
+        } else {
+          acc[key] = filterValues[key];
+        }
+      }
+      return acc;
+    }, {});
+  
+    handleFilter(validFilterValues);
   };
+  
 
   return (
     <Container className={classes.root}>
@@ -83,7 +96,55 @@ function FiltroReutilizable({ filters, handleFilter }) {
                     </Select>
                   </FormControl>
                 </Grid>
-              ) : (
+              ) : filter.type === 'datetime' ? ( // Modificación para los filtros de tipo datetime
+              <>
+                <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
+                  <TextField
+                    fullWidth
+                    className={classes.textField}
+                    variant="outlined"
+                    label={`Desde ${filter.label}`}
+                    type="datetime-local"
+                    value={filterValues[`${filter.id}-desde`] || ''}
+                    onChange={(event) => handleFilterChange(event, `${filter.id}-desde`)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
+                  <TextField
+                    fullWidth
+                    className={classes.textField}
+                    variant="outlined"
+                    label={`Hasta ${filter.label}`}
+                    type="datetime-local"
+                    value={filterValues[`${filter.id}-hasta`] || ''}
+                    onChange={(event) => handleFilterChange(event, `${filter.id}-hasta`)}
+                  />
+                </Grid>
+              </>
+            ) : filter.type === 'date' ? ( // Modificación para los filtros de tipo datetime
+            <>
+              <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
+                <TextField
+                  className={classes.textField}
+                  variant="outlined"
+                  label={`Desde ${filter.label}`}
+                  type="date"
+                  value={filterValues[`${filter.id}-desde`] || ''}
+                  onChange={(event) => handleFilterChange(event, `${filter.id}-desde`)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
+                <TextField
+                  className={classes.textField}
+                  variant="outlined"
+                  label={`Hasta ${filter.label}`}
+                  type="date"
+                  value={filterValues[`${filter.id}-hasta`] || ''}
+                  onChange={(event) => handleFilterChange(event, `${filter.id}-hasta`)}
+                />
+              </Grid>
+            </>
+          ) :(
                 <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
                   <TextField
                     className={classes.textField}

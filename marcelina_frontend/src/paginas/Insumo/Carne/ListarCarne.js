@@ -5,6 +5,7 @@ import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { format } from 'date-fns';
 
 const theme = createTheme({
   palette: {
@@ -52,7 +53,9 @@ function ListarCarne() {
     { id: 'carneNombre', numeric: false, disablePadding: true, label: 'Nombre' },
     { id: 'carneTipo', numeric: false, disablePadding: false, label: 'Tipo' },
     { id: 'carneCorte', numeric: false, disablePadding: false, label: 'Corte' },
+    { id: 'carneCategoria', numeric: false, disablePadding: false, label: 'Categoria' },
     { id: 'carneCantidad', numeric: false, disablePadding: false, label: 'Cantidad' },
+    { id: 'carneFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'carnePaseSanitario', numeric: false, disablePadding: false, label: 'Pase sanitario' },
   ];
 
@@ -60,16 +63,40 @@ function ListarCarne() {
     { id: 'nombre', label: 'Nombre', type: 'text' },
     { id: 'tipo', label: 'Tipo', type: 'select', options: ['Porcino', 'Bovino'] },
     { id: 'corte', label: 'Corte', type: 'text' },
+    { id: 'categoria', label: 'Categoria', type: 'text' },
     { id: 'cantidad', label: 'Cantidad', type: 'text' },
+    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta']},
     { id: 'paseSanitario', label: 'Pase sanitario', type: 'text' },
   ];
 
   const handleFilter = (filter) => {
     const lowerCaseFilter = Object.keys(filter).reduce((acc, key) => {
-      acc[key] = filter[key] ? filter[key].toLowerCase() : '';
+      if (filter[key]) {
+        if (key === 'fecha') {
+          const [desde, hasta] = filter[key].split(' hasta ');
+          acc['fecha-desde'] = desde;
+          acc['fecha-hasta'] = hasta;
+        } else {
+          acc[key] = filter[key].toLowerCase();
+        }
+      }
       return acc;
     }, {});
     setFiltros(lowerCaseFilter);
+  };
+
+  const mapData = (item, key) => {
+    if (key === 'carneFecha') {
+      if (item.carneFecha) {
+        const fecha = new Date(item.carneFecha); // Convertir fecha a objeto Date
+        return format(fecha, 'dd/MM/yyyy');
+      } else {
+        return '';
+      }
+    }
+    else {
+      return item[key];
+    }
   };
 
   const filteredData = data.filter((item) => {
@@ -77,15 +104,20 @@ function ListarCarne() {
       carneNombre: item.carneNombre.toLowerCase(),
       carneTipo: item.carneTipo.toLowerCase(),
       carneCorte: item.carneCorte.toLowerCase(),
+      carneCategoria: item.carneCategoria.toLowerCase(),
       carneCantidad: item.carneCantidad,
+      carneFecha: new Date(item.carneFecha),
       carnePaseSanitario: item.carnePaseSanitario.toLowerCase(),
     };
-
+  
     if (
       (!filtros.nombre || lowerCaseItem.carneNombre.startsWith(filtros.nombre)) &&
       (!filtros.tipo || lowerCaseItem.carneTipo.startsWith(filtros.tipo)) &&
       (!filtros.corte || lowerCaseItem.carneCorte.startsWith(filtros.corte)) &&
       (!filtros.cantidad || lowerCaseItem.carneCantidad.startsWith(filtros.cantidad)) &&
+      (!filtros.categoria || lowerCaseItem.carneCategoria.startsWith(filtros.cantidad)) &&
+      (!filtros['fecha-desde'] || lowerCaseItem.carneFecha >= new Date(filtros['fecha-desde'])) &&
+      (!filtros['fecha-hasta'] || lowerCaseItem.carneFecha <= new Date(filtros['fecha-hasta'])) && 
       (!filtros.paseSanitario || lowerCaseItem.carnePaseSanitario.startsWith(filtros.paseSanitario))
     ) {
       return true;
@@ -114,8 +146,14 @@ function ListarCarne() {
         <Grid item lg={2} md={2}></Grid>
       </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
-      <ListaReutilizable data={filteredData} tableHeadCells={tableHeadCells} title="Carnes" />
-    </div>
+      <ListaReutilizable
+        data={filteredData}
+        dataKey="carne"
+        tableHeadCells={tableHeadCells}
+        title="Carnes"
+        dataMapper={mapData}
+        columnRenderers={""}
+      />    </div>
   );
 }
 

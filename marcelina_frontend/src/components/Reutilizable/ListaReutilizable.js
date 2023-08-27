@@ -41,7 +41,6 @@ const useStyles = makeStyles((theme) => ({
     minWidth: 750,
   },
   tableContainer: {
-    maxHeight: 440,
     padding: '5px', // Margen interno de 2px
   },
   toolbar: {
@@ -53,7 +52,8 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1)
+    marginRight: theme.spacing(1),
+    marginBottom: theme.spacing(1)
   }
 }));
 
@@ -100,7 +100,7 @@ EnhancedTableHead.propTypes = {
   tableHeadCells: PropTypes.array.isRequired,
 };
 
-function ListaReutilizable({ data, tableHeadCells, title }) {
+function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, columnRenderers }) {
   const classes = useStyles();
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState(tableHeadCells[0].id);
@@ -112,13 +112,14 @@ function ListaReutilizable({ data, tableHeadCells, title }) {
     const mappedRows = data.map((item) => {
       const row = {};
       tableHeadCells.forEach((column) => {
-        row[column.id] = item[column.id];
+        row[column.id] = dataMapper(item, column.id); // Utilizar la función dataMapper para acceder a los datos
       });
       return row;
     });
 
     setRows(mappedRows);
-  }, [data, tableHeadCells]);
+  }, [data, tableHeadCells, dataMapper]);
+
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -165,25 +166,29 @@ function ListaReutilizable({ data, tableHeadCells, title }) {
               tableHeadCells={tableHeadCells}
             />
             <TableBody>
-              {sortedRows
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row, index) => (
-                  <TableRow key={index}>
-                    {tableHeadCells.map((column) => (
-                      <TableCell key={column.id} align={column.numeric ? 'right' : 'left'}>
-                        {row[column.id]}
-                      </TableCell>
-                    ))}
-                    <TableCell align="right">
-                      <Button className={classes.button} variant="contained" color="primary" onClick={() => handleButtonClick(row)}>
-                        <EditIcon />
-                      </Button>
-                      <Button className={classes.button} variant="contained" color="secondary" onClick={() => handleButtonClick(row)}>
-                        <DeleteIcon />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+        {sortedRows
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map((row, index) => (
+            <TableRow key={index}>
+              {tableHeadCells.map((column) => (
+                <TableCell key={column.id} align={column.numeric ? 'right' : 'left'}>
+                  {columnRenderers[column.id] ? (
+                    columnRenderers[column.id](row[column.id])
+                  ) : (
+                    row[column.id]
+                  )}
+                </TableCell>
+              ))}
+              <TableCell align="right">
+                <Button className={classes.button} variant="contained" color="primary" onClick={() => handleButtonClick(row)}>
+                  <EditIcon />
+                </Button>
+                <Button className={classes.button} variant="contained" color="secondary" onClick={() => handleButtonClick(row)}>
+                  <DeleteIcon />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
               {emptyRows > 0 && (
                 <TableRow style={{ height: 53 * emptyRows }}>
                   <TableCell colSpan={tableHeadCells.length + 1} />
