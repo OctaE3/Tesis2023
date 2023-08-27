@@ -19,13 +19,16 @@ import AgregarControlDeNitrato from '../../paginas/Insumo/Control_de_Nitrato/Agr
 import AgregarControlDeNitrito from '../../paginas/Insumo/Control_de_Nitrito/AgregarControlDeNitrito';
 import AgregarExpedicionDeProducto from '../../paginas/Trazabilidad/Expedicion_de_Producto/AgregarExpedicionDeProducto';
 import AgregarControlDeProductosQuimicos from '../../paginas/Insumo/Control_de_Productos_Quimicos/AgregarControlDeProductosQuimicos';
-import AgregarRecepcionDeMateriasPrimasCarnicas from '../../paginas/Insumo/Recepcion_de_Materias_Primas_Carnicas/AgregarRecepcionDeMateriasPrimasCarnicas';
+import ListarControlDeAlarmaLuminicaYSonoraDeCloro from '../../paginas/Control/Control_de_Alarma_Luminica_y_Sonora_de_Cloro/ListarControlDeAlarmaLuminicaYSonoraDeCloro';
+import ListarCliente from '../../paginas/Persona/Cliente/ListarCliente';
 import AgregarDiariaDeProduccion from '../../paginas/Insumo/Diaria_de_Produccion/AgregarDiariaDeProduccion';
 import AgregarResumenDeTrazabilidad from '../../paginas/Trazabilidad/Resumen_de_Trazabilidad/AgregarResumenDeTrazabilidad';
 import AgregarProducto from '../../paginas/Insumo/Producto/AgregarProducto';
 import AgregarMonitoreoDeSSOPOPerativo from '../../paginas/Trazabilidad/Monitoreo_de_SSOP_Operativo/AgregarMonitoreoDeSSOPOPerativo';
 import AgregarMonitoreoDeSSOPPreOperativo from '../../paginas/Trazabilidad/Monitoreo_de_SSOP_PreOperativo/AgregarMonitoreoDeSSOPPreOperativo';
-
+import AgregarRecepcionDeMateriasPrimasCarnicas from '../../paginas/Insumo/Recepcion_de_Materias_Primas_Carnicas/AgregarRecepcionDeMateriasPrimasCarnicas';
+import ListarInsumo from '../../paginas/Insumo/Control_de_Insumo/ListarInsumo';
+import ListarProveedor from '../../paginas/Persona/Proveedor/ListarProveedor';
 const AppRouter = () => {
     return (
       <Router>
@@ -34,12 +37,15 @@ const AppRouter = () => {
           <Route path="/inicio" element={<Home />} />
           <Route path="/localidad" element={<AgregarLocalidad />} />
           <Route path="/cliente" element={<AgregarCliente />} />
+          <Route path="/listarcliente" element={<ListarCliente />} />
           <Route path="/carne" element={<AgregarCarne />} />
           <Route path="/listarcarne" element={<ListarCarne />} />
           <Route path="/insumo" element={<AgregarInsumo />} />
           <Route path="/producto" element={<AgregarProducto />} />
           <Route path="/proveedor" element={<AgregarProveedor />} />
+          <Route path="/listarproveedor" element={<ListarProveedor />} />
           <Route path="/control-de-alarma-luminica-y-sonora-de-cloro" element={<AgregarControlDeAlarmaLuminicaYSonoraDeCloro />} />
+          <Route path="/listarcontrol-de-alarma-luminica-y-sonora-de-cloro" element={<ListarControlDeAlarmaLuminicaYSonoraDeCloro />} />
           <Route path="/control-de-cloro-libre" element={<AgregarControlDeCloroLibre />} />
           <Route path="/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" element={<AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
           <Route path="/control-de-mejoras-en-instalaciones" element={<AgregarControlDeMejorasEnInstalaciones />} />
@@ -55,7 +61,9 @@ const AppRouter = () => {
           <Route path="/resumen-de-trazabilidad" element={<AgregarResumenDeTrazabilidad />} />
           <Route path="/monitoreo-de-ssop-operativo" element={<AgregarMonitoreoDeSSOPOPerativo />} />
           <Route path="/monitoreo-de-ssop-pre-operativo" element={<AgregarMonitoreoDeSSOPPreOperativo />} />
+          <Route path="/listar-control-de-insumos" element={<ListarInsumo />} />
           {/* Otras rutas */}
+
         </Routes>
       </Router>
     );

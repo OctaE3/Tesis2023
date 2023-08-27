@@ -159,6 +159,9 @@ const Navbar = () => {
             <ListItem button component={Link} to="/cliente" onClick={handleDrawerClose}>
               <ListItemText primary="Clientes" />
             </ListItem>
+            <ListItem button component={Link} to="/listarcliente" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Clientes" />
+            </ListItem>
             <ListItem button component={Link} to="/carne" onClick={handleDrawerClose}>
               <ListItemText primary="Carne" />
             </ListItem>
@@ -168,14 +171,23 @@ const Navbar = () => {
             <ListItem button component={Link} to="/insumo" onClick={handleDrawerClose}>
               <ListItemText primary="Insumo" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-insumos" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Insumos" />
+            </ListItem>
             <ListItem button component={Link} to="/producto" onClick={handleDrawerClose}>
               <ListItemText primary="Producto" />
             </ListItem>
             <ListItem button component={Link} to="/proveedor" onClick={handleDrawerClose}>
               <ListItemText primary="Proveedor" />
             </ListItem>
+            <ListItem button component={Link} to="/listarproveedor" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Proveedor" />
+            </ListItem>
             <ListItem button component={Link} to="/control-de-alarma-luminica-y-sonora-de-cloro" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Alarma Luminica y Sonora de Cloro" />
+            </ListItem>
+            <ListItem button component={Link} to="/listarcontrol-de-alarma-luminica-y-sonora-de-cloro" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Alarma Luminica y Sonora de Cloro" />
             </ListItem>
             <ListItem button component={Link} to="/control-de-cloro-libre" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Cloro Libre" />

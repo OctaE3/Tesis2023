@@ -9,7 +9,7 @@ import Fade from '@material-ui/core/Fade';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import ValidacionReutilizable from './ValidacionReutilizable';
-import * as Yup from 'yup';
+
 
 const theme = createTheme({
   palette: {
@@ -153,7 +153,6 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const [opcion, setOpcion] = useState([
     { label: ' ', value: null },
   ]);
-
   const createOption = (carneNombre) => ({
     label: carneNombre,
     value: carneNombre,
@@ -166,7 +165,6 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
 
   const fieldsWithValidation = fields.filter((field) => field.validation);
   const validationSchema = ValidacionReutilizable(fieldsWithValidation);
-
   const [areaOptions, setAreaOptions] = useState([]);
 
   useEffect(() => {
@@ -177,26 +175,24 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
       else if (selectOptions.controlDeNitritoStock) {
         setStock(selectOptions.controlDeNitritoStock);
       }
-
-      if (selectOptions.monitoreoDeSSOPPreOperativoSector) {
-        if (formData['monitoreoDeSSOPPreOperativoSector']) {
-          if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Sala Elaboracion') {
-            setAreaOptions(selectOptions.area1);
-          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Desosado') {
-            setAreaOptions(selectOptions.area1);
-          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Camaras') {
-            setAreaOptions(selectOptions.area2);
-          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Sector Despacho') {
-            setAreaOptions(selectOptions.area3);
-          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Sector Aditivos') {
-            setAreaOptions(selectOptions.area4);
-          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Instalaciones del Personal') {
-            setAreaOptions(selectOptions.area5);
-          }
+    if (selectOptions.monitoreoDeSSOPPreOperativoSector) {
+      if (formData['monitoreoDeSSOPPreOperativoSector']) {
+        if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Sala Elaboracion') {
+          setAreaOptions(selectOptions.area1);
+        } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Desosado') {
+          setAreaOptions(selectOptions.area1);
+        } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Camaras') {
+          setAreaOptions(selectOptions.area2);
+        } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Sector Despacho') {
+          setAreaOptions(selectOptions.area3);
+        } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Sector Aditivos') {
+          setAreaOptions(selectOptions.area4);
+        } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Instalaciones del Personal') {
+          setAreaOptions(selectOptions.area5);
         }
       }
     }
-
+  }
     if (formDataModal['carneTipo']) {
       if (formDataModal['carneTipo'] === 'Porcino') {
         setCarneCorteOptions(selectOptions.carneCortePorcino);
@@ -516,10 +512,10 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                           ))
                         ) : (
                           selectOptions[field.name].map((option, ind) => (
-                            <option key={ind} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))
+                          <option key={ind} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))
                         )}
                       </Select>
                     </FormControl>
@@ -914,9 +910,9 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                           <option value="Seleccionar" > Seleccionar </option>
                           {selectOptions[field.name].map((option, ind) => (
                             <option
-                              key={ind}
-                              value={option.value}
-                            >
+                            key={ind}
+                            value={option.value}
+                          >
                               {option.label}
                             </option>
                           ))}
