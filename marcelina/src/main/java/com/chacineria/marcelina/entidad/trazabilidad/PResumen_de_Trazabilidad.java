@@ -1,6 +1,8 @@
 package com.chacineria.marcelina.entidad.trazabilidad;
+
 import com.chacineria.marcelina.entidad.insumo.Lote;
 import com.chacineria.marcelina.entidad.insumo.Producto;
+import com.chacineria.marcelina.entidad.persona.Cliente;
 import com.chacineria.marcelina.entidad.persona.Usuario;
 import com.chacineria.marcelina.entidad.insumo.Control_de_Insumos;
 import com.chacineria.marcelina.entidad.insumo.Carne;
@@ -22,8 +24,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 
 @Entity(name = "resumen_de_trazabilidad")
-public class PResumen_de_Trazabilidad implements Serializable{
-    
+public class PResumen_de_Trazabilidad implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "resumen_de_trazabilidad_id")
@@ -44,22 +46,16 @@ public class PResumen_de_Trazabilidad implements Serializable{
     private Double resumenDeTrazabilidadCantidadProducida;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "resumen_de_trazabilidad_carnes",
-        joinColumns = @JoinColumn(name = "resumen_de_trazabilidad_id"),
-        inverseJoinColumns = @JoinColumn(name = "carne_id"))
+    @JoinTable(name = "resumen_de_trazabilidad_carnes", joinColumns = @JoinColumn(name = "resumen_de_trazabilidad_id"), inverseJoinColumns = @JoinColumn(name = "carne_id"))
     private Set<Carne> resumenDeTrazabilidadMatPrimaCarnica = new HashSet<>();
 
-
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "resumen_de_trazabilidad_insumos",
-        joinColumns = @JoinColumn(name = "resumen_de_trazabilidad_id"),
-        inverseJoinColumns = @JoinColumn(name = "insumo_id"))
+    @JoinTable(name = "resumen_de_trazabilidad_insumos", joinColumns = @JoinColumn(name = "resumen_de_trazabilidad_id"), inverseJoinColumns = @JoinColumn(name = "insumo_id"))
     private Set<Control_de_Insumos> resumenDeTrazabilidadMatPrimaNoCarnica = new HashSet<>();
 
-    @Column(name = "resumen_de_tazabilidad_destino", length = 60, nullable = false)
-    private String resumenDeTrazabilidadDestino;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "resumen_de_trazabilidad_destinos", joinColumns = @JoinColumn(name = "resumen_de_trazabilidad_id"), inverseJoinColumns = @JoinColumn(name = "cliente_id"))
+    private Set<Cliente> resumenDeTrazabilidadDestino = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "resumen_de_trazabilidad_responsable", nullable = false)
@@ -117,15 +113,16 @@ public class PResumen_de_Trazabilidad implements Serializable{
         return resumenDeTrazabilidadMatPrimaNoCarnica;
     }
 
-    public void setResumenDeTrazabilidadMatPrimaNoCarnica(Set<Control_de_Insumos> resumenDeTrazabilidadMatPrimaNoCarnica) {
+    public void setResumenDeTrazabilidadMatPrimaNoCarnica(
+            Set<Control_de_Insumos> resumenDeTrazabilidadMatPrimaNoCarnica) {
         this.resumenDeTrazabilidadMatPrimaNoCarnica = resumenDeTrazabilidadMatPrimaNoCarnica;
     }
 
-    public String getResumenDeTrazabilidadDestino() {
+    public Set<Cliente> getResumenDeTrazabilidadDestino() {
         return resumenDeTrazabilidadDestino;
     }
 
-    public void setResumenDeTrazabilidadDestino(String resumenDeTrazabilidadDestino) {
+    public void setResumenDeTrazabilidadDestino(Set<Cliente> resumenDeTrazabilidadDestino) {
         this.resumenDeTrazabilidadDestino = resumenDeTrazabilidadDestino;
     }
 
@@ -140,7 +137,7 @@ public class PResumen_de_Trazabilidad implements Serializable{
     public PResumen_de_Trazabilidad(Long resumenDeTrazabilidadId, Date resumenDeTrazabilidadFecha,
             Lote resumenDeTrazabilidadLote, Producto resumenDeTrazabilidadProducto,
             Double resumenDeTrazabilidadCantidadProducida, Set<Carne> resumenDeTrazabilidadMatPrimaCarnica,
-            Set<Control_de_Insumos> resumenDeTrazabilidadMatPrimaNoCarnica, String resumenDeTrazabilidadDestino,
+            Set<Control_de_Insumos> resumenDeTrazabilidadMatPrimaNoCarnica, Set<Cliente> resumenDeTrazabilidadDestino,
             Usuario resumenDeTrazabilidadResponsable) {
         this.resumenDeTrazabilidadId = resumenDeTrazabilidadId;
         this.resumenDeTrazabilidadFecha = resumenDeTrazabilidadFecha;
@@ -153,6 +150,7 @@ public class PResumen_de_Trazabilidad implements Serializable{
         this.resumenDeTrazabilidadResponsable = resumenDeTrazabilidadResponsable;
     }
 
-   public PResumen_de_Trazabilidad() { }
-    
+    public PResumen_de_Trazabilidad() {
+    }
+
 }

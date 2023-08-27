@@ -198,6 +198,9 @@ const Navbar = () => {
             <ListItem button component={Link} to="/control-de-nitratos" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Nitratos" />
             </ListItem>
+            <ListItem button component={Link} to="/control-de-nitritos" onClick={handleDrawerClose}>
+              <ListItemText primary="Control de Nitritos" />
+            </ListItem>
             <ListItem button component={Link} to="/expedicion-de-producto" onClick={handleDrawerClose}>
               <ListItemText primary="Expedición de Producto" />
             </ListItem>
@@ -212,6 +215,12 @@ const Navbar = () => {
             </ListItem>
             <ListItem button component={Link} to="/resumen-de-trazabilidad" onClick={handleDrawerClose}>
               <ListItemText primary="Resumen de Trazabilidad" />
+            </ListItem>
+            <ListItem button component={Link} to="/monitoreo-de-ssop-operativo" onClick={handleDrawerClose}>
+              <ListItemText primary="Monitoreo de SSOP Operativo" />
+            </ListItem>
+            <ListItem button component={Link} to="/monitoreo-de-ssop-pre-operativo" onClick={handleDrawerClose}>
+              <ListItemText primary="Monitoreo de SSOP Pre-Operativo" />
             </ListItem>
           </List>
         </Drawer>
