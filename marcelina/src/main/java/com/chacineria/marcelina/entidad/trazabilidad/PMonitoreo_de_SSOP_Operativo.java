@@ -1,10 +1,15 @@
 package com.chacineria.marcelina.entidad.trazabilidad;
+
 import java.io.Serializable;
+import java.sql.Date;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.chacineria.marcelina.entidad.persona.Usuario;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,20 +18,28 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity(name = "monitoreo_de_ssop_operativo")
-public class PMonitoreo_de_SSOP_Operativo implements Serializable{
-    
+public class PMonitoreo_de_SSOP_Operativo implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "monitoreo_de_ssop_operativo_id")
     private Long monitoreoDeSSOPOperativoId;
 
-    @Column(name = "monitoreo_de_ssop_operativo_fecha", nullable = false)
-    private LocalDateTime monitoreoDeSSOPOperativoFecha;
+    @Column(name = "monitoreo_de_ssop_operativo_fecha_inicio", nullable = false)
+    private Date monitoreoDeSSOPOperativoFechaInicio;
+
+    @Column(name = "monitoreo_de_ssop_operativo_fecha_final", nullable = false)
+    private Date monitoreoDeSSOPOperativoFechaFinal;
+
+    @ElementCollection
+    @CollectionTable(name = "monitoreo_de_ssop_operativo_dias_realizados", joinColumns = @JoinColumn(name = "monitoreo_de_ssop_operativo_id"))
+    @Column(name = "monitoreo_de_ssop_operativo_dias")
+    private List<String> monitoreoDeSSOPOperativoDias;
 
     @Column(name = "monitoreo_de_ssop_operativo_area", length = 50, nullable = false)
     private String monitoreoDeSSOPOperativoArea;
 
-    @Column(name = "monitoreo_de_ssop_operativo_observaciones", length = 150, nullable = false)
+    @Column(name = "monitoreo_de_ssop_operativo_observaciones", length = 150, nullable = true)
     private String monitoreoDeSSOPOperativoObservaciones;
 
     @Column(name = "monitoreo_de_ssop_operativo_acc_correctivas", length = 150, nullable = false)
@@ -45,14 +58,6 @@ public class PMonitoreo_de_SSOP_Operativo implements Serializable{
 
     public void setMonitoreoDeSSOPOperativoId(Long monitoreoDeSSOPOperativoId) {
         this.monitoreoDeSSOPOperativoId = monitoreoDeSSOPOperativoId;
-    }
-
-    public LocalDateTime getMonitoreoDeSSOPOperativoFecha() {
-        return monitoreoDeSSOPOperativoFecha;
-    }
-
-    public void setMonitoreoDeSSOPOperativoFecha(LocalDateTime monitoreoDeSSOPOperativoFecha) {
-        this.monitoreoDeSSOPOperativoFecha = monitoreoDeSSOPOperativoFecha;
     }
 
     public String getMonitoreoDeSSOPOperativoArea() {
@@ -95,18 +100,46 @@ public class PMonitoreo_de_SSOP_Operativo implements Serializable{
         this.monitoreoDeSSOPOperativoResponsable = monitoreoDeSSOPOperativoResponsable;
     }
 
-    public PMonitoreo_de_SSOP_Operativo(Long monitoreoDeSSOPOperativoId, LocalDateTime monitoreoDeSSOPOperativoFecha,
+    public Date getMonitoreoDeSSOPOperativoFechaInicio() {
+        return monitoreoDeSSOPOperativoFechaInicio;
+    }
+
+    public void setMonitoreoDeSSOPOperativoFechaInicio(Date monitoreoDeSSOPOperativoFechaInicio) {
+        this.monitoreoDeSSOPOperativoFechaInicio = monitoreoDeSSOPOperativoFechaInicio;
+    }
+
+    public Date getMonitoreoDeSSOPOperativoFechaFinal() {
+        return monitoreoDeSSOPOperativoFechaFinal;
+    }
+
+    public void setMonitoreoDeSSOPOperativoFechaFinal(Date monitoreoDeSSOPOperativoFechaFinal) {
+        this.monitoreoDeSSOPOperativoFechaFinal = monitoreoDeSSOPOperativoFechaFinal;
+    }
+
+    public List<String> getMonitoreoDeSSOPOperativoDias() {
+        return monitoreoDeSSOPOperativoDias;
+    }
+
+    public void setMonitoreoDeSSOPOperativoDias(List<String> monitoreoDeSSOPOperativoDias) {
+        this.monitoreoDeSSOPOperativoDias = monitoreoDeSSOPOperativoDias;
+    }
+
+    public PMonitoreo_de_SSOP_Operativo(Long monitoreoDeSSOPOperativoId, Date monitoreoDeSSOPOperativoFechaInicio,
+            Date monitoreoDeSSOPOperativoFechaFinal, List<String> monitoreoDeSSOPOperativoDias,
             String monitoreoDeSSOPOperativoArea, String monitoreoDeSSOPOperativoObservaciones,
             String monitoreoDeSSOPOperativoAccCorrectivas, String monitoreoDeSSOPOperativoAccPreventivas,
             Usuario monitoreoDeSSOPOperativoResponsable) {
         this.monitoreoDeSSOPOperativoId = monitoreoDeSSOPOperativoId;
-        this.monitoreoDeSSOPOperativoFecha = monitoreoDeSSOPOperativoFecha;
+        this.monitoreoDeSSOPOperativoFechaInicio = monitoreoDeSSOPOperativoFechaInicio;
+        this.monitoreoDeSSOPOperativoFechaFinal = monitoreoDeSSOPOperativoFechaFinal;
+        this.monitoreoDeSSOPOperativoDias = monitoreoDeSSOPOperativoDias;
         this.monitoreoDeSSOPOperativoArea = monitoreoDeSSOPOperativoArea;
         this.monitoreoDeSSOPOperativoObservaciones = monitoreoDeSSOPOperativoObservaciones;
         this.monitoreoDeSSOPOperativoAccCorrectivas = monitoreoDeSSOPOperativoAccCorrectivas;
         this.monitoreoDeSSOPOperativoAccPreventivas = monitoreoDeSSOPOperativoAccPreventivas;
         this.monitoreoDeSSOPOperativoResponsable = monitoreoDeSSOPOperativoResponsable;
     }
-    
-    public PMonitoreo_de_SSOP_Operativo() { }
+
+    public PMonitoreo_de_SSOP_Operativo() {
+    }
 }

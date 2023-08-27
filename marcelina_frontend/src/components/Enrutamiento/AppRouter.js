@@ -16,12 +16,15 @@ import AgregarControlDeReposicionDeCloro from '../../paginas/Control/Control_de_
 import AgregarControlDeTemperaturaDeEsterilizadores from '../../paginas/Control/Control_de_Temperatura_de_Estirilizadores/AgregarControlDeTemperaturaDeEsterilizadores';
 import AgregarControlDeTemperaturaEnCamaras from '../../paginas/Control/Control_de_Temperatura_en_Camaras/AgregarControlDeTemperaturaEnCamaras';
 import AgregarControlDeNitrato from '../../paginas/Insumo/Control_de_Nitrato/AgregarControlDeNitrato';
+import AgregarControlDeNitrito from '../../paginas/Insumo/Control_de_Nitrito/AgregarControlDeNitrito';
 import AgregarExpedicionDeProducto from '../../paginas/Trazabilidad/Expedicion_de_Producto/AgregarExpedicionDeProducto';
 import AgregarControlDeProductosQuimicos from '../../paginas/Insumo/Control_de_Productos_Quimicos/AgregarControlDeProductosQuimicos';
 import AgregarRecepcionDeMateriasPrimasCarnicas from '../../paginas/Insumo/Recepcion_de_Materias_Primas_Carnicas/AgregarRecepcionDeMateriasPrimasCarnicas';
 import AgregarDiariaDeProduccion from '../../paginas/Insumo/Diaria_de_Produccion/AgregarDiariaDeProduccion';
 import AgregarResumenDeTrazabilidad from '../../paginas/Trazabilidad/Resumen_de_Trazabilidad/AgregarResumenDeTrazabilidad';
 import AgregarProducto from '../../paginas/Insumo/Producto/AgregarProducto';
+import AgregarMonitoreoDeSSOPOPerativo from '../../paginas/Trazabilidad/Monitoreo_de_SSOP_Operativo/AgregarMonitoreoDeSSOPOPerativo';
+import AgregarMonitoreoDeSSOPPreOperativo from '../../paginas/Trazabilidad/Monitoreo_de_SSOP_PreOperativo/AgregarMonitoreoDeSSOPPreOperativo';
 
 const AppRouter = () => {
     return (
@@ -44,11 +47,14 @@ const AppRouter = () => {
           <Route path="/control-de-temperatura-de-esterilizadores" element={<AgregarControlDeTemperaturaDeEsterilizadores />} />
           <Route path="/control-de-temperatura-en-camaras" element={<AgregarControlDeTemperaturaEnCamaras />} />
           <Route path="/control-de-nitratos" element={<AgregarControlDeNitrato />} />
+          <Route path="/control-de-nitritos" element={<AgregarControlDeNitrito />} />
           <Route path="/expedicion-de-producto" element={<AgregarExpedicionDeProducto />} />
           <Route path="/control-de-productos-quimicos" element={<AgregarControlDeProductosQuimicos />} />
           <Route path="/recepcion-de-materias-primas-carnicas" element={<AgregarRecepcionDeMateriasPrimasCarnicas />} />
           <Route path="/diaria-de-produccion" element={<AgregarDiariaDeProduccion />} />
           <Route path="/resumen-de-trazabilidad" element={<AgregarResumenDeTrazabilidad />} />
+          <Route path="/monitoreo-de-ssop-operativo" element={<AgregarMonitoreoDeSSOPOPerativo />} />
+          <Route path="/monitoreo-de-ssop-pre-operativo" element={<AgregarMonitoreoDeSSOPPreOperativo />} />
           {/* Otras rutas */}
         </Routes>
       </Router>

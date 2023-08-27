@@ -82,6 +82,9 @@ const useStyles = makeStyles(theme => ({
   },
   select: {
     width: '100%',
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: 'blue',
+    },
   },
   selectContainer: {
     display: 'flex',
@@ -114,10 +117,23 @@ const useStyles = makeStyles(theme => ({
     marginLeft: 6,
     fontWeight: 'normal'
   },
+  customOutlinedRed: {
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: 'red', // Cambia "red" al color deseado
+    },
+  },
+  customOutlinedBlue: {
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: 'blue', // Cambia "red" al color deseado
+    },
+  },
   auto: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(1),
-  }
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: 'blue', // Cambia "red" al color deseado
+    },
+  },
 }));
 
 const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal }) => {
@@ -137,6 +153,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const [opcion, setOpcion] = useState([
     { label: ' ', value: null },
   ]);
+
   const createOption = (carneNombre) => ({
     label: carneNombre,
     value: carneNombre,
@@ -150,15 +167,37 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const fieldsWithValidation = fields.filter((field) => field.validation);
   const validationSchema = ValidacionReutilizable(fieldsWithValidation);
 
+  const [areaOptions, setAreaOptions] = useState([]);
+
   useEffect(() => {
-    if (selectOptions.controlDeNitratoStock) {
-      setStock(selectOptions.controlDeNitratoStock);
-    }
-    else if (selectOptions.controlDeNitritoStock) {
-      setStock(selectOptions.controlDeNitritoStock);
+    if (selectOptions) {
+      if (selectOptions.controlDeNitratoStock) {
+        setStock(selectOptions.controlDeNitratoStock);
+      }
+      else if (selectOptions.controlDeNitritoStock) {
+        setStock(selectOptions.controlDeNitritoStock);
+      }
+
+      if (selectOptions.monitoreoDeSSOPPreOperativoSector) {
+        if (formData['monitoreoDeSSOPPreOperativoSector']) {
+          if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Sala Elaboracion') {
+            setAreaOptions(selectOptions.area1);
+          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Desosado') {
+            setAreaOptions(selectOptions.area1);
+          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Camaras') {
+            setAreaOptions(selectOptions.area2);
+          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Sector Despacho') {
+            setAreaOptions(selectOptions.area3);
+          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Sector Aditivos') {
+            setAreaOptions(selectOptions.area4);
+          } else if (formData['monitoreoDeSSOPPreOperativoSector'] === 'Instalaciones del Personal') {
+            setAreaOptions(selectOptions.area5);
+          }
+        }
+      }
     }
 
-    if (formDataModal['carneTip']) {
+    if (formDataModal['carneTipo']) {
       if (formDataModal['carneTipo'] === 'Porcino') {
         setCarneCorteOptions(selectOptions.carneCortePorcino);
         setDesactivadoCategoria(false);
@@ -176,7 +215,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
         setDesactivadoCategoria(true);
       }
     }
-  }, [formDataModal['carneTipo'], formDataModal['carneCategoria'], selectOptions]);
+  }, [formDataModal['carneTipo'], formDataModal['carneCategoria'], formData['monitoreoDeSSOPPreOperativoSector'], selectOptions]);
 
   const handleChange = event => {
     const { name, value } = event.target;
@@ -426,7 +465,8 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                   <Grid item lg={8} md={8} sm={8} xs={8}>
                     <TextField
                       fullWidth
-                      color="primary"
+                      color={field.color}
+                      className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                       margin="normal"
                       variant="outlined"
                       label={field.label}
@@ -457,6 +497,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       <InputLabel htmlFor={`outlined-${field.name}-native-simple`}>{field.label}</InputLabel>
                       <Select
                         className={classes.select}
+                        color={field.color}
                         native
                         value={formData[field.name] || ''}
                         onChange={handleChange}
@@ -467,11 +508,19 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                         }}
                       >
                         <option value="Seleccionar" > Seleccionar </option>
-                        {selectOptions[field.name].map((option, ind) => (
-                          <option key={ind} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                        {field.name === 'monitoreoDeSSOPPreOperativoArea' ? (
+                          areaOptions.map((option, ind) => (
+                            <option key={ind} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))
+                        ) : (
+                          selectOptions[field.name].map((option, ind) => (
+                            <option key={ind} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))
+                        )}
                       </Select>
                     </FormControl>
                   </Grid>
@@ -504,10 +553,10 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                     <TextField
                                       fullWidth
                                       autoFocus
-                                      color="primary"
+                                      color={field.color}
+                                      className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                                       margin="normal"
                                       variant="outlined"
-                                      className={classes.campos}
                                       label={altaCampo.label}
                                       id={altaCampo.name}
                                       type={altaCampo.type}
@@ -539,6 +588,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                   <Grid item lg={8} md={8} sm={8} xs={8}>
                     <Autocomplete
                       multiple
+                      color={field.color}
                       className={classes.auto}
                       options={selectOptions[field.name]}
                       getOptionLabel={(option) => option.label}
@@ -570,6 +620,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                   <Grid item lg={8} md={8} sm={8} xs={8}>
                     <Autocomplete
                       multiple
+                      color={field.color}
                       className={classes.auto}
                       options={opcion}
                       getOptionLabel={(option) => option.label}
@@ -690,10 +741,10 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                       <TextField
                                         fullWidth
                                         autoFocus
-                                        color="primary"
+                                        color={field.color}
+                                        className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                                         margin="normal"
                                         variant="outlined"
-                                        className={classes.campos}
                                         label={altaCampo.label}
                                         id={altaCampo.name}
                                         type={altaCampo.type}
@@ -729,7 +780,8 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       <TextField
                         fullWidth
                         autoFocus
-                        color="primary"
+                        color={field.color}
+                        className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                         margin="normal"
                         variant="outlined"
                         label={field.label}
@@ -776,8 +828,9 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       readOnly
                       inputRef={campoReadOnly}
                       multiline={field.multi === '3'}
-                      rows={field.multi}
-                      color="primary"
+                      minRows={field.multi}
+                      color={field.color}
+                      className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                       margin="normal"
                       variant="outlined"
                       label={field.label}
@@ -856,10 +909,14 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                             name: field.name,
                             id: `outlined-${field.name}-native-simple`,
                           }}
+                          color={field.color}
                         >
                           <option value="Seleccionar" > Seleccionar </option>
                           {selectOptions[field.name].map((option, ind) => (
-                            <option key={ind} value={option.value}>
+                            <option
+                              key={ind}
+                              value={option.value}
+                            >
                               {option.label}
                             </option>
                           ))}
@@ -888,7 +945,6 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       <TextField
                         fullWidth
                         autoFocus
-                        color="primary"
                         margin="normal"
                         variant="outlined"
                         label={field.campo.label}
@@ -898,6 +954,8 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                         value={dynamic.textFieldValue}
                         onChange={(e) => handleChangeDynamic(field.name, idx, "textFieldValue", e.target.value)}
                         InputProps={{ startAdornment: <InputAdornment position="start">Kg</InputAdornment>, }}
+                        color={field.color}
+                        className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                       />
                     </Grid>
                     <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
@@ -915,8 +973,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       fullWidth
                       autoFocus
                       multiline={field.multi === '3'}
-                      rows={field.multi}
-                      color="primary"
+                      minRows={field.multi}
                       margin="normal"
                       variant="outlined"
                       label={field.label}
@@ -928,6 +985,8 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       error={field.validation ? Boolean(formErrors[field.name]) : ''}
                       onChange={handleChange}
                       InputProps={field.adornment === 'si' ? { startAdornment: <InputAdornment position="start">{field.unit}</InputAdornment>, } : {}}
+                      color={field.color}
+                      className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                     />
                   </Grid>
                   <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
