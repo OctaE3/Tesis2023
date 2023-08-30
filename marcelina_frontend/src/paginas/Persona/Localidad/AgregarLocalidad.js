@@ -55,7 +55,7 @@ const AgregarLocalidad = () => {
 
   const classes = useStyles();
   const [localidad, setLocalidad] = useState({});
-  const [localidades, setLocalidades] = useState({});
+  const [localidades, setLocalidades] = useState([]);
   const [reloadLocalidades, setReloadLocalidades] = useState(false);
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
@@ -103,10 +103,10 @@ const AgregarLocalidad = () => {
     const localidadCiudad = formData.localidadCiudad;
 
     const localidadesExisten = localidades.some(localidad => {
-      return localidad.departamento === localidadDepartamento && localidad.ciudad === localidadCiudad;
+      return localidad.localidadDepartamento === localidadDepartamento && localidad.localidadCiudad === localidadCiudad;
     });
 
-    if (localidadesExisten) {
+    if (localidadesExisten === false) {
       axios.post('/agregar-localidad', formData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

@@ -162,6 +162,9 @@ const Navbar = () => {
             <ListItem button component={Link} to="/listarcliente" onClick={handleDrawerClose}>
               <ListItemText primary="Ver Clientes" />
             </ListItem>
+            <ListItem button component={Link} to="/modificar-cliente" onClick={handleDrawerClose}>
+              <ListItemText primary="Modificar Clientes" />
+            </ListItem>
             <ListItem button component={Link} to="/carne" onClick={handleDrawerClose}>
               <ListItemText primary="Carne" />
             </ListItem>

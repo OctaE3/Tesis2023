@@ -19,7 +19,7 @@ public class PControl_de_Temperatura_en_Camaras implements Serializable {
     private Long controlDeTemperaturaEnCamarasId;
 
     @Column(name = "control_de_temperatura_en_camara_nro_camara", nullable = false)
-    private List<String> controlDeTemperaturaEnCamarasNroCamara;
+    private String controlDeTemperaturaEnCamarasNroCamara;
 
     @Column(name = "control_de_temperatura_en_camara_fecha", nullable = false)
     private Date controlDeTemperaturaEnCamarasFecha;
@@ -41,11 +41,11 @@ public class PControl_de_Temperatura_en_Camaras implements Serializable {
         this.controlDeTemperaturaEnCamarasId = controlDeTemperaturaEnCamarasId;
     }
 
-    public List<String> getControlDeTemperaturaEnCamarasNroCamara() {
+    public String getControlDeTemperaturaEnCamarasNroCamara() {
         return controlDeTemperaturaEnCamarasNroCamara;
     }
 
-    public void setControlDeTemperaturaEnCamarasNroCamara(List<String> controlDeTemperaturaEnCamarasNroCamara) {
+    public void setControlDeTemperaturaEnCamarasNroCamara(String controlDeTemperaturaEnCamarasNroCamara) {
         this.controlDeTemperaturaEnCamarasNroCamara = controlDeTemperaturaEnCamarasNroCamara;
     }
 
@@ -82,7 +82,7 @@ public class PControl_de_Temperatura_en_Camaras implements Serializable {
     }
 
     public PControl_de_Temperatura_en_Camaras(Long controlDeTemperaturaEnCamarasId,
-            List<String> controlDeTemperaturaEnCamarasNroCamara, Date controlDeTemperaturaEnCamarasFecha,
+            String controlDeTemperaturaEnCamarasNroCamara, Date controlDeTemperaturaEnCamarasFecha,
             Integer controlDeTemperaturaEnCamarasHora, Integer controlDeTemperaturaEnCamarasTempInterna,
             Integer controlDeTemperaturaEnCamaraTempExterna) {
         this.controlDeTemperaturaEnCamarasId = controlDeTemperaturaEnCamarasId;

@@ -6,6 +6,7 @@ import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutiliza
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
+import { useNavigate } from 'react-router-dom';
 
 const theme = createTheme({
   palette: {
@@ -29,6 +30,7 @@ function ListarCliente() {
   const [filtros, setFiltros] = useState({});
   const [localidades, setLocalidades] = useState([]);
   const classes = useStyles();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,9 +46,12 @@ function ListarCliente() {
           }
         });
 
-        const clientesData = clientesResponse.data;
+        const clientesData = clientesResponse.data.map((cliente) => ({
+            ...cliente,
+            Id: cliente.clienteId,
+        }));
         const localidadesData = localidadesResponse.data;
-
+        
         setData(clientesData);
         setLocalidades(localidadesData.map((localidad) => localidad.localidadDepartamento)); // Obtener solo los nombres de las localidades
       } catch (error) {
@@ -104,7 +109,7 @@ function ListarCliente() {
     const lowerCaseItem = {
       clienteNombre: item.clienteNombre.toLowerCase(),
       clienteEmail: item.clienteEmail.toLowerCase(),
-      clienteObservaciones: item.clienteObservaciones.toLowerCase(),
+      clienteObservaciones: item.clienteObservaciones ? item.clienteObservaciones.toLowerCase() : '',
       clienteContacto: item.clienteContacto.map(contacto => contacto.toLowerCase()), // Convertir todos los contactos a minúsculas
       clienteLocalidad: item.clienteLocalidad ? item.clienteLocalidad.localidadDepartamento.toLowerCase() : '',
     };
@@ -123,6 +128,11 @@ function ListarCliente() {
 
   const columnRenderers = {
     clienteContacto: (contacts) => <ColumnaReutilizable contacts={contacts} />,
+  };
+
+  const handleEditCliente = (rowData) => {
+    const id = rowData.Id;
+    navigate(`/modificar-cliente/${id}`);
   };
 
   return (
@@ -152,6 +162,7 @@ function ListarCliente() {
         title="Clientes"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
+        onEditButton={handleEditCliente}
       />
 
     </div>

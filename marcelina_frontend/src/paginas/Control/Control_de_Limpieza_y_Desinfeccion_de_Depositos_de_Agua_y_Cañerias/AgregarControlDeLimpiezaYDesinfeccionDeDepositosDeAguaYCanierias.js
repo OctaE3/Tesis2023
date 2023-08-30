@@ -78,11 +78,12 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
   };
 
   const handleFormSubmit = (formData) => {
+    const depositos = formData.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.map(deposito => deposito.value);
     const controlDeLimpiezaConResponsable = {
       ...formData,
-      controlDeCloroLibreResponsable: window.localStorage.getItem('user'),
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: depositos,
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable: window.localStorage.getItem('user'),
     }
-    setControlDeLimpieza(controlDeLimpiezaConResponsable);
     console.log(controlDeLimpiezaConResponsable);
     axios.post('/agregar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-canierias', controlDeLimpiezaConResponsable, {
       headers: {

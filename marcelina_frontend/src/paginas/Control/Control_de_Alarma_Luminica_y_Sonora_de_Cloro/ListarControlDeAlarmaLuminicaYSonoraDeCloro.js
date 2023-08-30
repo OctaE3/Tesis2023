@@ -6,6 +6,7 @@ import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutiliza
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const theme = createTheme({
   palette: {
@@ -29,6 +30,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,7 +46,10 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
           }
         });
 
-        const data = response.data;
+        const data = response.data.map((control) => ({
+          ...control,
+          Id: control.controlDeAlarmaLuminicaYSonaraDeCloroId,
+        }));
         const ResponsableData = ResponsableResponse.data;
 
         setData(data);
@@ -144,6 +149,11 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
     controlDeAlarmaLuminicaYSonoraDeCloroResponsable: (responsable) => responsable.usuarioNombre
   };
 
+  const handleEditControl = (rowData) => {
+    const id = rowData.Id;
+    navigate(`/modificar-control-de-alarma-luminica-y-sonora-de-cloro/${id}`);
+  }
+
   return (
     <div>
       <Navbar />
@@ -171,6 +181,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
         title="Listar Control De Alarma Luminica Y Sonora De Cloro"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
+        onEditButton={handleEditControl}
       />    </div>
   );
 }

@@ -6,6 +6,7 @@ import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutiliza
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
+import { useNavigate } from 'react-router-dom';
 
 const theme = createTheme({
   palette: {
@@ -29,6 +30,7 @@ function ListarProveedor() {
   const [filtros, setFiltros] = useState({});
   const [localidades, setLocalidades] = useState([]);
   const classes = useStyles();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,7 +46,10 @@ function ListarProveedor() {
           }
         });
 
-        const Data = Response.data;
+        const Data = Response.data.map((proveedor) => ({
+          ...proveedor,
+          Id: proveedor.proveedorId,
+        }))
         const localidadesData = localidadesResponse.data;
 
         setData(Data);
@@ -125,6 +130,11 @@ function ListarProveedor() {
     proveedorContacto: (contacts) => <ColumnaReutilizable contacts={contacts} />,
   };
 
+  const handleEditProveedor = (rowData) => {
+    const id = rowData.Id;
+    navigate(`/modificar-proveedor/${id}`);
+  };
+
   return (
     <div>
       <Navbar />
@@ -152,6 +162,7 @@ function ListarProveedor() {
         title="Clientes"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
+        onEditButton={handleEditProveedor}
       />
 
     </div>

@@ -11,6 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 @Entity(name = "control_de_cloro_libre")
 public class PControl_de_Cloro_Libre implements Serializable{
@@ -21,6 +23,7 @@ public class PControl_de_Cloro_Libre implements Serializable{
     private Long controlDeCloroLibreId;
 
     @Column(name = "control_de_cloro_libre_fecha", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime controlDeCloroLibreFecha;
 
     @Column(name = "control_de_cloro_libre_grifo_pico", nullable = false)

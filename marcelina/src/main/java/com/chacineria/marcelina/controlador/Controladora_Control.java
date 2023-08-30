@@ -171,7 +171,7 @@ public class Controladora_Control {
         }
     }
 
-    @PutMapping("/modificar-controlDeCloroLibre/{controlDeCloroLibreId}")
+    @PutMapping("/modificar-control-de-cloro-libre/{controlDeCloroLibreId}")
     public ResponseEntity<PControl_de_Cloro_Libre> modificarControlDeCloroLibre(@RequestBody PControl_de_Cloro_Libre controlDeCloroLibre, @PathVariable(value="controlDeCloroLibreId") Long controlDeCloroLibreId){
         Optional<PControl_de_Cloro_Libre> controlDeCloroLibreData = controlDeCloroLibreServicioImpl.findById(controlDeCloroLibreId);
         if(controlDeCloroLibreData.isPresent()){

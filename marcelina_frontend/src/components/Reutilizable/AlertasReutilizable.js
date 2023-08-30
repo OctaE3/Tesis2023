@@ -33,7 +33,7 @@ const AlertasReutilizable = ({ alert, isVisible }) => {
         <div className={classes.alert}>
             {alert.map((alerta) => (
                 alerta.type === 'description' ? (
-                    <Fade in={isVisible} timeout={500}>
+                    <Fade in={isVisible} timeout={500} key={alerta.id}>
                         <div className={classes.root}>
                             <Alert severity={alerta.severity}>
                                 <AlertTitle>{alerta.title}</AlertTitle>
@@ -42,7 +42,7 @@ const AlertasReutilizable = ({ alert, isVisible }) => {
                         </div>
                     </Fade>
                 ) : alerta.type === 'actions' ? (
-                    <div className={classes.root}>
+                    <div className={classes.root} key={alerta.id}>
                         <Collapse in={open}>
                             <Alert severity={alerta.severity}
                                 action={
