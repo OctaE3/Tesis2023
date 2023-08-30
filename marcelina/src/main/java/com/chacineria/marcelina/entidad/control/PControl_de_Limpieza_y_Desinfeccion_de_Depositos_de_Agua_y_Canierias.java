@@ -1,10 +1,13 @@
 package com.chacineria.marcelina.entidad.control;
 import java.io.Serializable;
 import java.sql.Date;
+import java.util.List;
 
 import com.chacineria.marcelina.entidad.persona.Usuario;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,8 +26,10 @@ public class PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canieria
     @Column(name = "control_de_limpieza_y_desinfeccion_fecha", nullable = false)
     private Date controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
 
-    @Column(name = "control_de_limpieza_y_desinfeccion_deposito", length = 30 ,nullable = false)
-    private String controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito;
+    @ElementCollection
+    @CollectionTable(name = "control_de_limpieza_y_desinfeccion_depositos", joinColumns = @JoinColumn(name = "control_de_limpieza_y_desinfeccion_id"))
+    @Column(name = "control_de_limpieza_y_desinfeccion_deposito")
+    private List<String> controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito;
 
     @Column(name = "control_de_limpieza_y_desinfeccion_canierias", length = 30, nullable = false)
     private String controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias;
@@ -52,15 +57,6 @@ public class PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canieria
     public void setControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha(
             Date controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha) {
         this.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha = controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
-    }
-
-    public String getControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito() {
-        return controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito;
-    }
-
-    public void setControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito(
-            String controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito) {
-        this.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito = controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito;
     }
 
     public String getControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias() {
@@ -93,7 +89,7 @@ public class PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canieria
     public PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canierias(
             Long controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId,
             Date controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha,
-            String controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito,
+            List<String> controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito,
             String controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias,
             String controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones,
             Usuario controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable) {
@@ -106,4 +102,13 @@ public class PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canieria
     }
 
     public PControl_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Canierias() { }
+
+    public List<String> getControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito() {
+        return controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito;
+    }
+
+    public void setControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito(
+            List<String> controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito) {
+        this.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito = controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito;
+    }
 }

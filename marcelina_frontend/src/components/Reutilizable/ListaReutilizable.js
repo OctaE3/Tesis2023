@@ -100,7 +100,7 @@ EnhancedTableHead.propTypes = {
   tableHeadCells: PropTypes.array.isRequired,
 };
 
-function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, columnRenderers }) {
+function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, columnRenderers, onEditButton }) {
   const classes = useStyles();
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState(tableHeadCells[0].id);
@@ -110,13 +110,12 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
 
   useEffect(() => {
     const mappedRows = data.map((item) => {
-      const row = {};
+      const row = {Id: item.Id};
       tableHeadCells.forEach((column) => {
         row[column.id] = dataMapper(item, column.id); // Utilizar la función dataMapper para acceder a los datos
       });
       return row;
     });
-
     setRows(mappedRows);
   }, [data, tableHeadCells, dataMapper]);
 
@@ -139,7 +138,7 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
   const handleButtonClick = (rowData) => {
-    // Aquí puedes agregar la lógica para manejar el clic en el botón
+    
     console.log('Botón clickeado:', rowData);
   };
 
@@ -180,7 +179,7 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
                 </TableCell>
               ))}
               <TableCell align="right">
-                <Button className={classes.button} variant="contained" color="primary" onClick={() => handleButtonClick(row)}>
+                <Button className={classes.button} variant="contained" color="primary" onClick={() => onEditButton(row)}>
                   <EditIcon />
                 </Button>
                 <Button className={classes.button} variant="contained" color="secondary" onClick={() => handleButtonClick(row)}>

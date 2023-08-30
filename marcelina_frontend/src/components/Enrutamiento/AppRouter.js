@@ -29,6 +29,17 @@ import AgregarMonitoreoDeSSOPPreOperativo from '../../paginas/Trazabilidad/Monit
 import AgregarRecepcionDeMateriasPrimasCarnicas from '../../paginas/Insumo/Recepcion_de_Materias_Primas_Carnicas/AgregarRecepcionDeMateriasPrimasCarnicas';
 import ListarInsumo from '../../paginas/Insumo/Control_de_Insumo/ListarInsumo';
 import ListarProveedor from '../../paginas/Persona/Proveedor/ListarProveedor';
+import ModificarCliente from '../../paginas/Persona/Cliente/ModificarCliente';
+import ModificarLocalidad from '../../paginas/Persona/Localidad/ModificarLocalidad';
+import ModificProveedor from '../../paginas/Persona/Proveedor/ModificarProveedor';
+import ModificarControlDeAlarmaLuminicaYSonoraDeCloro from '../../paginas/Control/Control_de_Alarma_Luminica_y_Sonora_de_Cloro/ModificarControlDeAlarmaLuminicaYSonoraDeCloro';
+import ModificarControlDeCloroLibre from '../../paginas/Control/Control_de_Cloro_Libre/ModificarControlDeCloroLibre';
+import ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias from '../../paginas/Control/Control_de_Limpieza_y_Desinfeccion_de_Depositos_de_Agua_y_Cañerias/ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias';
+import ModificarControlDeMejorasEnInstalaciones from '../../paginas/Control/Control_de_Mejoras_en_Insatalaciones/ModificarControlDeMejorasEnInstalaciones';
+import ModificarControlDeReposicionDeCloro from '../../paginas/Control/Control_de_Reposicion_de_Cloro/ModificarControlDeReposicionDeCloro';
+import ModificarControlDeTemperaturaDeEsterilizadores from '../../paginas/Control/Control_de_Temperatura_de_Estirilizadores/ModificarControlDeTemperaturaDeEsterilizadores';
+import ModificarControlDeTemperaturaEnCamaras from '../../paginas/Control/Control_de_Temperatura_en_Camaras/ModificarControlDeTemperaturaEnCamaras';
+
 const AppRouter = () => {
     return (
       <Router>
@@ -36,22 +47,32 @@ const AppRouter = () => {
           <Route path="/" element={<Login />} />
           <Route path="/inicio" element={<Home />} />
           <Route path="/localidad" element={<AgregarLocalidad />} />
+          <Route path="/modificar-localidad/:id" element={<ModificarLocalidad />} />
           <Route path="/cliente" element={<AgregarCliente />} />
           <Route path="/listarcliente" element={<ListarCliente />} />
+          <Route path="/modificar-cliente/:id" element={<ModificarCliente />} />
           <Route path="/carne" element={<AgregarCarne />} />
           <Route path="/listarcarne" element={<ListarCarne />} />
           <Route path="/insumo" element={<AgregarInsumo />} />
           <Route path="/producto" element={<AgregarProducto />} />
           <Route path="/proveedor" element={<AgregarProveedor />} />
           <Route path="/listarproveedor" element={<ListarProveedor />} />
+          <Route path="/modificar-proveedor/:id" element={<ModificProveedor />} />
           <Route path="/control-de-alarma-luminica-y-sonora-de-cloro" element={<AgregarControlDeAlarmaLuminicaYSonoraDeCloro />} />
           <Route path="/listarcontrol-de-alarma-luminica-y-sonora-de-cloro" element={<ListarControlDeAlarmaLuminicaYSonoraDeCloro />} />
+          <Route path="/modificar-control-de-alarma-luminica-y-sonora-de-cloro/:id" element={<ModificarControlDeAlarmaLuminicaYSonoraDeCloro />} />
           <Route path="/control-de-cloro-libre" element={<AgregarControlDeCloroLibre />} />
+          <Route path="/modificar-control-de-cloro-libre/:id" element={<ModificarControlDeCloroLibre />} />
           <Route path="/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" element={<AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
+          <Route path="/modificar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias/:id" element={<ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
           <Route path="/control-de-mejoras-en-instalaciones" element={<AgregarControlDeMejorasEnInstalaciones />} />
+          <Route path="/modificar-control-de-mejoras-en-instalaciones/:id" element={<ModificarControlDeMejorasEnInstalaciones />} />
           <Route path="/control-de-reposicion-de-cloro" element={<AgregarControlDeReposicionDeCloro />} />
+          <Route path="/modificar-control-de-reposicion-de-cloro/:id" element={<ModificarControlDeReposicionDeCloro />} />
           <Route path="/control-de-temperatura-de-esterilizadores" element={<AgregarControlDeTemperaturaDeEsterilizadores />} />
+          <Route path="/modificar-control-de-temperatura-de-esterilizadores/:id" element={<ModificarControlDeTemperaturaDeEsterilizadores />} />
           <Route path="/control-de-temperatura-en-camaras" element={<AgregarControlDeTemperaturaEnCamaras />} />
+          <Route path="/modificar-control-de-temperatura-en-camaras/:id" element={<ModificarControlDeTemperaturaEnCamaras />} />
           <Route path="/control-de-nitratos" element={<AgregarControlDeNitrato />} />
           <Route path="/control-de-nitritos" element={<AgregarControlDeNitrito />} />
           <Route path="/expedicion-de-producto" element={<AgregarExpedicionDeProducto />} />

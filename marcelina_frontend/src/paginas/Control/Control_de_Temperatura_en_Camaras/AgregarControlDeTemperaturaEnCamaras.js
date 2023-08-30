@@ -45,15 +45,15 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
     { name: 'controlDeTemperaturaEnCamarasFecha', label: 'Fecha', type: 'date', color: 'primary' },
     { name: 'controlDeTemperaturaEnCamarasHora', label: 'Hora', type: 'number', color: 'primary' },
     { name: 'controlDeTemperaturaEnCamarasTempInterna', label: 'Temperatura Interna', type: 'number', adornment: 'si', unit: '°C', color: 'primary' },
-    { name: 'controlDeTemperaturaEnCamarasTempExterna', label: 'Temperatura Externa', type: 'number', adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaEnCamaraTempExterna', label: 'Temperatura Externa', type: 'number', adornment: 'si', unit: '°C', color: 'primary' },
   ];
 
   const alertSuccess = [
-    { title: 'Correcto', body: 'Se registro el control de temperatura de esterilizadores con éxito!', severity: 'success', type: 'description' },
+    { title: 'Correcto', body: 'Se registro el control de temperatura en camaras con éxito!', severity: 'success', type: 'description' },
   ];
 
   const alertError = [
-    { title: 'Error', body: 'No se logro regristrar el control de temperatura de esterilizadores, revise los datos ingresados', severity: 'error', type: 'description' },
+    { title: 'Error', body: 'No se logro regristrar el control de temperatura en camaras, revise los datos ingresados', severity: 'error', type: 'description' },
   ];
 
   const classes = useStyles();
@@ -85,7 +85,7 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
 
     setControlDeTemperatura(formData);
     console.log(formData);
-    axios.post('/agregar-control-de-temperatura-de-esterilizadores', formData, {
+    axios.post('/agregar-control-de-temperatura-en-camaras', formData, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         "Content-Type": "application/json"
