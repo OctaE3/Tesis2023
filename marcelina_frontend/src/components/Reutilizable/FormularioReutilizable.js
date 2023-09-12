@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { TextField, createTheme, FormControl, InputLabel, Button, Grid, Box, Container, Typography, Select } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
+import RemoveIcon from '@material-ui/icons/Remove';
 import CloseIcon from '@material-ui/icons/Close';
 import Modal from '@material-ui/core/Modal';
 import Backdrop from '@material-ui/core/Backdrop';
@@ -92,6 +93,12 @@ const useStyles = makeStyles(theme => ({
   },
   addButton: {
     justifyContent: 'flex-start',
+    marginTop: theme.spacing(0.5),
+  },
+  deleteButton: {
+    display: 'flex',
+    marginTop: theme.spacing(0.5),
+    justifyContent: 'flex-end',
   },
   iconButton: {
     minWidth: '50px',
@@ -127,6 +134,12 @@ const useStyles = makeStyles(theme => ({
       borderColor: 'blue', // Cambia "red" al color deseado
     },
   },
+  customLabelBlue: {
+    color: 'blue',
+  },
+  customLabelRed: {
+    color: 'red',
+  },
   auto: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(1),
@@ -143,12 +156,14 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const [formDataModal, setFormDataModal] = useState({});
   const [formErrors, setFormErrors] = useState({});
   const [open, setOpen] = useState(false);
+  const [openR, setOpenR] = useState(false);
   const [telefonos, setTelefonos] = useState([{ telefono: "" }]);
   const [dynamicMultipleLote, setDynamicMultipleLote] = useState([{ selectValue: "", textFieldValue: "" }]);
   const [dynamicMultipleCarne, setDynamicMultipleCarne] = useState([{ selectValue: "", textFieldValue: "" }]);
   const [dynamicMultipleAditivo, setDynamicMultipleAditivo] = useState([{ selectValue: "", textFieldValue: "" }]);
   const campoReadOnly = useRef();
-  const [stockAgregado, setStockAgregado] = useState(0);
+  const [stockAgregado, setStockAgregado] = useState();
+  const [stockRestar, setStockRestar] = useState();
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [opcion, setOpcion] = useState([
     { label: ' ', value: null },
@@ -213,18 +228,31 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
     }
   }, [formDataModal['carneTipo'], formDataModal['carneCategoria'], formData['monitoreoDeSSOPPreOperativoSector'], selectOptions]);
 
-  const handleChange = event => {
-    const { name, value } = event.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value,
-    }));
-
-    try {
-      validationSchema.validateSyncAt(name, { [name]: value });
-      setFormErrors((prevFormErrors) => ({ ...prevFormErrors, [name]: undefined }));
-    } catch (error) {
-      setFormErrors((prevFormErrors) => ({ ...prevFormErrors, [name]: error.message }));
+  const handleChange = (event, type) => {
+    const { name, value, id } = event.target;
+    const regex = new RegExp(id);
+    
+    if (type === "email") {
+      const emailReg = new RegExp("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{0,3}");
+      if (emailReg.test(value)) {
+        setFormData(prevState => ({
+          ...prevState,
+          [name]: value,
+        }));
+      }
+    }
+    else if (type === 'date' || type === "datetime-local" || type === "selector") {
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: value,
+      }));
+    } else {
+      if (regex.test(value)) {
+        setFormData(prevState => ({
+          ...prevState,
+          [name]: value,
+        }));
+      }
     }
     console.log(formData);
   };
@@ -241,17 +269,25 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
     setTelefonos([...telefonos, { telefono: "" }]);
   };
 
-  const handleChangeTelefono = async (index, telefono) => {
-    setTelefonos(prevTelefonos => {
-      const nuevosTelefonos = [...prevTelefonos];
-      nuevosTelefonos[index] = { telefono };
-      return nuevosTelefonos;
-    });
+  const handleChangeTelefono = async (index, telefono, pattern, name) => {
+    const regex = new RegExp(pattern);
+    if (regex) {
+      if (regex.test(telefono)) {
 
-    setFormData(prevFormData => ({
-      ...prevFormData,
-      [fields.find(field => field.type === 'phone').name]: telefonos.map(tel => tel.telefono),
-    }));
+        setTelefonos(prevTelefonos => {
+          const nuevosTelefonos = [...prevTelefonos];
+          nuevosTelefonos[index] = { telefono };
+          return nuevosTelefonos;
+        });
+
+        setFormData(prevFormData => ({
+          ...prevFormData,
+          [fields.find(field => field.type === 'phone').name]: telefonos.map(tel => tel.telefono),
+        }));
+
+      }
+    }
+    console.log(telefonos);
     console.log(formData);
   };
 
@@ -292,39 +328,52 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
     }
   }
 
-  const handleChangeDynamic = (fieldName, index, field, value) => {
-    if (fieldName === 'diariaDeProduccionInsumosCarnicos') {
-      setDynamicMultipleCarne((prevDynamicMultiple) => {
-        const updatedFields = [...prevDynamicMultiple];
-        updatedFields[index][field] = value;
-        return updatedFields;
-      });
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        'cantidadCarne': dynamicMultipleCarne,
-      }));
-    } else if (fieldName === 'diariaDeProduccionAditivos') {
-      setDynamicMultipleAditivo((prevDynamicMultiple) => {
-        const updatedFields = [...prevDynamicMultiple];
-        updatedFields[index][field] = value;
-        return updatedFields;
-      });
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        'cantidadAditivo': dynamicMultipleAditivo,
-      }));
-    } else {
-      setDynamicMultipleLote((prevDynamicMultiple) => {
-        const updatedFields = [...prevDynamicMultiple];
-        updatedFields[index][field] = value;
-        return updatedFields;
-      });
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        'cantidad': dynamicMultipleLote,
-      }));
+  const handleChangeDynamic = (fieldName, index, field, value, event) => {
+    const { id } = event.target;
+    const regex = new RegExp(id);
+    let permiso = false;
+    if (field === "textFieldValue") {
+      if (regex.test(value)) {
+        permiso = true;
+      }
+    } else if (field === "selectValue") {
+      permiso = true;
     }
-    console.log(formData);
+
+    if (permiso === true) {
+      if (fieldName === 'diariaDeProduccionInsumosCarnicos') {
+        setDynamicMultipleCarne((prevDynamicMultiple) => {
+          const updatedFields = [...prevDynamicMultiple];
+          updatedFields[index][field] = value;
+          return updatedFields;
+        });
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          'cantidadCarne': dynamicMultipleCarne,
+        }));
+      } else if (fieldName === 'diariaDeProduccionAditivos') {
+        setDynamicMultipleAditivo((prevDynamicMultiple) => {
+          const updatedFields = [...prevDynamicMultiple];
+          updatedFields[index][field] = value;
+          return updatedFields;
+        });
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          'cantidadAditivo': dynamicMultipleAditivo,
+        }));
+      } else {
+        setDynamicMultipleLote((prevDynamicMultiple) => {
+          const updatedFields = [...prevDynamicMultiple];
+          updatedFields[index][field] = value;
+          return updatedFields;
+        });
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          'cantidad': dynamicMultipleLote,
+        }));
+      }
+      console.log(formData);
+    }
   }
 
   const handleRemoveDynamic = (fieldName, index) => {
@@ -360,16 +409,29 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   };
 
   const handleChangeModal = event => {
-    const { name, value } = event.target;
-    setFormDataModal(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+    const { name, value, id } = event.target;
+    const regex = new RegExp(id);
+    if (regex) {
+      if (regex.test(value)) {
+        setFormDataModal(prevState => ({
+          ...prevState,
+          [name]: value
+        }));
+      }
+    }
   };
 
   const handleChangeModalStock = event => {
-    setStockAgregado(event.target.value);
-    console.log(stockAgregado);
+    const { id, value, name } = event.target;
+    const regex = new RegExp("^[0-9]{0,9}$");
+    console.log(name);
+    if (regex.test(value)) {
+      if (name === 'StockAgregar') {
+        setStockAgregado(value);
+      } else if (name === 'StockRestar') {
+        setStockRestar(value);
+      }
+    }
   };
 
   const handleChangeSelectMultiple = (fieldName, newValue) => {
@@ -378,11 +440,21 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   };
 
   const handleChangeSelectModal = event => {
-    const { name, value } = event.target;
-    setFormDataModal(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+    const { name, value, id } = event.target;
+    const regex = new RegExp(id);
+    if (regex) {
+      if (regex.test(value)) {
+        setFormDataModal(prevState => ({
+          ...prevState,
+          [name]: value
+        }));
+      }
+    } else {
+      setFormDataModal(prevState => ({
+        ...prevState,
+        [name]: value
+      }));
+    }
   };
 
   const handleSubmitSelectModal = async event => {
@@ -410,6 +482,10 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
 
   const handleSubmit = async event => {
     event.preventDefault();
+    const tel = telefonos[0];
+    if (tel.telefono !== "") {
+      onSubmit(formData, telefonos);
+    }
     onSubmit(formData);
   };
 
@@ -432,15 +508,41 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
     setOpen(false);
   }
 
+  const handleOpenModalR = () => {
+    setOpenR(true);
+  }
+
+  const handleCloseModalR = () => {
+    setOpenR(false);
+  }
+
   const handleCloseModalStock = () => {
-    setStock(prevStock => prevStock + parseInt(stockAgregado));
+    console.log(stock);
+    console.log(stockAgregado);
+    setStock(prevStock => parseInt(prevStock) + parseInt(stockAgregado));
     const stockSumado = parseInt(stock) + parseInt(stockAgregado);
     setFormData((prevFormData) => ({
       ...prevFormData,
       'stock': stockSumado,
     }));
-    console.log(formData);
     setOpen(false);
+    setStockAgregado(0);
+  }
+
+  const handleCloseModalStockResta = () => {
+    const stockActual = parseInt(stock);
+    const cantidadRestar = parseInt(stockRestar);
+
+    if (stockActual >= cantidadRestar) {
+      setStock(prevStock => prevStock - parseInt(stockRestar));
+      const stockSumado = parseInt(stock) - parseInt(stockRestar);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        'stock': stockSumado,
+      }));
+      setOpenR(false);
+      setStockRestar(0);
+    } else { }
   }
 
   return (
@@ -458,6 +560,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                     <TextField
                       fullWidth
                       color={field.color}
+                      required={true}
                       className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                       margin="normal"
                       variant="outlined"
@@ -467,9 +570,10 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       name={field.name}
                       value={formData[field.name] || ''}
                       format={field.format}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e, field.type)}
                       InputLabelProps={{
                         shrink: true,
+                        className: field.color === 'primary' ? classes.customLabelBlue : classes.customLabelRed,
                       }}
                     />
                   </Grid>
@@ -486,13 +590,14 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                   <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                   <Grid item lg={8} md={8} sm={8} xs={8}>
                     <FormControl variant="outlined" className={classes.formControl} >
-                      <InputLabel htmlFor={`outlined-${field.name}-native-simple`}>{field.label}</InputLabel>
+                      <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-${field.name}-native-simple`}>{field.label}</InputLabel>
                       <Select
                         className={classes.select}
                         color={field.color}
+                        helperText="Este campo es Obligatorio"
                         native
                         value={formData[field.name] || ''}
-                        onChange={handleChange}
+                        onChange={(e) => handleChange(e, field.type)}
                         label={field.label}
                         inputProps={{
                           name: field.name,
@@ -546,11 +651,13 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                       fullWidth
                                       autoFocus
                                       color={field.color}
+                                      InputLabelProps={{ className: classes.customLabelBlue }}
+                                      required={true}
                                       className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                                       margin="normal"
                                       variant="outlined"
                                       label={altaCampo.label}
-                                      id={altaCampo.name}
+                                      id={altaCampo.pattern}
                                       type={altaCampo.type}
                                       name={altaCampo.name}
                                       value={formDataModal[altaCampo.name] || ''}
@@ -593,6 +700,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                           label={field.label}
                           InputLabelProps={{
                             shrink: true,
+                            className: classes.customLabelBlue
                           }}
                         />
                       )}
@@ -625,6 +733,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                           label={field.label}
                           InputLabelProps={{
                             shrink: true,
+                            className: classes.customLabelBlue
                           }}
                         />
                       )}
@@ -658,7 +767,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                   altaCampo.name === 'carneTipo' ? (
                                     <div key={index}>
                                       <FormControl variant="outlined" className={classes.formControl} >
-                                        <InputLabel htmlFor={`outlined-${altaCampo.name}-native-simple`}>{altaCampo.label}</InputLabel>
+                                        <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-${altaCampo.name}-native-simple`}>{altaCampo.label}</InputLabel>
                                         <Select
                                           className={classes.select}
                                           native
@@ -682,7 +791,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                   ) : altaCampo.name === 'carneCorte' ? (
                                     <div key={index}>
                                       <FormControl variant="outlined" className={classes.formControl} >
-                                        <InputLabel htmlFor={`outlined-${altaCampo.name}-native-simple`}>{altaCampo.label}</InputLabel>
+                                        <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-${altaCampo.name}-native-simple`}>{altaCampo.label}</InputLabel>
                                         <Select
                                           className={classes.select}
                                           native
@@ -706,7 +815,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                   ) : altaCampo.name === 'carneCategoria' ? (
                                     <div key={index}>
                                       <FormControl variant="outlined" className={classes.formControl} >
-                                        <InputLabel htmlFor={`outlined-${altaCampo.name}-native-simple`}>{altaCampo.label}</InputLabel>
+                                        <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-${altaCampo.name}-native-simple`}>{altaCampo.label}</InputLabel>
                                         <Select
                                           className={classes.select}
                                           native
@@ -734,11 +843,14 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                         fullWidth
                                         autoFocus
                                         color={field.color}
+                                        required={true}
+                                        InputLabelProps={{ className: classes.customLabelBlue }}
+                                        pattern={altaCampo.pattern}
                                         className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                                         margin="normal"
                                         variant="outlined"
                                         label={altaCampo.label}
-                                        id={altaCampo.name}
+                                        id={altaCampo.pattern}
                                         type={altaCampo.type}
                                         name={altaCampo.name}
                                         value={formDataModal[altaCampo.name] || ''}
@@ -773,16 +885,19 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                         fullWidth
                         autoFocus
                         color={field.color}
+                        helperText={field.text}
+                        required={true}
                         className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
+                        InputLabelProps={{ className: classes.customLabelBlue }}
                         margin="normal"
                         variant="outlined"
                         label={field.label}
-                        id={`${field.name}-${idx}`}
+                        id={field.pattern}
                         type="text"
-                        name={field.name}
+                        name={`${field.name}-${idx}`}
                         value={tel.telefono || ''}
-                        onChange={(e) => handleChangeTelefono(idx, e.target.value)}
-                        InputProps={{ startAdornment: <InputAdornment position="start">+598</InputAdornment>, }}
+                        onChange={(e) => handleChangeTelefono(idx, e.target.value, field.pattern, field.name)}
+                        InputProps={{}}
                       />
                     </Grid>
                     <Grid item lg={2} md={2} sm={2} xs={2}>
@@ -812,17 +927,63 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                   justifyContent='center'
                   alignItems='center'
                 >
-                  <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                  <Grid item lg={2} md={2} sm={2} xs={2}>
+                    <Grid className={`${classes.deleteButton} align-right`}>
+                      <Button className={classes.iconButton} onClick={handleOpenModalR}>
+                        <RemoveIcon color='primary' fontSize='large' />
+                      </Button>
+                    </Grid>
+                    <Grid>
+                      <Modal
+                        aria-labelledby="transition-modal-title"
+                        aria-describedby="transition-modal-description"
+                        className={classes.modal}
+                        open={openR}
+                        onClose={handleCloseModalR}
+                        closeAfterTransition
+                        BackdropComponent={Backdrop}
+                        BackdropProps={{
+                          timeout: 500,
+                        }}
+                      >
+                        <Fade in={openR}>
+                          <div className={classes.paper}>
+                            <Typography component='h2' variant='h4'>Restar Stock</Typography>
+                            <Typography component='h2' variant='h5'>Ingrese la cantidad que quiere restar al stock</Typography>
+                            <div key={index}>
+                              <TextField
+                                fullWidth
+                                autoFocus
+                                required
+                                color="primary"
+                                margin="normal"
+                                variant="outlined"
+                                className={classes.campos}
+                                InputLabelProps={{ className: classes.customLabelBlue }}
+                                label="Cantidad"
+                                type='text'
+                                name='StockRestar'
+                                value={stockRestar}
+                                onChange={handleChangeModalStock}
+                              />
+                              <Typography component='h2' variant='body1'>Recordatorio: Si ingresa una cantidad para restar mayor a la del stock, no se restara.</Typography>
+                            </div>
+                            <Button className={classes.modalButton} type="submit" variant="contained" color="primary" onClick={handleCloseModalStockResta}>Enviar</Button>
+                          </div>
+                        </Fade>
+                      </Modal>
+                    </Grid>
+                  </Grid>
                   <Grid item lg={8} md={8} sm={8} xs={8}>
                     <TextField
                       fullWidth
                       autoFocus
                       readOnly
+                      required
                       inputRef={campoReadOnly}
-                      multiline={field.multi === '3'}
-                      minRows={field.multi}
                       color={field.color}
                       className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
+                      InputLabelProps={{ className: classes.customLabelBlue }}
                       margin="normal"
                       variant="outlined"
                       label={field.label}
@@ -854,6 +1015,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       >
                         <Fade in={open}>
                           <div className={classes.paper}>
+                            <Typography component='h2' variant='h4'>Sumar Stock</Typography>
                             <Typography component='h1' variant='h5'>Ingrese la cantidad que quiere sumar al stock</Typography>
                             <div key={index}>
                               <TextField
@@ -863,8 +1025,8 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                                 margin="normal"
                                 variant="outlined"
                                 className={classes.campos}
+                                InputLabelProps={{ className: classes.customLabelBlue }}
                                 label="Cantidad"
-                                id='StockAgregar'
                                 type='text'
                                 name='StockAgregar'
                                 value={stockAgregado}
@@ -890,12 +1052,12 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                     <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                     <Grid item lg={8} md={8} sm={8} xs={8}>
                       <FormControl variant="outlined" className={classes.formControl} >
-                        <InputLabel htmlFor={`outlined-${field.name}-native-simple`}>{field.label}</InputLabel>
+                        <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-${field.name}-native-simple`}>{field.label}</InputLabel>
                         <Select
                           className={classes.select}
                           native
                           value={dynamic.selectValue}
-                          onChange={(e) => handleChangeDynamic(field.name, idx, "selectValue", e.target.value)}
+                          onChange={(e) => handleChangeDynamic(field.name, idx, "selectValue", e.target.value, e)}
                           label={field.label}
                           inputProps={{
                             name: field.name,
@@ -940,11 +1102,13 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                         margin="normal"
                         variant="outlined"
                         label={field.campo.label}
-                        id={`${field.campo.name}-${idx}`}
+                        InputLabelProps={{ className: classes.customLabelBlue }}
+                        required={true}
+                        id={field.campo.pattern}
                         type="text"
-                        name={field.campo.name}
+                        name={`${field.campo.name}-${idx}`}
                         value={dynamic.textFieldValue}
-                        onChange={(e) => handleChangeDynamic(field.name, idx, "textFieldValue", e.target.value)}
+                        onChange={(e) => handleChangeDynamic(field.name, idx, "textFieldValue", e.target.value, e)}
                         InputProps={{ startAdornment: <InputAdornment position="start">Kg</InputAdornment>, }}
                         color={field.color}
                         className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
@@ -965,18 +1129,26 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
                       fullWidth
                       autoFocus
                       multiline={field.multi === '3'}
+                      required={field.obligatorio}
+                      pattern={field.pattern}
+                      helperText={field.text}
                       minRows={field.multi}
                       margin="normal"
                       variant="outlined"
                       label={field.label}
-                      id={field.name}
+                      id={field.pattern}
                       type={field.type}
                       name={field.name}
                       value={formData[field.name] || ''}
-                      helperText={field.validation ? formErrors[field.name] : ''}
                       error={field.validation ? Boolean(formErrors[field.name]) : ''}
-                      onChange={handleChange}
-                      InputProps={field.adornment === 'si' ? { startAdornment: <InputAdornment position="start">{field.unit}</InputAdornment>, } : {}}
+                      onChange={(e) => handleChange(e, field.type)}
+                      InputLabelProps={{
+                        shrink: true,
+                        className: field.color === 'primary' ? classes.customLabelBlue : classes.customLabelRed,
+                      }}
+                      InputProps={
+                        field.adornment === 'si' ? { startAdornment: <InputAdornment position="start">{field.unit}</InputAdornment>, } : undefined
+                      }
                       color={field.color}
                       className={field.color === 'primary' ? classes.customOutlinedBlue : classes.customOutlinedRed}
                     />

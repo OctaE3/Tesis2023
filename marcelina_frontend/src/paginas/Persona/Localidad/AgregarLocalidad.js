@@ -33,25 +33,52 @@ const useStyles = makeStyles(theme => ({
   text: {
     color: '#2D2D2D',
   },
-  liTitle: {
-    color: 'black',
+  liTitleBlue: {
+    color: 'blue',
     fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
   },
 }));
 
 const AgregarLocalidad = () => {
+  const text = "Este campo es Obligatorio";
+
   const formFields = [
-    { name: 'localidadDepartamento', label: 'Departamento', type: 'text', color: 'primary' },
-    { name: 'localidadCiudad', label: 'Ciudad', type: 'text', color: 'primary' },
+    { name: 'localidadDepartamento', label: 'Departamento', type: 'text', obligatorio: true, text: text, pattern: "^[A-Za-z\\s]*$", color: 'primary' },
+    { name: 'localidadCiudad', label: 'Ciudad', type: 'text', obligatorio: true, text: text, pattern: "^[A-Za-z\\s]*$", color: 'primary' },
   ];
 
-  const alertSuccess = [
-    { title: 'Correcto', body: 'Localidad agregada con éxito!', severity: 'success', type: 'description' },
-  ];
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Localidad registrada con éxito!', severity: 'success', type: 'description'
+  });
 
-  const alertError = [
-    { title: 'Error', body: 'No se logro agregar la localidad, revise los datos ingresados', severity: 'error', type: 'description' },
-  ];
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logro registrar la localidad, revise los datos ingresados.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   const classes = useStyles();
   const [localidad, setLocalidad] = useState({});
@@ -59,10 +86,13 @@ const AgregarLocalidad = () => {
   const [reloadLocalidades, setReloadLocalidades] = useState(false);
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -95,6 +125,38 @@ const AgregarLocalidad = () => {
     }
   }, [reloadLocalidades]);
 
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
+
+  const updateErrorAlert = (newBody) => {
+    setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+  const checkErrorLocalidad = (ciudad, departamento) => {
+    if (ciudad === undefined || ciudad === null || ciudad.trim() === '') {
+      return false;
+    }
+    else if (departamento === undefined || departamento === null || departamento.trim() === '') {
+      return false;
+    }
+    return true;
+  }
+
   const handleFormSubmit = (formData) => {
     setLocalidad(formData);
     console.log(formData);
@@ -103,40 +165,61 @@ const AgregarLocalidad = () => {
     const localidadCiudad = formData.localidadCiudad;
 
     const localidadesExisten = localidades.some(localidad => {
-      return localidad.localidadDepartamento === localidadDepartamento && localidad.localidadCiudad === localidadCiudad;
+      return localidad.localidadDepartamento.toString().toLowerCase() === localidadDepartamento.toString().toLowerCase() && localidad.localidadCiudad.toString().toLowerCase() === localidadCiudad.toString().toLowerCase();
     });
 
-    if (localidadesExisten === false) {
-      axios.post('/agregar-localidad', formData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          "Content-Type": "application/json"
-        }
-      })
-        .then(response => {
-          if (response.status === 201) {
-            setShowAlertSuccess(true);
-            setTimeout(() => {
-              setShowAlertSuccess(false);
-            }, 5000);
-          } else {
-            setShowAlertError(true);
-            setTimeout(() => {
-              setShowAlertError(false);
-            }, 5000);
-          }
-        })
-        .catch(error => {
-          console.error(error);
-        })
-    } else {
-      alertError.forEach((alert) => {
-        alert.body = `Esa localidad ya existe.`;
-      });
+    const check = checkErrorLocalidad(localidadCiudad, localidadDepartamento);
+
+    if (check === false) {
+      updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 5000);
+      }, 7000);
+    } else {
+      if (localidadesExisten === false) {
+        axios.post('/agregar-localidad', formData, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type": "application/json"
+          }
+        })
+          .then(response => {
+            if (response.status === 201) {
+              setShowAlertSuccess(true);
+              setTimeout(() => {
+                setShowAlertSuccess(false);
+              }, 5000);
+            } else {
+              updateErrorAlert('No se logro registrar la localidad, revise los datos ingresados.');
+              setShowAlertError(true);
+              setTimeout(() => {
+                setShowAlertError(false);
+              }, 5000);
+            }
+          })
+          .catch(error => {
+            if (error.request.status === 401) {
+              setShowAlertWarning(true);
+              setTimeout(() => {
+                setShowAlertWarning(false);
+              }, 5000);
+            }
+            else if (error.request.status === 500) {
+              updateErrorAlert('No se logro registrar la localidad, revise los datos ingresados.');
+              setShowAlertError(true);
+              setTimeout(() => {
+                setShowAlertError(false);
+              }, 5000);
+            }
+          })
+      } else {
+        updateErrorAlert('La localidad que intenta ingresar ya existe.');
+        setShowAlertError(true);
+        setTimeout(() => {
+          setShowAlertError(false);
+        }, 5000);
+      }
     }
   }
 
@@ -151,7 +234,7 @@ const AgregarLocalidad = () => {
               <Typography component='h1' variant='h4'>Agregar Localidad</Typography>
               <div>
                 <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton>
+                  <IconButton className={blinking ? classes.blinkingButton : ''}>
                     <HelpOutlineIcon fontSize="large" color="primary" />
                   </IconButton>
                 </Button>
@@ -174,10 +257,10 @@ const AgregarLocalidad = () => {
                         Este formulario cuenta con 2 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitle}>Departamento</span>: en este campo se debe ingresar el nombre de departamento donde esta ubicada la ciudad.
+                            <span className={classes.liTitleBlue}>Departamento</span>: en este campo se debe ingresar el nombre de departamento donde esta ubicada la ciudad.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Ciudad</span>: en este campo se debe ingresar la ciudad en la que se ubica el departamento.
+                            <span className={classes.liTitleBlue}>Ciudad</span>: en este campo se debe ingresar la ciudad en la que se ubica el departamento.
                           </li>
                         </ul>
                       </span>
@@ -185,10 +268,10 @@ const AgregarLocalidad = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitle}>Campos con contorno azul</span>: los campos con contorno azul son obligatorio, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
                       </span>
@@ -209,6 +292,7 @@ const AgregarLocalidad = () => {
             <Grid item lg={4} md={4} sm={4} xs={4}>
               <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
               <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+              <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
             </Grid>
             <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
           </Grid>

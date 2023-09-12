@@ -1,6 +1,7 @@
 package com.chacineria.marcelina.controlador;
 
 import com.chacineria.marcelina.dto.ExpedicionCantidadDto;
+import com.chacineria.marcelina.dto.ModificarExpedicionDto;
 import com.chacineria.marcelina.entidad.persona.Usuario;
 import com.chacineria.marcelina.entidad.trazabilidad.PAnual_de_Insumos_Carnicos;
 import com.chacineria.marcelina.entidad.trazabilidad.PExpedicion_de_Producto;
@@ -202,31 +203,37 @@ public class Controladora_Trazabilidad {
 
         @PutMapping("/modificar-expedicion-de-producto/{expedicionDeProductoId}")
         public ResponseEntity<PExpedicion_de_Producto> modificarExpedicionDeProducto(
-                        @RequestBody PExpedicion_de_Producto expedicionDeProducto,
+                        @RequestBody ModificarExpedicionDto dto,
                         @PathVariable(value = "expedicionDeProductoId") Long expedicionDeProductoId) {
                 Optional<PExpedicion_de_Producto> expedicionDeProductoData = expedicionDeProductoServicioImpl
                                 .findById(expedicionDeProductoId);
                 if (expedicionDeProductoData.isPresent()) {
                         expedicionDeProductoData.get()
                                         .setExpedicionDeProductoCliente(
-                                                        expedicionDeProducto.getExpedicionDeProductoCliente());
+                                                        dto.getExpedicionDeProducto().getExpedicionDeProductoCliente());
                         expedicionDeProductoData.get()
                                         .setExpedicionDeProductoDocumento(
-                                                        expedicionDeProducto.getExpedicionDeProductoDocumento());
+                                                        dto.getExpedicionDeProducto()
+                                                                        .getExpedicionDeProductoDocumento());
                         expedicionDeProductoData.get()
                                         .setExpedicionDeProductoFecha(
-                                                        expedicionDeProducto.getExpedicionDeProductoFecha());
+                                                        dto.getExpedicionDeProducto().getExpedicionDeProductoFecha());
                         expedicionDeProductoData.get()
                                         .setExpedicionDeProductoLotes(
-                                                        expedicionDeProducto.getExpedicionDeProductoLotes());
+                                                        dto.getExpedicionDeProducto().getExpedicionDeProductoLotes());
                         expedicionDeProductoData.get()
                                         .setExpedicionDeProductoCantidad(
-                                                        expedicionDeProducto.getExpedicionDeProductoCantidad());
+                                                        dto.getExpedicionDeProducto()
+                                                                        .getExpedicionDeProductoCantidad());
                         expedicionDeProductoData.get()
                                         .setExpedicionDeProductoProductos(
-                                                        expedicionDeProducto.getExpedicionDeProductoProductos());
+                                                        dto.getExpedicionDeProducto()
+                                                                        .getExpedicionDeProductoProductos());
+                        expedicionDeProductoData.get().setExpedicionDeProductoUsuario(
+                                        dto.getExpedicionDeProducto().getExpedicionDeProductoUsuario());
+                        dto.setExpedicionDeProducto(expedicionDeProductoData.get());
                         return new ResponseEntity<>(
-                                        expedicionDeProductoServicioImpl.save(expedicionDeProductoData.get()),
+                                        expedicionDeProductoServicioImpl.saveExpModificar(dto),
                                         HttpStatus.OK);
                 } else {
                         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -406,6 +413,8 @@ public class Controladora_Trazabilidad {
                 if (monitoreoDeSSOPPreOperativoData.isPresent()) {
                         monitoreoDeSSOPPreOperativoData.get().setMonitoreoDeSSOPPreOperativoAccCorrectivas(
                                         monitoreoDeSSOPPreOperativo.getMonitoreoDeSSOPPreOperativoAccCorrectivas());
+                        monitoreoDeSSOPPreOperativoData.get().setMonitoreoDeSSOPPreOperativoDias(
+                                        monitoreoDeSSOPPreOperativo.getMonitoreoDeSSOPPreOperativoDias());
                         monitoreoDeSSOPPreOperativoData.get().setMonitoreoDeSSOPPreOperativoAccPreventivas(
                                         monitoreoDeSSOPPreOperativo.getMonitoreoDeSSOPPreOperativoAccPreventivas());
                         monitoreoDeSSOPPreOperativoData.get().setMonitoreoDeSSOPPreOperativoArea(

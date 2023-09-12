@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
 import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
@@ -33,28 +33,55 @@ const useStyles = makeStyles(theme => ({
   text: {
     color: '#2D2D2D',
   },
-  liTitle: {
-    color: 'black',
+  liTitleBlue: {
+    color: 'blue',
     fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
   },
 }));
 
 const AgregarControlDeTemperaturaEnCamaras = () => {
+  const text = "Este campo es Obligatorio";
+
   const formFields = [
-    { name: 'controlDeTemperaturaEnCamarasNroCamara', label: 'Número de Camara', type: 'selector', color: 'primary' },
+    { name: 'controlDeTemperaturaEnCamarasNroCamara', label: 'Número de Camara *', type: 'selector', color: 'primary' },
     { name: 'controlDeTemperaturaEnCamarasFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeTemperaturaEnCamarasHora', label: 'Hora', type: 'number', color: 'primary' },
-    { name: 'controlDeTemperaturaEnCamarasTempInterna', label: 'Temperatura Interna', type: 'number', adornment: 'si', unit: '°C', color: 'primary' },
-    { name: 'controlDeTemperaturaEnCamaraTempExterna', label: 'Temperatura Externa', type: 'number', adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaEnCamarasHora', label: 'Hora', type: 'text', obligatorio: true, text: text, pattern: "^[0-9]{0,10}$", color: 'primary' },
+    { name: 'controlDeTemperaturaEnCamarasTempInterna', label: 'Temperatura Interna', type: 'text', obligatorio: true, text: text, pattern: "^-?[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaEnCamaraTempExterna', label: 'Temperatura Externa', type: 'text', obligatorio: true, text: text, pattern: "^-?[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
   ];
 
-  const alertSuccess = [
-    { title: 'Correcto', body: 'Se registro el control de temperatura en camaras con éxito!', severity: 'success', type: 'description' },
-  ];
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se registro el control de temperatura en camaras con éxito!', severity: 'success', type: 'description'
+  });
 
-  const alertError = [
-    { title: 'Error', body: 'No se logro regristrar el control de temperatura en camaras, revise los datos ingresados', severity: 'error', type: 'description' },
-  ];
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logro regristrar el control de temperatura en camaras, revise los datos ingresados.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   const classes = useStyles();
   const [controlDeTemperatura, setControlDeTemperatura] = useState({});
@@ -68,10 +95,28 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
   ]);
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
+
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -81,33 +126,87 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
     setOpen(false);
   };
 
-  const handleFormSubmit = (formData) => {
+  const updateErrorAlert = (newBody) => {
+    setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
 
-    setControlDeTemperatura(formData);
-    console.log(formData);
-    axios.post('/agregar-control-de-temperatura-en-camaras', formData, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        "Content-Type": "application/json"
-      }
-    })
-      .then(response => {
-        if (response.status === 201) {
-          setShowAlertSuccess(true);
-          setTimeout(() => {
-            setShowAlertSuccess(false);
-          }, 5000);
-        } else {
-          setShowAlertError(true);
-          setTimeout(() => {
-            setShowAlertError(false);
-          }, 5000);
+  const checkError = (nroC, fecha, hora, tempI, tempE) => {
+    if (nroC === undefined || nroC === null) {
+      return false;
+    }
+    else if (fecha === undefined || fecha === null) {
+      return false;
+    }
+    else if (hora === undefined || hora === null || hora.trim() === '') {
+      return false;
+    }
+    else if (tempI === undefined || tempI === null || tempI.trim() === '') {
+      return false;
+    }
+    else if (tempE === undefined || tempE === null || tempE.trim() === '') {
+      return false;
+    }
+    return true;
+  }
+
+  const handleFormSubmit = (formData) => {
+    const control = formData;
+    console.log(control);
+
+    const nroC = control.controlDeTemperaturaEnCamarasNroCamara;
+    const fecha = control.controlDeTemperaturaEnCamarasFecha;
+    const hora = control.controlDeTemperaturaEnCamarasHora;
+    const tempI = control.controlDeTemperaturaEnCamarasTempInterna;
+    const tempE = control.controlDeTemperaturaEnCamaraTempExterna;
+
+    const check = checkError(nroC, fecha, hora, tempI, tempE);
+
+    if (check === false) {
+      updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+      }, 7000);
+    } else {
+      axios.post('/agregar-control-de-temperatura-en-camaras', formData, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json"
         }
       })
-      .catch(error => {
-        console.error(error);
-      })
-
+        .then(response => {
+          if (response.status === 201) {
+            updateErrorAlert('No se logro regristrar el control de temperatura en camaras, revise los datos ingresados.');
+            setShowAlertSuccess(true);
+            setTimeout(() => {
+              setShowAlertSuccess(false);
+            }, 5000);
+          } else {
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 5000);
+          }
+        })
+        .catch(error => {
+          if (error.request.status === 401) {
+            setShowAlertWarning(true);
+            setTimeout(() => {
+              setShowAlertWarning(false);
+            }, 5000);
+          }
+          else if (error.request.status === 500) {
+            updateErrorAlert('No se logro regristrar el control de temperatura en camaras, revise los datos ingresados.');
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 5000);
+          }
+        })
+    }
   }
 
   return (
@@ -121,7 +220,7 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
               <Typography component='h1' variant='h4'>Control de Temperatura en Cámaras</Typography>
               <div>
                 <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton>
+                  <IconButton className={blinking ? classes.blinkingButton : ''}>
                     <HelpOutlineIcon fontSize="large" color="primary" />
                   </IconButton>
                 </Button>
@@ -144,19 +243,19 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
                         Este formulario cuenta con 5 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitle}>Número de la cámara</span>: en este campo se debe seleccionar la cámara de la cual se midió su temperatura interna y externa.
+                            <span className={classes.liTitleBlue}>Número de la cámara</span>: en este campo se debe seleccionar la cámara de la cual se midió su temperatura interna y externa.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Fecha</span>: en este campo se debe registrar la fecha en la que se midió la temperatura de la cámara.
+                            <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en la que se midió la temperatura de la cámara.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Hora</span>: en este campo se registrará la hora en la que se midió la temperatura de la cámara.
+                            <span className={classes.liTitleBlue}>Hora</span>: en este campo se registrará la hora en la que se midió la temperatura de la cámara.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Temperatura Interna</span>: en este campo se registrará la temperatura interna de la cámara seleccionada.
+                            <span className={classes.liTitleBlue}>Temperatura Interna</span>: en este campo se registrará la temperatura interna de la cámara seleccionada.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Temperatura Externa</span>: en este campo se registrará la temperatura externa de la cámara seleccionada.
+                            <span className={classes.liTitleBlue}>Temperatura Externa</span>: en este campo se registrará la temperatura externa de la cámara seleccionada.
                           </li>
                         </ul>
                       </span>
@@ -164,10 +263,10 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitle}>Campos con contorno azul</span>: los campos con contorno azul son obligatorio, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
                       </span>
@@ -188,6 +287,7 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
             <Grid item lg={4} md={4} sm={4} xs={4}>
               <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
               <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+              <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
             </Grid>
             <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
           </Grid>

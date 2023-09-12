@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
 import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
@@ -33,36 +33,81 @@ const useStyles = makeStyles(theme => ({
   text: {
     color: '#2D2D2D',
   },
-  liTitle: {
-    color: 'black',
+  liTitleBlue: {
+    color: 'blue',
     fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
   },
 }));
 
 const AgregarControlDeCloroLibre = () => {
+  const text = "Este campo es Obligatorio";
+
   const formFields = [
     { name: 'controlDeCloroLibreFecha', label: 'Fecha y Hora', type: 'datetime-local', color: 'primary' },
-    { name: 'controlDeCloroLibreGrifoPico', label: 'Número del Grifo', type: 'number', color: 'primary' },
-    { name: 'controlDeCloroLibreResultado', label: 'Resultado', type: 'number', color: 'primary' },
-    { name: 'controlDeCloroLibreObservaciones', label: 'Observaciones', type: 'text', multi: '3', color: 'secondary' },
+    { name: 'controlDeCloroLibreGrifoPico', label: 'Número del Grifo', type: 'text', obligatorio: true, text: text, pattern: "^[0-9]{0,10}$", color: 'primary' },
+    { name: 'controlDeCloroLibreResultado', label: 'Resultado', type: 'text', obligatorio: true, text: text, pattern: "^[0-9]{0,10}$", color: 'primary' },
+    { name: 'controlDeCloroLibreObservaciones', label: 'Observaciones', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'secondary' },
   ];
 
-  const alertSuccess = [
-    { title: 'Correcto', body: 'Se registro el control de cloro libre con éxito!', severity: 'success', type: 'description' },
-  ];
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se registro el control de cloro libre con éxito!', severity: 'success', type: 'description'
+  });
 
-  const alertError = [
-    { title: 'Error', body: 'No se logro regristrar el control de cloro libre, revise los datos', severity: 'error', type: 'description' },
-  ];
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logro regristrar el control de cloro libre, revise los datos ingresados', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   const classes = useStyles();
   const [controlDeCloroLibre, setControlDeCloroLibre] = useState({});
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
+
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -72,36 +117,85 @@ const AgregarControlDeCloroLibre = () => {
     setOpen(false);
   };
 
+  const updateErrorAlert = (newBody) => {
+    setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+  const checkError = (fecha, grifo, resultado) => {
+    if (fecha === undefined || fecha === null) {
+      return false;
+    }
+    else if (grifo === undefined || grifo === "" || grifo === null) {
+      return false;
+    }
+    else if (resultado === undefined || resultado === "" || resultado === null) {
+      return false;
+    }
+    return true;
+  }
+
   const handleFormSubmit = (formData) => {
+    const numResultado = parseFloat(formData.controlDeCloroLibreResultado);
     const controlDeCloroLibreConResponsable = {
       ...formData,
+      controlDeCloroLibreResultado: numResultado,
       controlDeCloroLibreResponsable: window.localStorage.getItem('user'),
     }
-    setControlDeCloroLibre(controlDeCloroLibreConResponsable);
-    console.log(controlDeCloroLibreConResponsable);
-    axios.post('/agregar-control-de-cloro-libre', controlDeCloroLibreConResponsable, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        "Content-Type": "application/json"
-      }
-    })
-      .then(response => {
-        if (response.status === 201) {
-          setShowAlertSuccess(true);
-          setTimeout(() => {
-            setShowAlertSuccess(false);
-          }, 5000);
-        } else {
-          setShowAlertError(true);
-          setTimeout(() => {
-            setShowAlertError(false);
-          }, 5000);
+
+    const fechaHora = controlDeCloroLibreConResponsable.controlDeCloroLibreFecha;
+    const grifo = controlDeCloroLibreConResponsable.controlDeCloroLibreGrifoPico;
+    const resultado = controlDeCloroLibreConResponsable.controlDeCloroLibreResultado;
+
+    const check = checkError(fechaHora, grifo, resultado);
+
+    if (check === false) {
+      updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+      }, 7000);
+    } else {
+      setControlDeCloroLibre(controlDeCloroLibreConResponsable);
+      console.log(controlDeCloroLibreConResponsable);
+      axios.post('/agregar-control-de-cloro-libre', controlDeCloroLibreConResponsable, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json"
         }
       })
-      .catch(error => {
-        console.error(error);
-      })
-
+        .then(response => {
+          if (response.status === 201) {
+            setShowAlertSuccess(true);
+            setTimeout(() => {
+              setShowAlertSuccess(false);
+            }, 5000);
+          } else {
+            updateErrorAlert('No se logro regristrar el control de cloro libre, revise los datos ingresados');
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 5000);
+          }
+        })
+        .catch(error => {
+          if (error.request.status === 401) {
+            setShowAlertWarning(true);
+            setTimeout(() => {
+              setShowAlertWarning(false);
+            }, 5000);
+          }
+          else if (error.request.status === 500) {
+            updateErrorAlert('No se logró registrar el estado de las alarmas, revise los datos ingresados.');
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 5000);
+          }
+        })
+    }
   }
 
   return (
@@ -115,7 +209,7 @@ const AgregarControlDeCloroLibre = () => {
               <Typography component='h1' variant='h4'>Control de Cloro Libre</Typography>
               <div>
                 <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton>
+                  <IconButton className={blinking ? classes.blinkingButton : ''}>
                     <HelpOutlineIcon fontSize="large" color="primary" />
                   </IconButton>
                 </Button>
@@ -138,16 +232,16 @@ const AgregarControlDeCloroLibre = () => {
                         Este formulario cuenta con 4 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitle}>Fecha y Hora</span>: en este campo se debe registrar la fecha y la hora en que se registró el chequeo de los grifos.
+                            <span className={classes.liTitleBlue}>Fecha y Hora</span>: en este campo se debe registrar la fecha y la hora en que se registró el chequeo de los grifos.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Número del Grifo</span>: en este campo se registrará el número del grifo que se revisó.
+                            <span className={classes.liTitleBlue}>Número del Grifo</span>: en este campo se registrará el número del grifo que se revisó.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Resultado</span>: en este campo se registrará la cantidad de cloro medido en el agua.
+                            <span className={classes.liTitleBlue}>Resultado</span>: en este campo se registrará la cantidad de cloro medido en el agua.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de medir el cloro en el agua.
+                            <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de medir el cloro en el agua.
                           </li>
                         </ul>
                       </span>
@@ -155,10 +249,10 @@ const AgregarControlDeCloroLibre = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitle}>Campos con contorno azul</span>: los campos con contorno azul son obligatorio, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
                       </span>
@@ -179,6 +273,7 @@ const AgregarControlDeCloroLibre = () => {
             <Grid item lg={4} md={4} sm={4} xs={4}>
               <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
               <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+              <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
             </Grid>
             <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
           </Grid>

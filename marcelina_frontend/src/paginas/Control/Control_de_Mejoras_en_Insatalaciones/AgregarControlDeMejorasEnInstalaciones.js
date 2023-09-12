@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
+import { format } from 'date-fns';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -33,36 +34,81 @@ const useStyles = makeStyles(theme => ({
   text: {
     color: '#2D2D2D',
   },
-  liTitle: {
-    color: 'black',
+  liTitleBlue: {
+    color: 'blue',
     fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
   },
 }));
 
 const AgregarControlDeMejorasEnInstalaciones = () => {
+  const text = "Este campo es Obligatorio";
+
   const formFields = [
     { name: 'controlDeMejorasEnInstalacionesFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeMejorasEnInstalacionesSector', label: 'Sector', type: 'text', color: 'primary' },
-    { name: 'controlDeMejorasEnInstalacionesDefecto', label: 'Defecto', type: 'text', multi: '3', color: 'primary' },
-    { name: 'controlDeMejorasEnInstalacionesMejoraRealizada', label: 'Mejora Realizada', type: 'text', multi: '3', color: 'primary' },
+    { name: 'controlDeMejorasEnInstalacionesSector', label: 'Sector', type: 'text', text: text, obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,50}$", color: 'primary' },
+    { name: 'controlDeMejorasEnInstalacionesDefecto', label: 'Defecto', type: 'text', text: text, obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'primary' },
+    { name: 'controlDeMejorasEnInstalacionesMejoraRealizada', label: 'Mejora Realizada', text: text, obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
   ];
 
-  const alertSuccess = [
-    { title: 'Correcto', body: 'Se registro el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description' },
-  ];
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se registro el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description'
+  });
 
-  const alertError = [
-    { title: 'Error', body: 'No se logro regristrar el control de mejoras en instalaciones, revise los datos ingresados', severity: 'error', type: 'description' },
-  ];
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logro regristrar el control de mejoras en instalaciones, revise los datos ingresados.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   const classes = useStyles();
   const [controlDeMejoras, setControlDeMejoras] = useState({});
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
+
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -72,36 +118,90 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
     setOpen(false);
   };
 
+  const updateErrorAlert = (newBody) => {
+    setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+  const checkError = (fecha, sector, defecto, mejora) => {
+    if (fecha === undefined || fecha === null) {
+      return false;
+    }
+    else if (sector === undefined || sector === "" || sector === null) {
+      return false;
+    }
+    else if (defecto === undefined || defecto === "" || defecto === null) {
+      return false;
+    }
+    else if (mejora === undefined || mejora === "" || mejora === null) {
+      return false;
+    }
+    return true;
+  }
+
   const handleFormSubmit = (formData) => {
+    const fechaControl = new Date(formData.controlDeMejorasEnInstalacionesFecha);
+    fechaControl.setDate(fechaControl.getDate() + 2);
+    const fechaPars = format(fechaControl, 'yyyy-MM-dd')
+    console.log(fechaPars);
     const controlDeMejorasConResponsable = {
       ...formData,
+      controlDeMejorasEnInstalacionesFecha: fechaPars,
       controlDeMejorasEnInstalacionesResponsable: window.localStorage.getItem('user'),
     }
-    setControlDeMejoras(controlDeMejorasConResponsable);
-    console.log(controlDeMejorasConResponsable);
-    axios.post('/agregar-control-de-mejoras-en-instalaciones', controlDeMejorasConResponsable, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        "Content-Type": "application/json"
-      }
-    })
-      .then(response => {
-        if (response.status === 201) {
-          setShowAlertSuccess(true);
-          setTimeout(() => {
-            setShowAlertSuccess(false);
-          }, 5000);
-        } else {
-          setShowAlertError(true);
-          setTimeout(() => {
-            setShowAlertError(false);
-          }, 5000);
+
+    const fecha = controlDeMejorasConResponsable.controlDeMejorasEnInstalacionesFecha;
+    const sector = controlDeMejorasConResponsable.controlDeMejorasEnInstalacionesSector;
+    const defecto = controlDeMejorasConResponsable.controlDeMejorasEnInstalacionesDefecto;
+    const mejora = controlDeMejorasConResponsable.controlDeMejorasEnInstalacionesMejoraRealizada;
+
+    const check = checkError(fecha, sector, defecto, mejora);
+
+    if (check === false) {
+      updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+      }, 7000);
+    } else {
+      axios.post('/agregar-control-de-mejoras-en-instalaciones', controlDeMejorasConResponsable, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json"
         }
       })
-      .catch(error => {
-        console.error(error);
-      })
-
+        .then(response => {
+          if (response.status === 201) {
+            setShowAlertSuccess(true);
+            setTimeout(() => {
+              setShowAlertSuccess(false);
+            }, 5000);
+          } else {
+            updateErrorAlert('No se logro regristrar el control de mejoras en instalaciones, revise los datos ingresados.');
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 5000);
+          }
+        })
+        .catch(error => {
+          if (error.request.status === 401) {
+            setShowAlertWarning(true);
+            setTimeout(() => {
+              setShowAlertWarning(false);
+            }, 5000);
+          }
+          else if (error.request.status === 500) {
+            updateErrorAlert('No se logro regristrar el control de mejoras en instalaciones, revise los datos ingresados.');
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 5000);
+          }
+        })
+    }
   }
 
   return (
@@ -115,7 +215,7 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
               <Typography component='h1' variant='h4'>Control de Mejoras en Instalaciones</Typography>
               <div>
                 <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton>
+                  <IconButton className={blinking ? classes.blinkingButton : ''}>
                     <HelpOutlineIcon fontSize="large" color="primary" />
                   </IconButton>
                 </Button>
@@ -138,16 +238,16 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
                         Este formulario cuenta con 4 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitle}>Fecha</span>: en este campo se debe registrar la fecha en que se realizó de la mejora de la instalación.
+                            <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en que se realizó de la mejora de la instalación.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Sector</span>: en este campo se registrará en que sector se realizó la mejora.
+                            <span className={classes.liTitleBlue}>Sector</span>: en este campo se registrará en que sector se realizó la mejora.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Defecto</span>: en este campo se registrará el defecto que se encontró.
+                            <span className={classes.liTitleBlue}>Defecto</span>: en este campo se registrará el defecto que se encontró.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Mejora Realizada</span>: en este campo se pueden registrar la mejora que se realizó.
+                            <span className={classes.liTitleBlue}>Mejora Realizada</span>: en este campo se pueden registrar la mejora que se realizó.
                           </li>
                         </ul>
                       </span>
@@ -155,10 +255,10 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitle}>Campos con contorno azul</span>: los campos con contorno azul son obligatorio, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitle}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
                       </span>
@@ -179,6 +279,7 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
             <Grid item lg={4} md={4} sm={4} xs={4}>
               <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
               <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+              <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
             </Grid>
             <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
           </Grid>
