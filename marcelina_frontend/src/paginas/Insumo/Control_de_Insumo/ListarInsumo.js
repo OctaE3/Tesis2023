@@ -6,6 +6,7 @@ import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutiliza
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const theme = createTheme({
   palette: {
@@ -30,6 +31,7 @@ function ListarInsumo() {
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
   const [proveedor, setProveedor] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,7 +53,10 @@ function ListarInsumo() {
         });
 
 
-        const data = response.data; // Asumiendo que la respuesta de la API es un arreglo de objetos con los datos
+        const data = response.data.map((data) => ({
+          ...data,
+          Id: data.insumoId,
+        }));
         const ResponsableData = ResponsableResponse.data;
         const ProveedorData = ProveedorResponse.data;
 
@@ -184,6 +189,11 @@ function ListarInsumo() {
     insumoResponsable: (responsable) => responsable.usuarioNombre
   };
 
+  const handleEditControl = (rowData) => {
+    const id = rowData.Id;
+    navigate(`/modificar-insumo/${id}`);
+  }
+
   return (
     <div>
       <Navbar />
@@ -211,6 +221,7 @@ function ListarInsumo() {
         title="Insumos"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
+        onEditButton={handleEditControl}
       />    </div>
   );
 }

@@ -39,6 +39,18 @@ import ModificarControlDeMejorasEnInstalaciones from '../../paginas/Control/Cont
 import ModificarControlDeReposicionDeCloro from '../../paginas/Control/Control_de_Reposicion_de_Cloro/ModificarControlDeReposicionDeCloro';
 import ModificarControlDeTemperaturaDeEsterilizadores from '../../paginas/Control/Control_de_Temperatura_de_Estirilizadores/ModificarControlDeTemperaturaDeEsterilizadores';
 import ModificarControlDeTemperaturaEnCamaras from '../../paginas/Control/Control_de_Temperatura_en_Camaras/ModificarControlDeTemperaturaEnCamaras';
+import ModificarCarne from '../../paginas/Insumo/Carne/ModificarCarne';
+import ModificarInsumo from '../../paginas/Insumo/Control_de_Insumo/ModificarInsumo';
+import ModificarControlDeNitrato from '../../paginas/Insumo/Control_de_Nitrato/ModificarControlDeNitrato';
+import ModificarControlDeNitrito from '../../paginas/Insumo/Control_de_Nitrito/ModificarControlDeNitrito';
+import ModificarControlDeProductosQuimicos from '../../paginas/Insumo/Control_de_Productos_Quimicos/ModificarControlDeProductosQuimicos';
+import ModificarDiariaDeProduccion from '../../paginas/Insumo/Diaria_de_Produccion/ModificarDiariaDeProduccion';
+import ModificarProducto from '../../paginas/Insumo/Producto/ModificarProducto';
+import ModificarRecepcionDeMateriasPrimasCarnicas from '../../paginas/Insumo/Recepcion_de_Materias_Primas_Carnicas/ModificarRecepcionDeMateriasPrimasCarnicas';
+import ModificarMoniteoreoDeSSOPOperativo from '../../paginas/Trazabilidad/Monitoreo_de_SSOP_Operativo/ModificarMonitoreoDeSSOPOperativo';
+import ModificarMoniteoreoDeSSOPPreOperativo from '../../paginas/Trazabilidad/Monitoreo_de_SSOP_PreOperativo/MoidificarMonitoreoDeSSOPPreOperativo';
+import ModificarResumenDeTrazabilidad from '../../paginas/Trazabilidad/Resumen_de_Trazabilidad/ModificarResumenDeTrazabilidad';
+import ModificarExpedicionDeProducto from '../../paginas/Trazabilidad/Expedicion_de_Producto/ModificarExpedicionDeProducto';
 
 const AppRouter = () => {
     return (
@@ -53,8 +65,11 @@ const AppRouter = () => {
           <Route path="/modificar-cliente/:id" element={<ModificarCliente />} />
           <Route path="/carne" element={<AgregarCarne />} />
           <Route path="/listarcarne" element={<ListarCarne />} />
+          <Route path="/modificar-carne/:id" element={<ModificarCarne />} />
           <Route path="/insumo" element={<AgregarInsumo />} />
+          <Route path="/modificar-insumo/:id" element={<ModificarInsumo />} />
           <Route path="/producto" element={<AgregarProducto />} />
+          <Route path="/modificar-producto/:id" element={<ModificarProducto />} />
           <Route path="/proveedor" element={<AgregarProveedor />} />
           <Route path="/listarproveedor" element={<ListarProveedor />} />
           <Route path="/modificar-proveedor/:id" element={<ModificProveedor />} />
@@ -74,14 +89,23 @@ const AppRouter = () => {
           <Route path="/control-de-temperatura-en-camaras" element={<AgregarControlDeTemperaturaEnCamaras />} />
           <Route path="/modificar-control-de-temperatura-en-camaras/:id" element={<ModificarControlDeTemperaturaEnCamaras />} />
           <Route path="/control-de-nitratos" element={<AgregarControlDeNitrato />} />
+          <Route path="/modificar-control-de-nitratos/:id" element={<ModificarControlDeNitrato />} />
           <Route path="/control-de-nitritos" element={<AgregarControlDeNitrito />} />
+          <Route path="/modificar-control-de-nitritos/:id" element={<ModificarControlDeNitrito />} />
           <Route path="/expedicion-de-producto" element={<AgregarExpedicionDeProducto />} />
+          <Route path="/modificar-expedicion-de-producto/:id" element={<ModificarExpedicionDeProducto />} />
           <Route path="/control-de-productos-quimicos" element={<AgregarControlDeProductosQuimicos />} />
+          <Route path="/modificar-control-de-productos-quimicos/:id" element={<ModificarControlDeProductosQuimicos />} />
           <Route path="/recepcion-de-materias-primas-carnicas" element={<AgregarRecepcionDeMateriasPrimasCarnicas />} />
+          <Route path="/modificar-recepcion-de-materias-primas-carnicas/:id" element={<ModificarRecepcionDeMateriasPrimasCarnicas />} />
           <Route path="/diaria-de-produccion" element={<AgregarDiariaDeProduccion />} />
+          <Route path="/modificar-diaria-de-produccion/:id" element={<ModificarDiariaDeProduccion />} />
           <Route path="/resumen-de-trazabilidad" element={<AgregarResumenDeTrazabilidad />} />
+          <Route path="/modificar-resumen-de-trazabilidad/:id" element={<ModificarResumenDeTrazabilidad />} />
           <Route path="/monitoreo-de-ssop-operativo" element={<AgregarMonitoreoDeSSOPOPerativo />} />
+          <Route path="/modificar-monitoreo-de-ssop-operativo/:id" element={<ModificarMoniteoreoDeSSOPOperativo />} />
           <Route path="/monitoreo-de-ssop-pre-operativo" element={<AgregarMonitoreoDeSSOPPreOperativo />} />
+          <Route path="/modificar-monitoreo-de-ssop-pre-operativo/:id" element={<ModificarMoniteoreoDeSSOPPreOperativo />} />
           <Route path="/listar-control-de-insumos" element={<ListarInsumo />} />
           {/* Otras rutas */}
 

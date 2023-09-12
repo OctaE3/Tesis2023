@@ -15,6 +15,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 @Entity(name = "monitoreo_de_ssop_preoperativo")
 public class PMonitoreo_de_SSOP_PreOperativo implements Serializable {
@@ -25,6 +27,7 @@ public class PMonitoreo_de_SSOP_PreOperativo implements Serializable {
     private Long monitoreoDeSSOPPreOperativoId;
 
     @Column(name = "monitoreo_de_ssop_preoperativo_fecha", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime monitoreoDeSSOPPreOperativoFecha;
 
     @ElementCollection

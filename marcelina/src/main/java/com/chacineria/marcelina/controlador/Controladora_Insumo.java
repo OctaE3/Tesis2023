@@ -4,6 +4,7 @@ import com.chacineria.marcelina.dto.Control_de_NitratoDto;
 import com.chacineria.marcelina.dto.Control_de_NitritoDto;
 import com.chacineria.marcelina.dto.DiariaDeProdCarneInsumoCantidadDto;
 import com.chacineria.marcelina.dto.ListadoCarnesDto;
+import com.chacineria.marcelina.dto.ModificarDiariaDto;
 import com.chacineria.marcelina.dto.RecepcionConCarnesDto;
 import com.chacineria.marcelina.entidad.insumo.Carne;
 import com.chacineria.marcelina.entidad.insumo.Control_de_Insumos;
@@ -111,6 +112,7 @@ public class Controladora_Insumo {
         if (carneData.isPresent()) {
             carneData.get().setCarneNombre(carne.getCarneNombre());
             carneData.get().setCarneCantidad(carne.getCarneCantidad());
+            carneData.get().setCarneCategoria(carne.getCarneCategoria());
             carneData.get().setCarneCorte(carne.getCarneCorte());
             carneData.get().setCarneTipo(carne.getCarneTipo());
             carneData.get().setCarnePaseSanitario(carne.getCarnePaseSanitario());
@@ -653,28 +655,31 @@ public class Controladora_Insumo {
 
     @PutMapping("/modificar-diaria-de-produccion/{diariaDeProduccionId}")
     public ResponseEntity<PDiaria_de_Produccion> modificarDiariaDeProduccion(
-            @RequestBody PDiaria_de_Produccion diariaDeProduccion,
+            @RequestBody ModificarDiariaDto modificarDto,
             @PathVariable(value = "diariaDeProduccionId") Long diariaDeProduccionId) {
         Optional<PDiaria_de_Produccion> diariaDeProduccionData = diariaDeProduccionServicioImpl
                 .findById(diariaDeProduccionId);
         if (diariaDeProduccionData.isPresent()) {
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionAditivos(diariaDeProduccion.getDiariaDeProduccionAditivos());
+                    .setDiariaDeProduccionAditivos(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionAditivos());
             diariaDeProduccionData.get().setDiariaDeProduccionCantidadProducida(
-                    diariaDeProduccion.getDiariaDeProduccionCantidadProducida());
+                    modificarDto.getDiariaDeProduccion().getDiariaDeProduccionCantidadProducida());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionEnvasado(diariaDeProduccion.getDiariaDeProduccionEnvasado());
-            diariaDeProduccionData.get().setDiariaDeProduccionFecha(diariaDeProduccion.getDiariaDeProduccionFecha());
+                    .setDiariaDeProduccionEnvasado(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionEnvasado());
+            diariaDeProduccionData.get().setDiariaDeProduccionFecha(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionFecha());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionFechaVencimiento(diariaDeProduccion.getDiariaDeProduccionFechaVencimiento());
+                    .setDiariaDeProduccionFechaVencimiento(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionFechaVencimiento());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionInsumosCarnicos(diariaDeProduccion.getDiariaDeProduccionInsumosCarnicos());
-            diariaDeProduccionData.get().setDiariaDeProduccionLote(diariaDeProduccion.getDiariaDeProduccionLote());
+                    .setDiariaDeProduccionInsumosCarnicos(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionInsumosCarnicos());
+            diariaDeProduccionData.get().setDiariaDeProduccionLote(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionLote());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionProducto(diariaDeProduccion.getDiariaDeProduccionProducto());
+                    .setDiariaDeProduccionProducto(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionProducto());
+            diariaDeProduccionData.get().setDiariaDeProduccionCantidadUtilizadaCarnes(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionCantidadUtilizadaCarnes());
+            diariaDeProduccionData.get().setDiariaDeProduccionCantidadUtilizadaInsumos(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionCantidadUtilizadaInsumos());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionResponsable(diariaDeProduccion.getDiariaDeProduccionResponsable());
-            return new ResponseEntity<>(diariaDeProduccionServicioImpl.save(diariaDeProduccionData.get()),
+                    .setDiariaDeProduccionResponsable(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionResponsable());
+                    modificarDto.setDiariaDeProduccion(diariaDeProduccionData.get());
+            return new ResponseEntity<>(diariaDeProduccionServicioImpl.saveModificarDiaria(modificarDto),
                     HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

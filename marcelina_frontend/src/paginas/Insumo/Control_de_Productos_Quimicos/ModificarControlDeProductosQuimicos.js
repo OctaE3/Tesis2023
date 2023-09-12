@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
-import Autocomplete from '@material-ui/lab/Autocomplete';
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
@@ -31,6 +30,9 @@ const useStyles = makeStyles(theme => ({
     },
     select: {
         width: '100%',
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'blue',
+        },
     },
     sendButton: {
         display: 'flex',
@@ -38,13 +40,6 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
-    },
-    auto: {
-        marginTop: theme.spacing(2),
-        marginBottom: theme.spacing(1),
-        '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'blue',
-        },
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -92,18 +87,15 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
+const ModificarControlDeProductosQuimicos = () => {
 
     const classes = useStyles();
     const { id } = useParams();
     const [control, setControl] = useState({});
-    const [depositos, setDepositos] = useState([]);
     const [controles, setControles] = useState([]);
-    const [opcion, setOpcion] = useState([
-        { value: '1', label: 'Deposito de Agua 1' },
-        { value: '2', label: 'Deposito de Agua 2' },
-        { value: '3', label: 'Deposito de Agua 3' },
-    ]);
+    const [proveedores, setProveedores] = useState([]);
+    const [proveedorSelect, setProveedorSelect] = useState([]);
+    const [quimicoProveedor, setQuimicoProveedor] = useState({});
 
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
@@ -118,11 +110,11 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
     const navigate = useNavigate();
 
     const [alertSuccess, setAlertSuccess] = useState({
-        title: 'Correcto', body: 'Se modificar el control de limpieza y desinfeccion de depositos de agua y canierias con éxito!', severity: 'success', type: 'description'
+        title: 'Correcto', body: 'Control de productos quimicos modificado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el control de limpieza y desinfeccion de depositos de agua y canierias, revise los datos ingresados', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logro modificar el control de productos quimicos, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
     const [alertWarning, setAlertWarning] = useState({
@@ -146,28 +138,56 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
 
     useEffect(() => {
         const obtenerControles = () => {
-            axios.get('/listar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-canierias', {
+            axios.get('/listar-control-de-productos-quimicos', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             })
                 .then(response => {
                     const controlesData = response.data;
-                    const controlEncontrado = controlesData.find((control) => control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId.toString() === id.toString());
-                    const fechaControl = controlEncontrado.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
+                    const controlEncontrado = controlesData.find((control) => control.controlDeProductosQuimicosId.toString() === id.toString());
+                    const controlesRestantes = controlesData.filter(
+                        (control) => control.controlDeProductosQuimicosId.toString() !== controlEncontrado.controlDeProductosQuimicosId.toString()
+                    );
+                    setControles(controlesRestantes);
+                    console.log(controlEncontrado)
+
+                    setQuimicoProveedor({
+                        value: controlEncontrado.controlDeProductosQuimicosProveedor.proveedorId,
+                        label: controlEncontrado.controlDeProductosQuimicosProveedor.proveedorNombre,
+                    });
+
+                    const fechaControl = controlEncontrado.controlDeProductosQuimicosFecha;
                     const fecha = new Date(fechaControl);
                     const fechaFormateada = fecha.toISOString().split('T')[0];
-                    const controlConFecha = {
+
+                    const controlConFechaParseada = {
                         ...controlEncontrado,
-                        controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha: fechaFormateada,
+                        controlDeProductosQuimicosFecha: fechaFormateada,
                     }
-                    const opciones = opcion.filter((item) =>
-                        controlEncontrado.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.includes(item.value)
+                    console.log(controlConFechaParseada);
+                    setControl(controlConFechaParseada);
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        };
+
+        const obtenerProveedores = () => {
+            axios.get('/listar-proveedores', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(response => {
+                    setProveedores(response.data);
+                    setProveedorSelect(
+                        response.data.map((proveedor) => ({
+                            value: proveedor.proveedorId,
+                            label: proveedor.proveedorNombre,
+                        }))
                     );
-                    console.log(opciones)
-                    setDepositos(opciones);
-                    setControl(controlConFecha);
-                    console.log(controlConFecha)
+
                 })
                 .catch(error => {
                     console.error(error);
@@ -175,6 +195,7 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
         };
 
         obtenerControles();
+        obtenerProveedores();
     }, []);
 
     useEffect(() => {
@@ -193,14 +214,9 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
     }, []);
 
     const handleChange = event => {
-        const { name, value, id, type } = event.target;
-        const regex = new RegExp(id);
-        if (type === "date") {
-            setControl(prevState => ({
-                ...prevState,
-                [name]: value,
-            }));
-        } else {
+        const { name, value } = event.target;
+        if (name === "controlDeProductosQuimicosProductoQuimico") {
+            const regex = new RegExp("^[A-Za-z0-9\\s]{0,50}$");
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -208,88 +224,113 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
                 }));
             }
         }
+        else if (name === "controlDeProductosQuimicosLote") {
+            const regex = new RegExp("^[A-Za-z0-9\\s]{0,15}$");
+            if (regex.test(value)) {
+                setControl(prevState => ({
+                    ...prevState,
+                    [name]: value,
+                }));
+            }
+        }
+        else if (name === "controlDeProductosQuimicosMotivoDeRechazo") {
+            const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+            if (regex.test(value)) {
+                setControl(prevState => ({
+                    ...prevState,
+                    [name]: value,
+                }));
+            }
+        } else {
+            setControl(prevState => ({
+                ...prevState,
+                [name]: value,
+            }));
+        }
     }
 
-    const handleDepositosChange = (event, newValue) => {
-        const uniqueList = [...new Set(newValue)];
-        setDepositos(uniqueList);
-    };
-
-    const checkError = (fecha, depositos, canierias) => {
+    const checkError = (fecha, proveedor, quimico, lote) => {
         if (fecha === undefined || fecha === null) {
             return false;
         }
-        else if (depositos.length === 0 || depositos === undefined || depositos === null) {
+        else if (proveedor === undefined || proveedor === null) {
             return false;
         }
-        else if (canierias === undefined || canierias === null) {
+        else if (quimico === undefined || quimico === null || quimico === '') {
+            return false;
+        }
+        else if (lote === undefined || lote === null || lote === '') {
             return false;
         }
         return true;
     }
 
     const handleFormSubmit = () => {
-        const valorDepositos = depositos.map(deposito => deposito.value);
-        const fecha = control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
+        const proveedorCompleto = proveedores.find((proveedor) => proveedor.proveedorId.toString() === quimicoProveedor.value.toString());
+        const fecha = control.controlDeProductosQuimicosFecha;
         const fechaNueva = new Date(fecha);
         fechaNueva.setDate(fechaNueva.getDate() + 1);
         const fechaFormateada = fechaNueva.toISOString().split('T')[0];
-        console.log(fechaFormateada);
         const data = {
             ...control,
-            controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha: fechaFormateada,
-            controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: valorDepositos,
+            controlDeProductosQuimicosFecha: fechaFormateada,
+            controlDeProductosQuimicosProveedor: proveedorCompleto,
         };
         console.log(data);
 
-        const fechaData = data.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
-        const deposito = data.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito;
-        const canierias = data.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias;
+        const check = checkError(data.controlDeProductosQuimicosFecha, data.controlDeProductosQuimicosProveedor,
+            data.controlDeProductosQuimicosProductoQuimico, data.controlDeProductosQuimicosLote);
 
-        const check = checkError(fechaData, deposito, canierias);
-
-        if (check === false) {
-            updateErrorAlert('Revise los datos ingresados y no deje campos vacíos.');
+        if (data.controlDeProductosQuimicosProveedor === null || data.controlDeProductosQuimicosProveedor === undefined || data.controlDeProductosQuimicosProveedor === "Seleccionar") {
+            updateErrorAlert(`Seleccione un proveedor válido, no se permite seleccionar la opción de "Seleccionar".`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 5000);
+            }, 7000);
         } else {
-            axios.put(`/modificar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-canierias/${id}`, data, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    "Content-Type": "application/json"
-                }
-            })
-                .then(response => {
-                    if (response.status === 200) {
-                        setShowAlertSuccess(true);
-                        setTimeout(() => {
-                            setShowAlertSuccess(false);
-                        }, 5000);
-                    } else {
-                        updateErrorAlert('No se logro modificar el control de limpieza y desinfeccion de depositos de agua y canierias, revise los datos ingresados.');
-                        setShowAlertError(true);
-                        setTimeout(() => {
-                            setShowAlertError(false);
-                        }, 5000);
+            if (check === false) {
+                updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+                setShowAlertError(true);
+                setTimeout(() => {
+                    setShowAlertError(false);
+                }, 7000);
+            } else {
+                axios.put(`/modificar-control-de-productos-quimicos/${id}`, data, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        "Content-Type": "application/json"
                     }
                 })
-                .catch(error => {
-                    if (error.request.status === 401) {
-                        setShowAlertWarning(true);
-                        setTimeout(() => {
-                            setShowAlertWarning(false);
-                        }, 5000);
-                    }
-                    else if (error.request.status === 500) {
-                        updateErrorAlert('No se logro modificar el control de limpieza y desinfeccion de depositos de agua y canierias, revise los datos ingresados.');
-                        setShowAlertError(true);
-                        setTimeout(() => {
-                            setShowAlertError(false);
-                        }, 5000);
-                    }
-                })
+                    .then(response => {
+                        if (response.status === 200) {
+                            setShowAlertSuccess(true);
+                            setTimeout(() => {
+                                setShowAlertSuccess(false);
+                            }, 5000);
+                        } else {
+                            updateErrorAlert('No se logro modificar el control de productos quimicos, revise los datos ingresados.')
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 5000);
+                        }
+                    })
+                    .catch(error => {
+                        if (error.request.status === 401) {
+                            setShowAlertWarning(true);
+                            setTimeout(() => {
+                                setShowAlertWarning(false);
+                            }, 5000);
+                        }
+                        else if (error.request.status === 500) {
+                            updateErrorAlert('No se logro modificar el control de productos quimicos, revise los datos ingresados.');
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 5000);
+                        }
+                    })
+            }
         }
     };
 
@@ -303,7 +344,7 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2}></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
-                                    <Typography component='h1' variant='h4'>Modificar Control De Cloro Libre</Typography>
+                                    <Typography component='h1' variant='h4'>Modificar Control de Nitrito</Typography>
                                     <div>
                                         <Button color="primary" onClick={handleClickOpen}>
                                             <IconButton className={blinking ? classes.blinkingButton : ''}>
@@ -322,23 +363,26 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar la cantidad de cloro medido en el agua y de qué grifo, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes registrar los productos químicos que recibe la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
-                                                        Este formulario cuenta con 4 campos:
+                                                        Este formulario cuenta con 5 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en que se registró la limpieza y desinfección de los depósitos y cañerías.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se recibe el producto químico.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Depósitos</span>: en este campo se registrará los depósitos que limpiaron y desinfectaron.
+                                                                <span className={classes.liTitleBlue}>Proveedor</span>: en este campo se debe seleccionar el proveedor al que se le compra el producto químico.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Cañerías</span>: en este campo se registrará las cañerías que se limpiaron y desinfectaron.
+                                                                <span className={classes.liTitleBlue}>Producto Químico</span>: en este campo se ingresa el producto químico que se recibe.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de limpiar los depósitos y cañerías.
+                                                                <span className={classes.liTitleBlue}>Lote</span>: este campo se ingresa el código del lote, del producto químico que se recibe.
+                                                            </li>
+                                                            <li>
+                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: en este campo se puede ingresar el motivo por el cual se rechazó el producto químico recibido.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -346,7 +390,7 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul</span>: los campos con contorno azul son obligatorio, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
                                                                 <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
@@ -381,55 +425,77 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
                                         <TextField
                                             fullWidth
                                             autoFocus
+                                            required
+                                            className={classes.customOutlinedBlue}
+                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha"
                                             defaultValue={new Date()}
-                                            className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
-                                            color="primary"
                                             type="date"
-                                            name="controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha"
-                                            value={control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha}
+                                            name="controlDeProductosQuimicosFecha"
+                                            value={control.controlDeProductosQuimicosFecha}
                                             onChange={handleChange}
                                         />
                                     </Grid>
                                     <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <Autocomplete
-                                            multiple
-                                            className={classes.auto}
-                                            options={opcion}
-                                            getOptionLabel={(opcion) => opcion.label}
-                                            value={depositos}
-                                            onChange={handleDepositosChange}
-                                            renderInput={(params) => (
-                                                <TextField
-                                                    {...params}
-                                                    variant="outlined"
-                                                    label="Depositos"
-                                                    InputLabelProps={{
-                                                        shrink: true,
-                                                        className: classes.customLabelBlue
-                                                    }}
-                                                />
-                                            )}
+                                        <FormControl variant="outlined" className={classes.formControl}>
+                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-controlDeProductosQuimicosProveedor-native-simple`}>Proveedor *</InputLabel>
+                                            <Select
+                                                className={classes.select}
+                                                native
+                                                value={quimicoProveedor.value}
+                                                name="controlDeProductosQuimicosProveedor"
+                                                label="Proveedor *"
+                                                inputProps={{
+                                                    name: "controlDeProductosQuimicosProveedor",
+                                                    id: `outlined-controlDeProductosQuimicosProveedor-native-simple`,
+                                                }}
+                                                onChange={(e) => setQuimicoProveedor(e.target.value)}
+                                            >
+                                                <option>Seleccionar</option>
+                                                {proveedorSelect.map((option, ind) => (
+                                                    <option key={ind} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item lg={12} md={12} sm={12} xs={12}>
+                                        <TextField
+                                            fullWidth
+                                            autoFocus
+                                            required
+                                            className={classes.customOutlinedBlue}
+                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            color="primary"
+                                            margin="normal"
+                                            variant="outlined"
+                                            label="Producto Químico"
+                                            defaultValue="Producto Químico"
+                                            type="text"
+                                            name="controlDeProductosQuimicosProductoQuimico"
+                                            value={control.controlDeProductosQuimicosProductoQuimico}
+                                            onChange={handleChange}
                                         />
                                     </Grid>
                                     <Grid item lg={12} md={12} sm={12} xs={12}>
                                         <TextField
                                             fullWidth
                                             autoFocus
-                                            margin="normal"
-                                            variant="outlined"
+                                            required
                                             className={classes.customOutlinedBlue}
                                             InputLabelProps={{ className: classes.customLabelBlue }}
                                             color="primary"
-                                            label="Cañerias"
-                                            defaultValue="Cañerias"
-                                            id="^[A-Za-z0-9\\s]+$"
+                                            margin="normal"
+                                            variant="outlined"
+                                            label="Lote"
+                                            defaultValue={0}
                                             type="text"
-                                            name="controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias"
-                                            value={control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias}
+                                            name="controlDeProductosQuimicosLote"
+                                            value={control.controlDeProductosQuimicosLote}
                                             onChange={handleChange}
                                         />
                                     </Grid>
@@ -439,19 +505,18 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
                                             minRows={3}
                                             multiline
                                             autoFocus
-                                            margin="normal"
-                                            variant="outlined"
-                                            label="Observaciones"
-                                            id="^[A-Za-z0-9\\s,.]{0,250}$"
                                             className={classes.customOutlinedRed}
                                             InputLabelProps={{ className: classes.customLabelRed }}
                                             color="secondary"
-                                            defaultValue="Observaciones"
+                                            margin="normal"
+                                            variant="outlined"
+                                            label="Motivo de rechazo"
+                                            defaultValue="Motivo de rechazo"
                                             type="text"
-                                            name="controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones"
+                                            name="controlDeProductosQuimicosMotivoDeRechazo"
                                             value={
-                                                control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones ?
-                                                    control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones :
+                                                control.controlDeProductosQuimicosMotivoDeRechazo ?
+                                                    control.controlDeProductosQuimicosMotivoDeRechazo :
                                                     ''
                                             }
                                             onChange={handleChange}
@@ -475,4 +540,4 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
     );
 };
 
-export default ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias;
+export default ModificarControlDeProductosQuimicos;

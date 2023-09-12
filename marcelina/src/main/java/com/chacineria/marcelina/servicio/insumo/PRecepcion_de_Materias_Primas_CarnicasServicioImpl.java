@@ -1,5 +1,6 @@
 package com.chacineria.marcelina.servicio.insumo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +36,20 @@ public class PRecepcion_de_Materias_Primas_CarnicasServicioImpl implements PRece
 
     @Override
     @Transactional
-    public PRecepcion_de_Materias_Primas_Carnicas save( PRecepcion_de_Materias_Primas_Carnicas save){
+    public PRecepcion_de_Materias_Primas_Carnicas save(PRecepcion_de_Materias_Primas_Carnicas save){
+        return recepcionDeMateriasPrimasCarnicasRepositorio.save(save);
+    }
+
+    @Transactional
+    public PRecepcion_de_Materias_Primas_Carnicas saveModificar(PRecepcion_de_Materias_Primas_Carnicas save){
+        List<Carne> carnes = save.getRecepcionDeMateriasPrimasCarnicasProductos();
+        List<Carne> carnesActualizadas = new ArrayList<>();
+        for (Carne carne : carnes) {
+            carne.setCarnePaseSanitario(save.getRecepcionDeMateriasPrimasCarnicasPaseSanitario());
+            carnesActualizadas.add(carne);
+            carneRepositorio.save(carne);
+        }
+        save.setRecepcionDeMateriasPrimasCarnicasProductos(carnesActualizadas);
         return recepcionDeMateriasPrimasCarnicasRepositorio.save(save);
     }
 

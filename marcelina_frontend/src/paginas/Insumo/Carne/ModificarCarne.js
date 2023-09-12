@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -30,6 +30,11 @@ const useStyles = makeStyles(theme => ({
     },
     select: {
         width: '100%',
+        marginBottom: theme.spacing(0.5),
+        marginTop: theme.spacing(0.5),
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'blue',
+        },
     },
     sendButton: {
         display: 'flex',
@@ -84,12 +89,52 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-const ModificarControlDeCloroLibre = () => {
+const ModificarCarne = () => {
 
     const classes = useStyles();
     const { id } = useParams();
     const [control, setControl] = useState({});
-    const [controles, setControles] = useState([]);
+    const [carneDesactivado, setCarneDesactivado] = useState(false);
+    const [opciones, setOpciones] = useState([]);
+    const [categoriaValue, setCategoriaValue] = useState('');
+    const carneTipoSelect = [
+        { value: 'Porcino', label: 'Porcino' },
+        { value: 'Bovino', label: 'Bovino' },
+        { value: 'Sangre', label: 'Sangre' },
+        { value: 'Tripas', label: 'Tripas' },
+        { value: 'Higado', label: 'Higado' },
+    ];
+    const carneCortePorcino = [
+        { value: 'Carcasa', label: 'Carcasa' },
+        { value: 'Media res', label: 'Media res' },
+        { value: 'Cortes c/h', label: 'Cortes c/h' },
+        { value: 'Cortes s/h', label: 'Cortes s/h' },
+        { value: 'Menudencias', label: 'Menudencias' },
+        { value: 'Subproductos', label: 'Subproductos' },
+    ];
+    const carneCorteBovino = [
+        { value: 'Media res', label: 'Media res' },
+        { value: 'Delantero', label: 'Delantero' },
+        { value: 'Trasero', label: 'Trasero' },
+        { value: 'Cortes c/h', label: 'Cortes c/h' },
+        { value: 'Cortes s/h', label: 'Cortes s/h' },
+        { value: 'Menudencias', label: 'Menudencias' },
+        { value: 'Subproductos', label: 'Subproductos' },
+    ];
+    const carneCorteSangre = [
+        { value: 'Sangre', label: 'Sangre' },
+    ];
+    const carneCorteTripas = [
+        { value: 'Tripas', label: 'Tripas' },
+    ];
+    const carneCorteHigado = [
+        { value: 'Higado', label: 'Higado' },
+    ];
+    const carneCategoria = [
+        { value: 'CarneSH', label: 'Carne S/H' },
+        { value: 'CarneCH', label: 'Carne C/H' },
+        { value: 'Grasa', label: 'Grasa' },
+    ];
 
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
@@ -104,11 +149,11 @@ const ModificarControlDeCloroLibre = () => {
     const navigate = useNavigate();
 
     const [alertSuccess, setAlertSuccess] = useState({
-        title: 'Correcto', body: 'Se modifico el control de cloro libre con éxito!', severity: 'success', type: 'description'
+        title: 'Correcto', body: 'Carne modificada con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el control de cloro libre, revise los datos ingresados', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logro modificar la carne, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
     const [alertWarning, setAlertWarning] = useState({
@@ -132,21 +177,26 @@ const ModificarControlDeCloroLibre = () => {
 
     useEffect(() => {
         const obtenerControles = () => {
-            axios.get('/listar-control-de-cloro-libre', {
+            axios.get('/listar-carnes', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             })
                 .then(response => {
                     const controlesData = response.data;
-                    const controlEncontrado = controlesData.find((control) => control.controlDeCloroLibreId.toString() === id.toString());
+                    const controlEncontrado = controlesData.find((control) => control.carneId.toString() === id.toString());
                     console.log(controlEncontrado)
-                    const fechaArray = controlEncontrado.controlDeCloroLibreFecha;
-                    const fecha = new Date(fechaArray[0], fechaArray[1] - 1, fechaArray[2], fechaArray[3], fechaArray[4]);
-                    const fechaParseada = format(fecha, 'yyyy-MM-dd HH:mm');
+                    const fechaControl = controlEncontrado.carneFecha;
+                    const fecha = new Date(fechaControl);
+                    const fechaFormateada = fecha.toISOString().split('T')[0];
+
                     const controlConFechaParseada = {
                         ...controlEncontrado,
-                        controlDeCloroLibreFecha: fechaParseada,
+                        carneCategoria: control.carneTipo === "Sangre" ? "Seleccionar" :
+                            control.carneTipo === "Higado" ? "Seleccionar" :
+                                control.carneTipo === "Tripas" ? "Seleccionar" :
+                                    controlEncontrado.carneCategoria,
+                        carneFecha: fechaFormateada,
                     }
                     console.log(controlConFechaParseada);
                     setControl(controlConFechaParseada);
@@ -158,6 +208,25 @@ const ModificarControlDeCloroLibre = () => {
 
         obtenerControles();
     }, []);
+
+    useEffect(() => {
+        if (control.carneTipo === 'Porcino') {
+            setOpciones(carneCortePorcino);
+            setCarneDesactivado(false);
+        } else if (control.carneTipo === 'Bovino') {
+            setOpciones(carneCorteBovino);
+            setCarneDesactivado(false);
+        } else if (control.carneTipo === 'Sangre') {
+            setOpciones(carneCorteSangre);
+            setCarneDesactivado(true);
+        } else if (control.carneTipo === 'Higado') {
+            setOpciones(carneCorteHigado);
+            setCarneDesactivado(true);
+        } else if (control.carneTipo === 'Tripas') {
+            setOpciones(carneCorteTripas);
+            setCarneDesactivado(true);
+        }
+    }, [control.carneTipo]);
 
     useEffect(() => {
         const blinkInterval = setInterval(() => {
@@ -175,14 +244,9 @@ const ModificarControlDeCloroLibre = () => {
     }, []);
 
     const handleChange = event => {
-        const { name, value, id, type } = event.target;
-        const regex = new RegExp(id);
-        if (type === "datetime-local") {
-            setControl(prevState => ({
-                ...prevState,
-                [name]: value,
-            }));
-        } else {
+        const { name, value } = event.target;
+        if (name === "carneNombre") {
+            const regex = new RegExp("^[A-Za-z0-9\\s]{0,50}$");
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -190,60 +254,68 @@ const ModificarControlDeCloroLibre = () => {
                 }));
             }
         }
+        else if (name === "carneCantidad") {
+            const regex = new RegExp("^[0-9]{0,10}$");
+            if (regex.test(value)) {
+                setControl(prevState => ({
+                    ...prevState,
+                    [name]: value,
+                }));
+            }
+        } else {
+            setControl(prevState => ({
+                ...prevState,
+                [name]: value,
+            }));
+        }
     }
 
-    const checkError = (fecha, grifo, resultado) => {
-        if (fecha === undefined || fecha === null) {
+    const checkError = (nombre, cantidad) => {
+        if (nombre === undefined || nombre === null || nombre.Trim() === '') {
             return false;
         }
-        else if (grifo === undefined || grifo === "" || grifo === null) {
-            return false;
-        }
-        else if (resultado === undefined || resultado === "" || resultado === null) {
+        else if (cantidad === undefined || cantidad === null || cantidad.Trim() === '') {
             return false;
         }
         return true;
     }
 
     const handleFormSubmit = () => {
-        const numResultado = parseFloat(control.controlDeCloroLibreResultado);
-        const fecha = control.controlDeCloroLibreFecha;
-        const formato = 'yyyy-MM-dd HH:mm';
-        const fechaHoraFormateada = parse(fecha, formato, new Date());
         const data = {
             ...control,
-            controlDeCloroLibreFecha: fechaHoraFormateada,
-            controlDeCloroLibreResultado: numResultado,
+            carneCategoria: control.carneTipo === "Sangre" ? "Sangre" :
+                control.carneTipo === "Higado" ? "Higado" :
+                    control.carneTipo === "Tripas" ? "Tripas" :
+                        control.carneCategoria,
         };
         console.log(data);
 
-        const fechaHora = data.controlDeCloroLibreFecha;
-        const grifo = data.controlDeCloroLibreGrifoPico;
-        const resultado = data.controlDeCloroLibreResultado;
+        const nombre = data.carneNombre.toString();
+        const cantidad = data.carneCantidad.toString();
 
-        const check = checkError(fechaHora, grifo, resultado);
+        const check = checkError(nombre, cantidad);
 
         if (check === false) {
+            updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
             }, 7000);
         } else {
-            axios.put(`/modificar-control-de-cloro-libre/${id}`, data, {
+            axios.put(`/modificar-carne/${id}`, data, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     "Content-Type": "application/json"
                 }
             })
                 .then(response => {
-                    console.log(response.status);
                     if (response.status === 200) {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
                         }, 5000);
                     } else {
-                        updateErrorAlert('No se logró registrar el estado de las alarmas, revise los datos ingresados');
+                        updateErrorAlert('No se logro modificar la carne, revise los datos ingresados.')
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
@@ -251,20 +323,19 @@ const ModificarControlDeCloroLibre = () => {
                     }
                 })
                 .catch(error => {
-                    console.error(error);
                     if (error.request.status === 401) {
                         setShowAlertWarning(true);
                         setTimeout(() => {
-                            setShowAlertWarning(false);
+                          setShowAlertWarning(false);
                         }, 5000);
-                    }
-                    else if (error.request.status === 500) {
-                        updateErrorAlert('No se logró registrar el estado de las alarmas, revise los datos ingresados');
+                      }
+                      else if (error.request.status === 500) {
+                        updateErrorAlert('No se logro modificar la carne, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
-                            setShowAlertError(false);
+                          setShowAlertError(false);
                         }, 5000);
-                    }
+                      }
                 })
         }
     };
@@ -279,7 +350,7 @@ const ModificarControlDeCloroLibre = () => {
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2}></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
-                                    <Typography component='h1' variant='h4'>Modificar Control De Cloro Libre</Typography>
+                                    <Typography component='h1' variant='h4'>Modificar Carne</Typography>
                                     <div>
                                         <Button color="primary" onClick={handleClickOpen}>
                                             <IconButton className={blinking ? classes.blinkingButton : ''}>
@@ -298,24 +369,18 @@ const ModificarControlDeCloroLibre = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar la cantidad de cloro medido en el agua y de qué grifo, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar las carne registradas en la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
-                                                        Este formulario cuenta con 4 campos:
+                                                        Este formulario cuenta con 5 campos:
                                                         <ul>
-                                                            <li>
-                                                                <span className={classes.liTitleBlue}>Fecha y Hora</span>: en este campo se debe registrar la fecha y la hora en que se registró el chequeo de los grifos.
-                                                            </li>
-                                                            <li>
-                                                                <span className={classes.liTitleBlue}>Número del Grifo</span>: en este campo se registrará el número del grifo que se revisó.
-                                                            </li>
-                                                            <li>
-                                                                <span className={classes.liTitleBlue}>Resultado</span>: en este campo se registrará la cantidad de cloro medido en el agua.
-                                                            </li>
-                                                            <li>
-                                                                <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de medir el cloro en el agua.
-                                                            </li>
+                                                            <li><span className={classes.liTitleBlue}>Nombre</span>: en este campo se ingresa el nombre de la carne o producto cárnico que se recibio</li>
+                                                            <li><span className={classes.liTitleBlue}>Tipo</span>: en este campo se selecciona el tipo de producto que se recibio, hay 5 tipos Bovino, Porcino, Higado, Tripa y Sangre</li>
+                                                            <li><span className={classes.liTitleBlue}>Corte</span>: en este campo se selecciona el grupo en el que entra el producto recibido</li>
+                                                            <li><span className={classes.liTitleBlue}>Categoria</span>: este campo solo esta disponible para los productos Bovinos y Porcinos,
+                                                                y lo que se busca en este campo es especificar si la carne recibida es con hueso o sin hueso</li>
+                                                            <li><span className={classes.liTitleBlue}>Cantidad</span>: en este campo se ingresa la cantidad recibida del producto</li>
                                                         </ul>
                                                     </span>
                                                     <span>
@@ -357,79 +422,105 @@ const ModificarControlDeCloroLibre = () => {
                                         <TextField
                                             fullWidth
                                             autoFocus
-                                            margin="normal"
-                                            required
-                                            className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
-                                            color="primary"
-                                            variant="outlined"
-                                            label="Fecha y Hora"
-                                            defaultValue={new Date()}
-                                            type="datetime-local"
-                                            name="controlDeCloroLibreFecha"
-                                            value={control.controlDeCloroLibreFecha}
-                                            onChange={handleChange}
-                                        />
-                                    </Grid>
-                                    <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            autoFocus
-                                            required
                                             className={classes.customOutlinedBlue}
                                             InputLabelProps={{ className: classes.customLabelBlue }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
-                                            label="Número del Grifo"
-                                            defaultValue="Número del Grifo"
-                                            id="^[0-9]+$"
-                                            type="number"
-                                            name="controlDeCloroLibreGrifoPico"
-                                            value={control.controlDeCloroLibreGrifoPico}
-                                            onChange={handleChange}
-                                        />
-                                    </Grid>
-                                    <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            autoFocus
-                                            required
-                                            className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
-                                            color="primary"
-                                            margin="normal"
-                                            variant="outlined"
-                                            label="Resultado"
-                                            defaultValue="Resultado"
-                                            id="^[0-9.]+$"
-                                            type="number"
-                                            name="controlDeCloroLibreResultado"
-                                            value={control.controlDeCloroLibreResultado}
-                                            onChange={handleChange}
-                                        />
-                                    </Grid>
-                                    <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            minRows={3}
-                                            multiline
-                                            autoFocus
-                                            className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
-                                            color="secondary"
-                                            margin="normal"
-                                            variant="outlined"
-                                            label="Observaciones"
-                                            defaultValue="Observaciones"
-                                            id="^[A-Za-z0-9\\s,.]{0,250}$"
+                                            label="Nombre"
+                                            defaultValue="Nombre"
                                             type="text"
-                                            name="controlDeCloroLibreObservaciones"
-                                            value={
-                                                control.controlDeCloroLibreObservaciones ?
-                                                    control.controlDeCloroLibreObservaciones :
-                                                    ''
-                                            }
+                                            name="carneNombre"
+                                            value={control.carneNombre}
+                                            onChange={handleChange}
+                                        />
+                                    </Grid>
+                                    <Grid item lg={12} md={12} sm={12} xs={12}>
+                                        <FormControl variant="outlined" className={classes.formControl}>
+                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-carneTipo-native-simple`}>Tipo</InputLabel>
+                                            <Select
+                                                className={classes.select}
+                                                native
+                                                value={control.carneTipo}
+                                                name="carneTipo"
+                                                label="Tipo"
+                                                inputProps={{
+                                                    name: "carneTipo",
+                                                    id: `outlined-carneTipo-native-simple`,
+                                                }}
+                                                onChange={handleChange}
+                                            >
+                                                <option>Seleccionar</option>
+                                                {carneTipoSelect.map((option, ind) => (
+                                                    <option key={ind} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item lg={12} md={12} sm={12} xs={12}>
+                                        <FormControl variant="outlined" className={classes.formControl}>
+                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-carneCorte-native-simple`}>Corte</InputLabel>
+                                            <Select
+                                                className={classes.select}
+                                                native
+                                                value={control.carneCorte}
+                                                name="carneCorte"
+                                                label="Corte"
+                                                inputProps={{
+                                                    name: "carneCorte",
+                                                    id: `outlined-carneCorte-native-simple`,
+                                                }}
+                                                onChange={handleChange}
+                                            >
+                                                <option>Seleccionar</option>
+                                                {opciones.map((option, ind) => (
+                                                    <option key={ind} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item lg={12} md={12} sm={12} xs={12}>
+                                        <FormControl variant="outlined" className={classes.formControl}>
+                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-carneCategoria-native-simple`}>Categoria</InputLabel>
+                                            <Select
+                                                className={classes.select}
+                                                native
+                                                value={control.carneCategoria}
+                                                name="carneCategoria"
+                                                label="Categoria"
+                                                inputProps={{
+                                                    name: "carneCategoria",
+                                                    id: `outlined-carneCategoria-native-simple`,
+                                                }}
+                                                onChange={handleChange}
+                                            >
+                                                <option>Seleccionar</option>
+                                                {carneCategoria.map((option, ind) => (
+                                                    <option key={ind} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item lg={12} md={12} sm={12} xs={12}>
+                                        <TextField
+                                            fullWidth
+                                            autoFocus
+                                            className={classes.customOutlinedBlue}
+                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            color="primary"
+                                            margin="normal"
+                                            variant="outlined"
+                                            label="Cantidad"
+                                            defaultValue={0}
+                                            type="number"
+                                            name="carneCantidad"
+                                            value={control.carneCantidad}
                                             onChange={handleChange}
                                         />
                                     </Grid>
@@ -451,4 +542,4 @@ const ModificarControlDeCloroLibre = () => {
     );
 };
 
-export default ModificarControlDeCloroLibre;
+export default ModificarCarne;

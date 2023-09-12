@@ -139,18 +139,20 @@ const AgregarExpedicionDeProducto = () => {
     console.log(cantidadValue);
     const selectValues = cantidadValue.map(item => item.selectValue);
     const hasDuplicateList = hasDuplicate(selectValues);
+    console.log(hasDuplicateList);
 
-    if (hasDuplicateList) {
+    if (hasDuplicateList === false) {
       const lotesCompletos = lotes.filter(lote => selectValues.includes(lote.loteId.toString()));
       const productosCompletos = lotesCompletos.map(lote => lote.loteProducto);
 
       console.log(lotesCompletos);
       const resultado = lotesCompletos.map(lote => {
-        const cantidaValueEncontrada = cantidadValue.find(cv => cv.selectValue === lote.loteId.toString());
+        const cantidaValueEncontrada = cantidadValue.find(cv => cv.selectValue.toString() === lote.loteId.toString());
         console.log(cantidaValueEncontrada);
         if (cantidaValueEncontrada) {
-          const cantidad = cantidaValueEncontrada.textFieldValue;
+          const cantidad = parseInt(cantidaValueEncontrada.textFieldValue);
           console.log(cantidad);
+          console.log(lote.loteCantidad);
           if (cantidad > lote.loteCantidad) {
             console.log(lote);
             return `${lote.loteCodigo} - ${lote.loteCantidad} Kg - ${lote.loteProducto.productoNombre} /`;
@@ -163,7 +165,7 @@ const AgregarExpedicionDeProducto = () => {
 
       const elementoUndefined = resultado.some(elemento => elemento === null);
       console.log(elementoUndefined);
-      if (!elementoUndefined) {
+      if (elementoUndefined === true) {
         const clienteCompleto = clientes.filter((cliente) => cliente.clienteId.toString() === formDataWithoutCantidad.expedicionDeProductoCliente)[0];
         //console.log(clienteCompleto);
 
@@ -184,22 +186,34 @@ const AgregarExpedicionDeProducto = () => {
         console.log(lotesCompletos);
         console.log(lotesCompletosConCantidadRestada);
 
+        const uniqueProductos = {};
+        const productosSinDuplicados = productosCompletos.filter((producto) => {
+          const key = `${producto.productoId}-${producto.productoCodigo}`;
+          if (!uniqueProductos[key]) {
+            uniqueProductos[key] = true;
+            return true;
+          }
+          return false;
+        });
+
+        console.log(productosSinDuplicados);
+
         const updateFormData = {
           ...formDataWithoutCantidad,
           expedicionDeProductoCliente: clienteCompleto,
-          expedicionDeProductoProductos: productosCompletos,
+          expedicionDeProductoProductos: productosSinDuplicados,
           expedicionDeProductoLotes: lotesCompletosConCantidadRestada,
           expedicionDeProductoUsuario: window.localStorage.getItem('user'),
         }
-        //console.log(updateFormData);
-        //console.log(listaDetalleCantidaLote);
+        console.log(updateFormData);
+        console.log(listaDetalleCantidaLote);
 
         const data = {
           expedicionDeProducto: updateFormData,
           listaCantidad: listaDetalleCantidaLote,
         }
 
-        //console.log(data);
+        console.log(data);
 
         axios.post('/agregar-expedicion-de-producto', data, {
           headers: {

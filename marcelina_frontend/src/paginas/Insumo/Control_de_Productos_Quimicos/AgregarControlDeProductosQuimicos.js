@@ -33,9 +33,33 @@ const useStyles = makeStyles(theme => ({
     text: {
         color: '#2D2D2D',
     },
-    liTitle: {
-        color: 'black',
+    text: {
+        color: '#2D2D2D',
+    },
+    liTitleBlue: {
+        color: 'blue',
         fontWeight: 'bold',
+    },
+    liTitleRed: {
+        color: 'red',
+        fontWeight: 'bold',
+    },
+    blinkingButton: {
+        animation: '$blink 1s infinite',
+    },
+    '@keyframes blink': {
+        '0%': {
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.common.white,
+        },
+        '50%': {
+            backgroundColor: theme.palette.common.white,
+            color: theme.palette.primary.main,
+        },
+        '100%': {
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.common.white,
+        },
     },
 }));
 
@@ -43,19 +67,23 @@ const AgregarControlDeProductosQuimicos = () => {
 
     const formFields = [
         { name: 'controlDeProductosQuimicosFecha', label: 'Fecha', type: 'date', color: 'primary' },
-        { name: 'controlDeProductosQuimicosProveedor', label: 'Proveedor', type: 'selector', color: 'primary' },
-        { name: 'controlDeProductosQuimicosProductoQuimico', label: 'Producto Químico', type: 'text', color: 'primary' },
-        { name: 'controlDeProductosQuimicosLote', label: 'Lote', type: 'text', color: 'primary' },
-        { name: 'controlDeProductosQuimicosMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3', color: 'secondary' },
+        { name: 'controlDeProductosQuimicosProveedor', label: 'Proveedor *', type: 'selector', color: 'primary' },
+        { name: 'controlDeProductosQuimicosProductoQuimico', label: 'Producto Químico', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,50}$", color: 'primary' },
+        { name: 'controlDeProductosQuimicosLote', label: 'Lote', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,15}$", color: 'primary' },
+        { name: 'controlDeProductosQuimicosMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
     ];
 
-    const alertSuccess = [
-        { title: 'Correcto', body: 'Control de productos quimicos agregado con éxito!', severity: 'success', type: 'description' },
-    ];
+    const [alertSuccess, setAlertSuccess] = useState({
+        title: 'Correcto', body: 'Control de productos quimicos agregado con éxito!', severity: 'success', type: 'description'
+    });
 
-    const alertError = [
-        { title: 'Error', body: 'No se logro agregar el control de productos quimicos, revise los datos ingresados.', severity: 'error', type: 'description' },
-    ];
+    const [alertError, setAlertError] = useState({
+        title: 'Error', body: 'No se logro agregar el control de productos quimicos, revise los datos ingresados.', severity: 'error', type: 'description'
+    });
+
+    const [alertWarning, setAlertWarning] = useState({
+        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    });
 
     const [proveedor, setProveedor] = useState({});
     const [proveedores, setProveedores] = useState([]);
@@ -63,12 +91,15 @@ const AgregarControlDeProductosQuimicos = () => {
     const [reloadProveedores, setReloadProveedores] = useState(false);
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
+    const [showAlertWarning, setShowAlertWarning] = useState(false);
 
     const classes = useStyles();
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+    const [blinking, setBlinking] = useState(true);
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -108,6 +139,44 @@ const AgregarControlDeProductosQuimicos = () => {
 
     }, [reloadProveedores]);
 
+    useEffect(() => {
+        const blinkInterval = setInterval(() => {
+            setBlinking((prevBlinking) => !prevBlinking);
+        }, 500);
+
+        setTimeout(() => {
+            clearInterval(blinkInterval);
+            setBlinking(false);
+        }, 5000);
+
+        return () => {
+            clearInterval(blinkInterval);
+        };
+    }, []);
+
+    const updateErrorAlert = (newBody) => {
+        setAlertError((prevAlert) => ({
+            ...prevAlert,
+            body: newBody,
+        }));
+    };
+
+    const checkError = (fecha, proveedor, quimico, lote) => {
+        if (fecha === undefined || fecha === null) {
+            return false;
+        }
+        else if (proveedor === undefined || proveedor === null) {
+            return false;
+        }
+        else if (quimico === undefined || quimico === null || quimico === '') {
+            return false;
+        }
+        else if (lote === undefined || lote === null || lote === '') {
+            return false;
+        }
+        return true;
+    }
+
     const handleFormSubmit = (formData) => {
         const proveedorSeleccionadaObj = proveedores.filter((proveedor) => proveedor.proveedorId.toString() === formData.controlDeProductosQuimicosProveedor)[0];
 
@@ -117,33 +186,59 @@ const AgregarControlDeProductosQuimicos = () => {
             controlDeProductosQuimicosResponsable: window.localStorage.getItem('user'),
         };
 
-        setProveedor(quimicosConProveedor);
+        const check = checkError(quimicosConProveedor.controlDeProductosQuimicosFecha, quimicosConProveedor.controlDeProductosQuimicosProveedor,
+            quimicosConProveedor.controlDeProductosQuimicosProductoQuimico, quimicosConProveedor.controlDeProductosQuimicosLote);
 
-        if (quimicosConProveedor.controlDeProductosQuimicosProveedor == null || quimicosConProveedor.controlDeProductosQuimicosProveedor === 'Seleccionar') {
-            console.log("Seleccione una localidad valida.")
+        if (quimicosConProveedor.controlDeProductosQuimicosProveedor === undefined || quimicosConProveedor.controlDeProductosQuimicosProveedor === null || quimicosConProveedor.controlDeProductosQuimicosProveedor === 'Seleccionar') {
+            updateErrorAlert(`Seleccione un proveedor válido, no se permite dejar seleccionada la opción de "Seleccionar".`);
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+            }, 7000);
         }
         else {
-            axios.post('/agregar-control-de-productos-quimicos', quimicosConProveedor, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            })
-                .then(response => {
-                    if (response.status === 201) {
-                        setShowAlertSuccess(true);
-                        setTimeout(() => {
-                            setShowAlertSuccess(false);
-                        }, 5000);
-                    } else {
-                        setShowAlertError(true);
-                        setTimeout(() => {
-                            setShowAlertError(false);
-                        }, 5000);
+            if (check === false) {
+                updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+                setShowAlertError(true);
+                setTimeout(() => {
+                    setShowAlertError(false);
+                }, 7000);
+            } else {
+                axios.post('/agregar-control-de-productos-quimicos', quimicosConProveedor, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 })
-                .catch(error => {
-                    console.error(error);
-                })
+                    .then(response => {
+                        if (response.status === 201) {
+                            setShowAlertSuccess(true);
+                            setTimeout(() => {
+                                setShowAlertSuccess(false);
+                            }, 5000);
+                        } else {
+                            updateErrorAlert('No se logro agregar el control de productos quimicos, revise los datos ingresados.')
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 5000);
+                        }
+                    })
+                    .catch(error => {
+                        if (error.request.status === 401) {
+                            setShowAlertWarning(true);
+                            setTimeout(() => {
+                                setShowAlertWarning(false);
+                            }, 5000);
+                        }
+                        else if (error.request.status === 500) {
+                            updateErrorAlert('No se logro agregar el control de productos quimicos, revise los datos ingresados.');
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 5000);
+                        }
+                    })
+            }
         }
     }
 
@@ -160,7 +255,7 @@ const AgregarControlDeProductosQuimicos = () => {
                                     <Typography component='h1' variant='h4'>Agregar Control de Productos Químicos</Typography>
                                     <div>
                                         <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton>
+                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
                                                 <HelpOutlineIcon fontSize="large" color="primary" />
                                             </IconButton>
                                         </Button>
@@ -183,19 +278,19 @@ const AgregarControlDeProductosQuimicos = () => {
                                                         Este formulario cuenta con 5 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitle}>Fecha</span>: en este campo se debe ingresar la fecha en la que se recibe el producto químico.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se recibe el producto químico.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Proveedor</span>: en este campo se debe seleccionar el proveedor al que se le compra el producto químico.
+                                                                <span className={classes.liTitleBlue}>Proveedor</span>: en este campo se debe seleccionar el proveedor al que se le compra el producto químico.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Producto Químico</span>: en este campo se ingresa el producto químico que se recibe.
+                                                                <span className={classes.liTitleBlue}>Producto Químico</span>: en este campo se ingresa el producto químico que se recibe.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Lote</span>: este campo se ingresa el código del lote, del producto químico que se recibe.
+                                                                <span className={classes.liTitleBlue}>Lote</span>: este campo se ingresa el código del lote, del producto químico que se recibe.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Motivo de rechazo</span>: en este campo se puede ingresar el motivo por el cual se rechazó el producto químico recibido.
+                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: en este campo se puede ingresar el motivo por el cual se rechazó el producto químico recibido.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -203,10 +298,10 @@ const AgregarControlDeProductosQuimicos = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitle}>Campos con contorno azul</span>: los campos con contorno azul son obligatorio, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -227,6 +322,7 @@ const AgregarControlDeProductosQuimicos = () => {
                                 <Grid item lg={4} md={4} sm={4} xs={4}>
                                     <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
                                     <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+                                    <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
                                 </Grid>
                                 <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
                             </Grid>

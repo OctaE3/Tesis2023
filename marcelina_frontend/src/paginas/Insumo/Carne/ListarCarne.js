@@ -6,6 +6,7 @@ import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutiliza
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const theme = createTheme({
   palette: {
@@ -28,6 +29,7 @@ function ListarCarne() {
   const [data, setData] = useState([]);
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,7 +40,10 @@ function ListarCarne() {
           }
         });
 
-        const data = response.data; // Asumiendo que la respuesta de la API es un arreglo de objetos con los datos
+        const data = response.data.map((data) => ({
+          ...data,
+          Id: data.carneId,
+        }));
 
         setData(data);
       } catch (error) {
@@ -125,6 +130,10 @@ function ListarCarne() {
     return false;
   });
 
+  const handleEditControl = (rowData) => {
+    const id = rowData.Id;
+    navigate(`/modificar-carne/${id}`);
+  }
 
   return (
     <div>
@@ -153,6 +162,7 @@ function ListarCarne() {
         title="Carnes"
         dataMapper={mapData}
         columnRenderers={""}
+        onEditButton={handleEditControl}
       />    </div>
   );
 }

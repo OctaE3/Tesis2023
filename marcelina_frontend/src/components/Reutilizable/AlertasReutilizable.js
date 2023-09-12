@@ -17,11 +17,11 @@ const useStyles = makeStyles((theme) => ({
         flexDirection: 'column', // Alineación vertical
         alignItems: 'flex-start', // Alinea al principio
         gap: theme.spacing(2), // Espaciado entre alertas
-      },
-      alert: {
+    },
+    alert: {
         transition: 'opacity 0.5s ease-in-out',
         width: '100%', // Asegúrate de que las alertas ocupen todo el ancho
-      },
+    },
 }));
 
 const AlertasReutilizable = ({ alert, isVisible }) => {
@@ -31,40 +31,39 @@ const AlertasReutilizable = ({ alert, isVisible }) => {
 
     return (
         <div className={classes.alert}>
-            {alert.map((alerta) => (
-                alerta.type === 'description' ? (
-                    <Fade in={isVisible} timeout={500} key={alerta.id}>
-                        <div className={classes.root}>
-                            <Alert severity={alerta.severity}>
-                                <AlertTitle>{alerta.title}</AlertTitle>
-                                {alerta.body}
-                            </Alert>
-                        </div>
-                    </Fade>
-                ) : alerta.type === 'actions' ? (
-                    <div className={classes.root} key={alerta.id}>
-                        <Collapse in={open}>
-                            <Alert severity={alerta.severity}
-                                action={
-                                    <IconButton
-                                        aria-label="close"
-                                        color="inherit"
-                                        size="small"
-                                        onClick={() => {
-                                            setOpen(false);
-                                        }}
-                                    >
-                                        <CloseIcon fontSize="inherit" />
-                                    </IconButton>
-                                }
-                            >
-                                <AlertTitle>{alerta.title}</AlertTitle>
-                                {alerta.body}
-                            </Alert>
-                        </Collapse>
+            {alert && alert.type === 'description' && (
+                <Fade in={isVisible} timeout={500} key={alert.id}>
+                    <div className={classes.root}>
+                        <Alert severity={alert.severity}>
+                            <AlertTitle>{alert.title}</AlertTitle>
+                            {alert.body}
+                        </Alert>
                     </div>
-                ) : null
-            ))}
+                </Fade>
+            )}
+            {alert && alert.type === 'actions' && (
+                <div className={classes.root} key={alert.id}>
+                    <Collapse in={open}>
+                        <Alert severity={alert.severity}
+                            action={
+                                <IconButton
+                                    aria-label="close"
+                                    color="inherit"
+                                    size="small"
+                                    onClick={() => {
+                                        setOpen(false);
+                                    }}
+                                >
+                                    <CloseIcon fontSize="inherit" />
+                                </IconButton>
+                            }
+                        >
+                            <AlertTitle>{alert.title}</AlertTitle>
+                            {alert.body}
+                        </Alert>
+                    </Collapse>
+                </div>
+            )}
         </div>
     );
 
