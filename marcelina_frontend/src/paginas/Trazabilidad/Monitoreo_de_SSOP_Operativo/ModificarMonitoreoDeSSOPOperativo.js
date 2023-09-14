@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, makeStyles, createTheme, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
-import Autocomplete from '@material-ui/lab/Autocomplete';
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import { useParams } from 'react-router-dom';
+import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -12,7 +15,7 @@ const theme = createTheme({
         primary: {
             main: '#2C2C71'
         }
-    },
+    }
 });
 
 const useStyles = makeStyles(theme => ({
@@ -28,6 +31,16 @@ const useStyles = makeStyles(theme => ({
     },
     select: {
         width: '100%',
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'blue',
+        },
+    },
+    auto: {
+        marginTop: theme.spacing(3),
+        marginBottom: theme.spacing(1),
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'blue',
+        },
     },
     sendButton: {
         display: 'flex',
@@ -36,9 +49,49 @@ const useStyles = makeStyles(theme => ({
         marginTop: 5,
         marginBottom: 10,
     },
-    auto: {
-        marginTop: theme.spacing(3),
-        marginBottom: theme.spacing(1),
+    customOutlinedRed: {
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'red',
+        },
+    },
+    customOutlinedBlue: {
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'blue',
+        },
+    },
+    customLabelBlue: {
+        color: 'blue',
+    },
+    customLabelRed: {
+        color: 'red',
+    },
+    blinkingButton: {
+        animation: '$blink 1s infinite',
+    },
+    '@keyframes blink': {
+        '0%': {
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.common.white,
+        },
+        '50%': {
+            backgroundColor: theme.palette.common.white,
+            color: theme.palette.primary.main,
+        },
+        '100%': {
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.common.white,
+        },
+    },
+    liTitleBlue: {
+        color: 'blue',
+        fontWeight: 'bold',
+    },
+    liTitleRed: {
+        color: 'red',
+        fontWeight: 'bold',
+    },
+    text: {
+        color: '#2D2D2D',
     },
 }));
 
@@ -67,6 +120,45 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
         { value: 'Personal', label: 'Personal' },
         { value: 'Otras', label: 'Otras' },
     ]);
+
+    const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+    const [showAlertError, setShowAlertError] = useState(false);
+    const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+    const [open, setOpen] = React.useState(false);
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+    const [blinking, setBlinking] = useState(true);
+
+    const navigate = useNavigate();
+
+    const [alertSuccess, setAlertSuccess] = useState({
+        title: 'Correcto', body: 'Monitoreo de ssop operativo modificado con éxito!', severity: 'success', type: 'description'
+    });
+
+    const [alertError, setAlertError] = useState({
+        title: 'Error', body: 'No se logro modificar el monitoreo de ssop operativo, revise los datos ingresados.', severity: 'error', type: 'description'
+    });
+
+    const [alertWarning, setAlertWarning] = useState({
+        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    });
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const updateErrorAlert = (newBody) => {
+        setAlertError((prevAlert) => ({
+            ...prevAlert,
+            body: newBody,
+        }));
+    };
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -106,18 +198,62 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
         obtenerControles();
     }, []);
 
+    useEffect(() => {
+        const blinkInterval = setInterval(() => {
+            setBlinking((prevBlinking) => !prevBlinking);
+        }, 500);
+
+        setTimeout(() => {
+            clearInterval(blinkInterval);
+            setBlinking(false);
+        }, 5000);
+
+        return () => {
+            clearInterval(blinkInterval);
+        };
+    }, []);
+
     const handleChange = event => {
         const { name, value } = event.target;
-        setControl(prevState => ({
-            ...prevState,
-            [name]: value,
-        }));
+        const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+        if (name === "monitoreoDeSSOPOperativoObservaciones" || name === "monitoreoDeSSOPOperativoAccCorrectivas" || name === "monitoreoDeSSOPOperativoAccPreventivas") {
+            if (regex.test(value)) {
+                setControl(prevState => ({
+                    ...prevState,
+                    [name]: value,
+                }));
+            }
+        } else {
+            setControl(prevState => ({
+                ...prevState,
+                [name]: value,
+            }));
+        }
     }
 
     const handleDiasChange = (event, newValue) => {
         const uniqueList = [...new Set(newValue)];
         setDiasControl(uniqueList);
     };
+
+    const checkError = (fecha, area, dias, correc, prevent) => {
+        if (fecha === undefined || fecha === null) {
+            return false;
+        }
+        else if (area === undefined || area === null || area === "Seleccionar") {
+            return false;
+        }
+        else if (dias === undefined || dias === null) {
+            return false;
+        }
+        else if (correc === undefined || correc === null || correc === '') {
+            return false;
+        }
+        else if (prevent === undefined || prevent === null || prevent === '') {
+            return false;
+        }
+        return true;
+    }
 
     const handleFormSubmit = () => {
         const fechaFinal = control.monitoreoDeSSOPOperativoFechaInicio;
@@ -142,22 +278,52 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
 
         console.log(data);
 
-        axios.put(`/modificar-monitoreo-de-ssop-operativo/${id}`, data, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                "Content-Type": "application/json"
-            }
-        })
-            .then(response => {
-                if (response.status === 200) {
-                    console.log("Modificado");
-                } else {
-                    console.log("No modificado")
+        const check = checkError(data.monitoreoDeSSOPOperativoFechaInicio, data.monitoreoDeSSOPOperativoArea,
+            data.monitoreoDeSSOPOperativoDias, data.monitoreoDeSSOPOperativoAccCorrectivas, data.monitoreoDeSSOPOperativoAccPreventivas);
+
+        if (check === false) {
+            updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+            }, 7000);
+        } else {
+            axios.put(`/modificar-monitoreo-de-ssop-operativo/${id}`, data, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    "Content-Type": "application/json"
                 }
             })
-            .catch(error => {
-                console.error(error);
-            })
+                .then(response => {
+                    if (response.status === 200) {
+                        setShowAlertSuccess(true);
+                        setTimeout(() => {
+                            setShowAlertSuccess(false);
+                        }, 5000);
+                    } else {
+                        updateErrorAlert('No se logro modificar el monitoreo de ssop operativo, revise los datos ingresados.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 5000);
+                    }
+                })
+                .catch(error => {
+                    if (error.request.status === 401) {
+                        setShowAlertWarning(true);
+                        setTimeout(() => {
+                            setShowAlertWarning(false);
+                        }, 5000);
+                    }
+                    else if (error.request.status === 500) {
+                        updateErrorAlert('No se logro modificar el monitoreo de ssop operativo, revise los datos ingresados.');
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 5000);
+                    }
+                })
+        }
     };
 
     return (
@@ -171,8 +337,82 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                 <Grid item lg={2} md={2}></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Monitoreo de SSOP Operativo</Typography>
+                                    <div>
+                                        <Button color="primary" onClick={handleClickOpen}>
+                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
+                                                <HelpOutlineIcon fontSize="large" color="primary" />
+                                            </IconButton>
+                                        </Button>
+                                        <Dialog
+                                            fullScreen={fullScreen}
+                                            fullWidth='md'
+                                            maxWidth='md'
+                                            open={open}
+                                            onClose={handleClose}
+                                            aria-labelledby="responsive-dialog-title"
+                                        >
+                                            <DialogTitle id="responsive-dialog-title">Explicación del formulario.</DialogTitle>
+                                            <DialogContent>
+                                                <DialogContentText className={classes.text}>
+                                                    <span>
+                                                        En esta página puedes registrar los monitoreos de SSOP Operativos, asegúrate de completar los campos necesarios para registrar el estado.
+                                                    </span>
+                                                    <br />
+                                                    <span>
+                                                        Este formulario cuenta con 6 campos:
+                                                        <ul>
+                                                            <li>
+                                                                <span className={classes.liTitleBlue}>Fecha de incio de la semana</span>: en este campo se debe ingresar la fecha en la que inicia el monitoreo.
+                                                            </li>
+                                                            <li>
+                                                                <span className={classes.liTitleBlue}>Área</span>: en este campo se selecciona el área en la que se realiza el monitoreo.
+                                                            </li>
+                                                            <li>
+                                                                <span className={classes.liTitleBlue}>Días implementados</span>: en este campo se selecciona el o los dias en los que se realizo el monitoreo.
+                                                            </li>
+                                                            <li>
+                                                                <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron en el momento que se realizo el monitoreo.
+                                                            </li>
+                                                            <li>
+                                                                <span className={classes.liTitleBlue}>Acciones Correctivas</span>: en este campo se ingresa las acciones que se implementaron para corregir el inconveniente.
+                                                            </li>
+                                                            <li>
+                                                                <span className={classes.liTitleBlue}>Acciones Preventivas</span>: en este campo se ingresa las acciones que se implementaran para solucionar posibles problemas a futuro.
+                                                            </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Campos obligatorios y no obligatorios:
+                                                        <ul>
+                                                            <li>
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción..
+
+                                                            </li>
+                                                            <li>
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                            </li>
+                                                        </ul>
+                                                    </span>
+                                                </DialogContentText>
+                                            </DialogContent>
+                                            <DialogActions>
+                                                <Button onClick={handleClose} color="primary" autoFocus>
+                                                    Cerrar
+                                                </Button>
+                                            </DialogActions>
+                                        </Dialog>
+                                    </div>
                                 </Grid>
                                 <Grid item lg={2} md={2}></Grid>
+                            </Grid>
+                            <Grid container spacing={0}>
+                                <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+                                <Grid item lg={4} md={4} sm={4} xs={4}>
+                                    <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+                                    <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+                                    <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+                                </Grid>
+                                <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
                             </Grid>
                             <Grid container >
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
@@ -181,6 +421,9 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                         <TextField
                                             fullWidth
                                             autoFocus
+                                            className={classes.customOutlinedBlue}
+                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha de Inicio de la Semana"
@@ -193,13 +436,13 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                     </Grid>
                                     <Grid item lg={12} md={12} sm={12} xs={12}>
                                         <FormControl variant="outlined" className={classes.formControl}>
-                                            <InputLabel htmlFor={`outlined-monitoreoDeSSOPOperativoArea-native-simple`}>Área</InputLabel>
+                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-monitoreoDeSSOPOperativoArea-native-simple`}>Área *</InputLabel>
                                             <Select
                                                 className={classes.select}
                                                 native
                                                 value={control.monitoreoDeSSOPOperativoArea}
                                                 name="monitoreoDeSSOPOperativoArea"
-                                                label="Área"
+                                                label="Área *"
                                                 inputProps={{
                                                     name: "monitoreoDeSSOPOperativoArea",
                                                     id: `outlined-monitoreoDeSSOPOperativoArea-native-simple`,
@@ -230,6 +473,7 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                                     label="Días"
                                                     InputLabelProps={{
                                                         shrink: true,
+                                                        className: classes.customLabelBlue,
                                                     }}
                                                 />
                                             )}
@@ -241,6 +485,9 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                             minRows={3}
                                             multiline
                                             autoFocus
+                                            className={classes.customOutlinedRed}
+                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Observaciones"
@@ -261,6 +508,9 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                             minRows={3}
                                             multiline
                                             autoFocus
+                                            className={classes.customOutlinedBlue}
+                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Acciones Correctivas"
@@ -277,6 +527,9 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                             minRows={3}
                                             multiline
                                             autoFocus
+                                            className={classes.customOutlinedBlue}
+                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Acciones Preventivas"
