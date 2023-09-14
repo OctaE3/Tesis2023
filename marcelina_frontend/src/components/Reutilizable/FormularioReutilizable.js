@@ -442,7 +442,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const handleChangeSelectModal = event => {
     const { name, value, id } = event.target;
     const regex = new RegExp(id);
-    if (regex) {
+    if (name === "carneNombre" || name === "carneCantidad") {
       if (regex.test(value)) {
         setFormDataModal(prevState => ({
           ...prevState,

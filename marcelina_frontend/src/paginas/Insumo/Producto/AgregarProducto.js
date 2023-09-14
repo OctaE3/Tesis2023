@@ -148,13 +148,13 @@ const AgregarProducto = () => {
     return true;
   }
 
-  const checkCod = (codigo) => {
-    const codigoProductos = [];
-    productos.forEach(producto => {
-      codigoProductos.push(producto.productoCodigo);
-    })
-
-    const productoEncontrado = codigoProductos.includes(codigo);
+  const checkCod = (prod) => {
+    const producto = {
+      ...prod,
+      productoNombre: prod.productoNombre,
+      productoCodigo: prod.productoCodigo,
+    }
+    const productoEncontrado = productos.includes(producto);
     return productoEncontrado;
   }
 
@@ -163,7 +163,7 @@ const AgregarProducto = () => {
     console.log(data);
 
     const check = checkError(data.productoNombre, data.productoCodigo);
-    const checkC = checkCod(data.productoCodigo);
+    const checkC = checkCod(data);
 
     if (check === false) {
       updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
@@ -209,7 +209,7 @@ const AgregarProducto = () => {
             }
           })
       } else {
-        updateErrorAlert(`El código que intenta ingresar, ya corresponde a otro producto.`);
+        updateErrorAlert(`No se puede repetir el nombre y el código de una producto ya registrado.`);
         setShowAlertError(true);
         setTimeout(() => {
           setShowAlertError(false);

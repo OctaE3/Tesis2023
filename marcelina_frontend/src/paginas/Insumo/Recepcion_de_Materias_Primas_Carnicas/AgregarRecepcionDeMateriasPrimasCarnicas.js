@@ -33,38 +33,63 @@ const useStyles = makeStyles(theme => ({
     text: {
         color: '#2D2D2D',
     },
-    liTitle: {
-        color: 'black',
+    liTitleBlue: {
+        color: 'blue',
         fontWeight: 'bold',
+    },
+    liTitleRed: {
+        color: 'red',
+        fontWeight: 'bold',
+    },
+    blinkingButton: {
+        animation: '$blink 1s infinite',
+    },
+    '@keyframes blink': {
+        '0%': {
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.common.white,
+        },
+        '50%': {
+            backgroundColor: theme.palette.common.white,
+            color: theme.palette.primary.main,
+        },
+        '100%': {
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.common.white,
+        },
     },
 }));
 
 const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
 
     const formFieldsModal = [
-        { name: 'carneNombre', label: 'Nombre', type: 'text', color: 'primary' },
-        { name: 'carneTipo', label: 'Tipo', type: 'select', color: 'primary' },
-        { name: 'carneCorte', label: 'Corte', type: 'select', color: 'primary' },
-        { name: 'carneCategoria', label: 'Categoria', type: 'select', color: 'primary' },
-        { name: 'carneCantidad', label: 'Cantidad', type: 'text', color: 'primary' },
+        { name: 'carneNombre', label: 'Nombre', type: 'text', color: 'primary', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,50}$" },
+        { name: 'carneTipo', label: 'Tipo *', type: 'select', color: 'primary' },
+        { name: 'carneCorte', label: 'Corte *', type: 'select', color: 'primary' },
+        { name: 'carneCategoria', label: 'Categoria *', type: 'select', color: 'primary' },
+        { name: 'carneCantidad', label: 'Cantidad', type: 'text', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,10}$" },
     ];
 
     const formFields = [
         { name: 'recepcionDeMateriasPrimasCarnicasFecha', label: 'Fecha', type: 'date', color: 'primary' },
-        { name: 'recepcionDeMateriasPrimasCarnicasProveedor', label: 'Proveedor', type: 'selector', color: 'primary' },
-        { name: 'recepcionDeMateriasPrimasCarnicasProductos', label: 'Productos', type: 'selectorMultiple', alta: 'si', altaCampos: formFieldsModal, color: 'primary' },
-        { name: 'recepcionDeMateriasPrimasCarnicasPaseSanitario', label: 'Pase Sanitario', type: 'text', color: 'primary' },
-        { name: 'recepcionDeMateriasPrimasCarnicasTemperatura', label: 'Temperatura', type: 'number', adornment: 'si', unit: '°C', color: 'primary' },
-        { name: 'recepcionDeMateriasPrimasCarnicasMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3', color: 'secondary' },
+        { name: 'recepcionDeMateriasPrimasCarnicasProveedor', label: 'Proveedor *', type: 'selector', color: 'primary' },
+        { name: 'recepcionDeMateriasPrimasCarnicasProductos', label: 'Productos *', type: 'selectorMultiple', alta: 'si', altaCampos: formFieldsModal, color: 'primary' },
+        { name: 'recepcionDeMateriasPrimasCarnicasPaseSanitario', label: 'Pase Sanitario', type: 'text', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,15}$" },
+        { name: 'recepcionDeMateriasPrimasCarnicasTemperatura', label: 'Temperatura', type: 'number', adornment: 'si', unit: '°C', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,10}$" },
+        { name: 'recepcionDeMateriasPrimasCarnicasMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3', color: 'secondary', pattern: "^[A-Za-z0-9\\s,.]{0,250}$" },
     ];
 
-    const alertSuccess = [
-        { title: 'Correcto', body: 'Recepcion de materia primas carnicas agregada con éxito!', severity: 'success', type: 'description' },
-    ];
+    const [alertSuccess, setAlertSuccess] = useState({
+        title: 'Correcto', body: 'Recepcion de materia primas carnicas agregada con éxito!', severity: 'success', type: 'description'
+    });
 
-    const alertError = [
-        { title: 'Error', body: 'No se logro agregar la recepcion de materia primas carnicas, revise los datos ingresados.', severity: 'error', type: 'description' },
-    ];
+    const [alertError, setAlertError] = useState({
+        title: 'Error', body: 'No se logro agregar la recepcion de materia primas carnicas, revise los datos ingresados.', severity: 'error', type: 'description'
+    });
+
+    const [alertWarning, setAlertWarning] = useState({
+        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    });
 
     const [proveedores, setProveedores] = useState([]);
     const [proveedoresSelect, setProveedoresSelect] = useState('');
@@ -108,12 +133,15 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
     ]);
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
+    const [showAlertWarning, setShowAlertWarning] = useState(false);
 
     const classes = useStyles();
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+    const [blinking, setBlinking] = useState(true);
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -148,69 +176,154 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
 
     }, []);
 
+    useEffect(() => {
+        const blinkInterval = setInterval(() => {
+            setBlinking((prevBlinking) => !prevBlinking);
+        }, 500);
+
+        setTimeout(() => {
+            clearInterval(blinkInterval);
+            setBlinking(false);
+        }, 5000);
+
+        return () => {
+            clearInterval(blinkInterval);
+        };
+    }, []);
+
+    const updateErrorAlert = (newBody) => {
+        setAlertError((prevAlert) => ({
+            ...prevAlert,
+            body: newBody,
+        }));
+    };
+
+    const checkError = (fecha, proveedor, pase, temperatura) => {
+        if (fecha === undefined || fecha === null) {
+            return false;
+        }
+        else if (proveedor === undefined || proveedor === null || proveedor === "Seleccionar") {
+            return false;
+        }
+        else if (pase === undefined || pase === null || pase === '') {
+            return false;
+        }
+        else if (temperatura === undefined || temperatura === null || temperatura === '') {
+            return false;
+        }
+        return true;
+    }
+
+    const checkMultiple = (productos) => {
+        if (productos && productos.length > 0) {
+            const resp = productos.forEach((carne) => {
+                if (carne.carneNombre === undefined || carne.carneNombre === null || carne.carneNombre === '') {
+                    return false;
+                }
+                else if (carne.carneTipo === undefined || carne.carneTipo === null || carne.carneTipo === "Seleccionar") {
+                    return false;
+                }
+                else if (carne.carneCorte === undefined || carne.carneCorte === null || carne.carneCorte === "Seleccionar") {
+                    return false;
+                }
+                else if (carne.carneCategoria === undefined || carne.carneCategoria === null || carne.carneCategoria === "Seleccionar") {
+                    return false;
+                }
+                else if (carne.carneCantidad === undefined || carne.carneCantidad === null || carne.carneCantidad === '') {
+                    return false;
+                }
+            })
+            return resp ? resp : true;
+        } else { return false }
+    }
+
     const handleFormSubmit = (formData) => {
+        console.log(formData);
         const { carnesAgregadas, ...formDataWithoutCarnesAgregadas } = formData;
 
-        const listaCarne = formData.carnesAgregadas
+        const checkMul = checkMultiple(carnesAgregadas);
 
-        const carnes = listaCarne.map(carne => ({
-            ...carne,
-            carneCategoria:
-                carne.carneTipo === "Sangre" ? "Sangre" :
-                    carne.carneTipo === "Higado" ? "Higado" :
-                        carne.carneTipo === "Tripas" ? "Tripas" :
-                            carne.carneCategoria,
-            carnePaseSanitario: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasPaseSanitario,
-            carneFecha: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasFecha,
-        }));
-
-        console.log(carnes);
-
-        const proveedorSeleccionadaObj = proveedores.filter((proveedor) => proveedor.proveedorId.toString() === formData.recepcionDeMateriasPrimasCarnicasProveedor)[0];
-
-        const materiasPrimasConProveedor = {
-            ...formDataWithoutCarnesAgregadas,
-            recepcionDeMateriasPrimasCarnicasProveedor: proveedorSeleccionadaObj ? proveedorSeleccionadaObj : null,
-            recepcionDeMateriasPrimasCarnicasResponsable: window.localStorage.getItem('user'),
-        };
-
-        const data = {
-            recepcionDeMateriasPrimasCarnicas: materiasPrimasConProveedor,
-            listaCarne: carnes,
-        }
-
-        if (materiasPrimasConProveedor.recepcionDeMateriasPrimasCarnicasProveedor === null || materiasPrimasConProveedor.recepcionDeMateriasPrimasCarnicasProveedor === 'Seleccionar') {
-            console.log("Seleccione un proveedor valido.")
-            alertError.forEach((alert) => {
-                alert.body = `Seleccione un proveedor valido.`;
-            });
+        if (checkMul === false) {
+            updateErrorAlert(`Revise los productos ingresados, no se permite dejar campos vacíos y seleccionar la opción "Seleccionar".`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 5000);
-        }
-        else {
-            axios.post('/agregar-recepcion-de-materias-primas-carnicas', data, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            })
-                .then(response => {
-                    if (response.status === 201) {
-                        setShowAlertSuccess(true);
-                        setTimeout(() => {
-                            setShowAlertSuccess(false);
-                        }, 5000);
-                    } else {
-                        setShowAlertError(true);
-                        setTimeout(() => {
-                            setShowAlertError(false);
-                        }, 5000);
+            }, 7000);
+        } else {
+            const listaCarne = formData.carnesAgregadas;
+
+            const carnes = listaCarne.map(carne => ({
+                ...carne,
+                carneCategoria:
+                    carne.carneTipo === "Sangre" ? "Sangre" :
+                        carne.carneTipo === "Higado" ? "Higado" :
+                            carne.carneTipo === "Tripas" ? "Tripas" :
+                                carne.carneCategoria,
+                carnePaseSanitario: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasPaseSanitario,
+                carneFecha: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasFecha,
+            }));
+
+            console.log(carnes);
+
+            const proveedorSeleccionadaObj = proveedores.filter((proveedor) => proveedor.proveedorId.toString() === formData.recepcionDeMateriasPrimasCarnicasProveedor)[0];
+
+            const materiasPrimasConProveedor = {
+                ...formDataWithoutCarnesAgregadas,
+                recepcionDeMateriasPrimasCarnicasProveedor: proveedorSeleccionadaObj ? proveedorSeleccionadaObj : null,
+                recepcionDeMateriasPrimasCarnicasResponsable: window.localStorage.getItem('user'),
+            };
+
+            const data = {
+                recepcionDeMateriasPrimasCarnicas: materiasPrimasConProveedor,
+                listaCarne: carnes,
+            }
+
+            const check = checkError(data.recepcionDeMateriasPrimasCarnicasFecha, data.recepcionDeMateriasPrimasCarnicasProveedor,
+                data.recepcionDeMateriasPrimasCarnicasPaseSanitario, data.recepcionDeMateriasPrimasCarnicasTemperatura);
+
+            if (check === false) {
+                updateErrorAlert(`Revise los datos ingresados, no se permite dejar campos vacíos y tampoco se permite seleccionar la opción "Seleccionar".`);
+                setShowAlertError(true);
+                setTimeout(() => {
+                    setShowAlertError(false);
+                }, 5000);
+            }
+            else {
+                axios.post('/agregar-recepcion-de-materias-primas-carnicas', data, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 })
-                .catch(error => {
-                    console.error(error);
-                })
+                    .then(response => {
+                        if (response.status === 201) {
+                            setShowAlertSuccess(true);
+                            setTimeout(() => {
+                                setShowAlertSuccess(false);
+                            }, 5000);
+                        } else {
+                            updateErrorAlert('No se logro registrar la recepcion de materia primas carnicas, revise los datos ingresados.')
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 5000);
+                        }
+                    })
+                    .catch(error => {
+                        if (error.request.status === 401) {
+                            setShowAlertWarning(true);
+                            setTimeout(() => {
+                                setShowAlertWarning(false);
+                            }, 5000);
+                        }
+                        else if (error.request.status === 500) {
+                            updateErrorAlert('No se logro registrar la recepcion de materia primas carnicas, revise los datos ingresados.');
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 5000);
+                        }
+                    })
+            }
         }
     }
 
@@ -227,7 +340,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                                     <Typography component='h1' variant='h4'>Control de Recepcion de Materias Primas Carnicas</Typography>
                                     <div>
                                         <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton>
+                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
                                                 <HelpOutlineIcon fontSize="large" color="primary" />
                                             </IconButton>
                                         </Button>
@@ -250,32 +363,32 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                                                         Este formulario cuenta con 6 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitle}>Fecha</span>: en este campo se debe ingresar la fecha en la que se recibio la carne.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se recibio la carne.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Proveedor</span>: en este campo se debe seleccionar el proveedor al que se le compro la carne.
+                                                                <span className={classes.liTitleBlue}>Proveedor</span>: en este campo se debe seleccionar el proveedor al que se le compro la carne.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Productos</span>: en este campo se ingresan los productos cárnicos que reciben, los productos se ingresan a través de un formulario, 
+                                                                <span className={classes.liTitleBlue}>Productos</span>: en este campo se ingresan los productos cárnicos que reciben, los productos se ingresan a través de un formulario,
                                                                 para abrir el formulario hay que darle click al icono de más a la derecha del campo.
                                                                 El formulario de carne cuenta con 5 campos:
                                                                 <ul>
-                                                                    <li><span className={classes.liTitle}>Nombre</span>: en este campo se ingresa el nombre de la carne o producto cárnico que se recibio</li>
-                                                                    <li><span className={classes.liTitle}>Tipo</span>: en este campo se selecciona el tipo de producto que se recibio, hay 5 tipos Bovino, Porcino, Higado, Tripa y Sangre</li>
-                                                                    <li><span className={classes.liTitle}>Corte</span>: en este campo se selecciona el grupo en el que entra el producto recibido</li>
-                                                                    <li><span className={classes.liTitle}>Categoria</span>: este campo solo esta disponible para los productos Bovinos y Porcinos, 
-                                                                    y lo que se busca en este campo es especificar si la carne recibida es con hueso o sin hueso</li>
-                                                                    <li><span className={classes.liTitle}>Cantidad</span>: en este campo se ingresa la cantidad recibida del producto</li>
+                                                                    <li><span className={classes.liTitleBlue}>Nombre</span>: en este campo se ingresa el nombre de la carne o producto cárnico que se recibio</li>
+                                                                    <li><span className={classes.liTitleBlue}>Tipo</span>: en este campo se selecciona el tipo de producto que se recibio, hay 5 tipos Bovino, Porcino, Higado, Tripa y Sangre</li>
+                                                                    <li><span className={classes.liTitleBlue}>Corte</span>: en este campo se selecciona el grupo en el que entra el producto recibido</li>
+                                                                    <li><span className={classes.liTitleBlue}>Categoria</span>: este campo solo esta disponible para los productos Bovinos y Porcinos,
+                                                                        y lo que se busca en este campo es especificar si la carne recibida es con hueso o sin hueso</li>
+                                                                    <li><span className={classes.liTitleBlue}>Cantidad</span>: en este campo se ingresa la cantidad recibida del producto</li>
                                                                 </ul>
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Pase Sanitario</span>: en este campo se ingresa el número del pase sanitario.
+                                                                <span className={classes.liTitleBlue}>Pase Sanitario</span>: en este campo se ingresa el número del pase sanitario.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Temperatura</span>: en este campo se ingresa la temperatura en la que se recibio la carne.
+                                                                <span className={classes.liTitleBlue}>Temperatura</span>: en este campo se ingresa la temperatura en la que se recibio la carne.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Motivo de rechazo</span>: en este campo se puede dar los motivos o los detalles de por que se rechazó el producto cárnico recibido.
+                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: en este campo se puede dar los motivos o los detalles de por que se rechazó el producto cárnico recibido.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -283,10 +396,10 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitle}>Campos con contorno azul</span>: los campos con contorno azul son obligatorio, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -307,6 +420,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                                 <Grid item lg={4} md={4} sm={4} xs={4}>
                                     <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
                                     <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+                                    <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
                                 </Grid>
                                 <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
                             </Grid>

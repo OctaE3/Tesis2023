@@ -41,26 +41,32 @@ const useStyles = makeStyles(theme => ({
 
 const AgregarMonitoreoDeSSOPPreOperativo = () => {
     const formFields = [
-        { name: 'monitoreoDeSSOPPreOperativoSector', label: 'Sector', type: 'selector', color: 'primary' },
-        { name: 'monitoreoDeSSOPPreOperativoArea', label: 'Área', type: 'selector', color: 'primary' },
+        { name: 'monitoreoDeSSOPPreOperativoSector', label: 'Sector *', type: 'selector', color: 'primary' },
+        { name: 'monitoreoDeSSOPPreOperativoArea', label: 'Área *', type: 'selector', color: 'primary' },
         { name: 'monitoreoDeSSOPPreOperativoFecha', label: 'Fecha y Hora', type: 'datetime-local', color: 'primary' },
-        { name: 'monitoreoDeSSOPPreOperativoDias', label: 'Días Implementados', type: 'selector', multiple: 'si', color: 'primary' },
-        { name: 'monitoreoDeSSOPPreOperativoObservaciones', label: 'Observaciones', type: 'text', multi: '3', color: 'secondary' },
-        { name: 'monitoreoDeSSOPPreOperativoAccCorrectivas', label: 'Acciones Correctivas', type: 'text', multi: '3', color: 'primary' },
-        { name: 'monitoreoDeSSOPPreOperativoAccPreventivas', label: 'Acciones Preventivas', type: 'text', multi: '3', color: 'primary' },
+        { name: 'monitoreoDeSSOPPreOperativoDias', label: 'Días Implementados *', type: 'selector', multiple: 'si', color: 'primary' },
+        { name: 'monitoreoDeSSOPPreOperativoObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
+        { name: 'monitoreoDeSSOPPreOperativoAccCorrectivas', label: 'Acciones Correctivas', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
+        { name: 'monitoreoDeSSOPPreOperativoAccPreventivas', label: 'Acciones Preventivas', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
     ];
 
-    const alertSuccess = [
-        { title: 'Correcto', body: 'Monitoreo de ssop pre operativo agregado con éxito!', severity: 'success', type: 'description' },
-    ];
+    const [alertSuccess, setAlertSuccess] = useState({
+        title: 'Correcto', body: 'Monitoreo de ssop pre operativo agregado con éxito!', severity: 'success', type: 'description'
+    });
 
-    const alertError = [
-        { title: 'Error', body: 'No se logro agregar el monitoreo de ssop pre operativo, revise los datos ingresados', severity: 'error', type: 'description' },
-    ];
+    const [alertError, setAlertError] = useState({
+        title: 'Error', body: 'No se logro agregar el monitoreo de ssop pre operativo, revise los datos ingresados.', severity: 'error', type: 'description'
+    });
+
+    const [alertWarning, setAlertWarning] = useState({
+        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    });
+
 
     const classes = useStyles();
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
+    const [showAlertWarning, setShowAlertWarning] = useState(false);
     const [sector, setSector] = useState([
         { value: 'Sala Elaboracion', label: 'Sala Elaboración' },
         { value: 'Desosado', label: 'Desosado' },
@@ -112,6 +118,8 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
 
+    const [blinking, setBlinking] = useState(true);
+
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -119,6 +127,50 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
     const handleClose = () => {
         setOpen(false);
     };
+
+    useEffect(() => {
+        const blinkInterval = setInterval(() => {
+            setBlinking((prevBlinking) => !prevBlinking);
+        }, 500);
+
+        setTimeout(() => {
+            clearInterval(blinkInterval);
+            setBlinking(false);
+        }, 5000);
+
+        return () => {
+            clearInterval(blinkInterval);
+        };
+    }, []);
+
+    const updateErrorAlert = (newBody) => {
+        setAlertError((prevAlert) => ({
+            ...prevAlert,
+            body: newBody,
+        }));
+    };
+
+    const checkError = (sector, area, fecha, dias, correc, prevent) => {
+        if (sector === undefined || sector === null || sector === "Seleccionar") {
+            return false;
+        }
+        else if (area === undefined || area === null || area === "Seleccionar") {
+            return false;
+        }
+        else if (fecha === undefined || fecha === null) {
+            return false;
+        }
+        else if (dias === undefined || dias === null) {
+            return false;
+        }
+        else if (correc === undefined || correc === null || correc === '') {
+            return false;
+        }
+        else if (prevent === undefined || prevent === null || prevent === '') {
+            return false;
+        }
+        return true;
+    }
 
     const handleFormSubmit = (formData) => {
 
@@ -131,28 +183,52 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
             monitoreoDeSSOPPreOperativoDias: valoresDias,
             monitoreoDeSSOPPreOperativoResponsable: window.localStorage.getItem('user'),
         }
-        axios.post('/agregar-monitoreo-de-ssop-pre-operativo', updateFormData, {
-            headers: {
-                'Authorization': `Bearer ${window.localStorage.getItem('token')}`,
-            }
-        })
-            .then(response => {
-                if (response.status === 201) {
-                    setShowAlertSuccess(true);
-                    setTimeout(() => {
-                        setShowAlertSuccess(false);
-                    }, 5000);
-                } else {
-                    setShowAlertError(true);
-                    setTimeout(() => {
-                        setShowAlertError(false);
-                    }, 5000);
+
+        const check = checkError(updateFormData.monitoreoDeSSOPPreOperativoSector, updateFormData.monitoreoDeSSOPPreOperativoArea, updateFormData.monitoreoDeSSOPPreOperativoFecha,
+            updateFormData.monitoreoDeSSOPPreOperativoDias, updateFormData.monitoreoDeSSOPPreOperativoAccCorrectivas, updateFormData.monitoreoDeSSOPPreOperativoAccPreventivas);
+
+        if (check === false) {
+            updateErrorAlert(`Revise los datos ingresados, no se permite seleccionar la opción de "Seleccionar" y no deje campos vacíos.`);
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+            }, 7000);
+        } else {
+            axios.post('/agregar-monitoreo-de-ssop-pre-operativo', updateFormData, {
+                headers: {
+                    'Authorization': `Bearer ${window.localStorage.getItem('token')}`,
                 }
             })
-            .catch(error => {
-                console.error(error);
-            })
-
+                .then(response => {
+                    if (response.status === 201) {
+                        setShowAlertSuccess(true);
+                        setTimeout(() => {
+                            setShowAlertSuccess(false);
+                        }, 5000);
+                    } else {
+                        updateErrorAlert('No se logro agregar el monitoreo de ssop pre operativo, revise los datos ingresados.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 5000);
+                    }
+                })
+                .catch(error => {
+                    if (error.request.status === 401) {
+                        setShowAlertWarning(true);
+                        setTimeout(() => {
+                            setShowAlertWarning(false);
+                        }, 5000);
+                    }
+                    else if (error.request.status === 500) {
+                        updateErrorAlert('No se logro agregar el monitoreo de ssop pre operativo, revise los datos ingresados.');
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 5000);
+                    }
+                })
+        }
     }
 
     return (
@@ -166,7 +242,7 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
                             <Typography component='h1' variant='h4'>Agregar Monitoreo de SSOP Pre Operativo</Typography>
                             <div>
                                 <Button color="primary" onClick={handleClickOpen}>
-                                    <IconButton>
+                                    <IconButton className={blinking ? classes.blinkingButton : ''}>
                                         <HelpOutlineIcon fontSize="large" color="primary" />
                                     </IconButton>
                                 </Button>
@@ -189,25 +265,25 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
                                                 Este formulario cuenta con 7 campos:
                                                 <ul>
                                                     <li>
-                                                        <span className={classes.liTitle}>Sector</span>: en este campo se selecciona el sector en donde se realizara el monitoreo.
+                                                        <span className={classes.liTitleBlue}>Sector</span>: en este campo se selecciona el sector en donde se realizara el monitoreo.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitle}>Área</span>: en este campo se selecciona el área en la que se realiza el monitoreo.
+                                                        <span className={classes.liTitleBlue}>Área</span>: en este campo se selecciona el área en la que se realiza el monitoreo.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitle}>Fecha y Hora</span>: en este campo se ingresa la fecha y la hora en la que se realiza el monitoreo.
+                                                        <span className={classes.liTitleBlue}>Fecha y Hora</span>: en este campo se ingresa la fecha y la hora en la que se realiza el monitoreo.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitle}>Días implementados</span>: en este campo se selecciona el o los días en los que se realizo el monitoreo.
+                                                        <span className={classes.liTitleBlue}>Días implementados</span>: en este campo se selecciona el o los días en los que se realizo el monitoreo.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitle}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron en el momento que se realizo el monitoreo.
+                                                        <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron en el momento que se realizo el monitoreo.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitle}>Acciones Correctivas</span>: en este campo se ingresa las acciones que se implementaron para corregir el inconveniente.
+                                                        <span className={classes.liTitleBlue}>Acciones Correctivas</span>: en este campo se ingresa las acciones que se implementaron para corregir el inconveniente.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitle}>Acciones Preventivas</span>: en este campo se ingresa las acciones que se implementaran para solucionar posibles problemas a futuro.
+                                                        <span className={classes.liTitleBlue}>Acciones Preventivas</span>: en este campo se ingresa las acciones que se implementaran para solucionar posibles problemas a futuro.
                                                     </li>
                                                 </ul>
                                             </span>
@@ -215,10 +291,10 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
                                                 Campos obligatorios y no obligatorios:
                                                 <ul>
                                                     <li>
-                                                        <span className={classes.liTitle}>Campos con contorno azul</span>: los campos con contorno azul son obligatorio, se tienen que completar sin excepción.
+                                                        <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitle}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                        <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                     </li>
                                                 </ul>
                                             </span>
@@ -239,6 +315,7 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
                         <Grid item lg={4} md={4} sm={4} xs={4}>
                             <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
                             <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+                            <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
                         </Grid>
                         <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
                     </Grid>
