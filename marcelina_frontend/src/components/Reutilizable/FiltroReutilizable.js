@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme) => ({
   },
   container: {
     marginTop: theme.spacing(2),
-    minWidth: '100%',
+    minWidth: '100%'
   },
   filters: {
     margin: theme.spacing(1),

@@ -262,274 +262,274 @@ const AgregarDiariaDeProduccion = () => {
                 setShowAlertError(false);
             }, 7000);
         } else {
-            const selectCarneValues = cantidadValueCarne.map(item => item.selectValue);
-            const selectInsumoValues = cantidadValueInsumo.map(item => item.selectValue);
+        const selectCarneValues = cantidadValueCarne.map(item => item.selectValue);
+        const selectInsumoValues = cantidadValueInsumo.map(item => item.selectValue);
 
-            const carnesCompletas = carnes.filter(carne => selectCarneValues.includes(carne.carneId.toString()));
-            const insumosCompletos = insumos.filter(insumo => selectInsumoValues.includes(insumo.insumoId.toString()));
+        const carnesCompletas = carnes.filter(carne => selectCarneValues.includes(carne.carneId.toString()));
+        const insumosCompletos = insumos.filter(insumo => selectInsumoValues.includes(insumo.insumoId.toString()));
 
-            //console.log(carnesCompletas);
-            //console.log(insumosCompletos);
+        //console.log(carnesCompletas);
+        //console.log(insumosCompletos);
 
-            const resultadoCarne = carnesCompletas.map(carne => {
-                const cantidaValueEncontradaCarne = cantidadValueCarne.find(cv => cv.selectValue === carne.carneId.toString());
-                console.log(cantidaValueEncontradaCarne);
-                if (cantidaValueEncontradaCarne) {
-                    const cantidad = cantidaValueEncontradaCarne.textFieldValue;
-                    console.log(cantidad);
-                    if (cantidad > carne.carneCantidad) {
-                        console.log(carne);
-                        return `${carne.carneNombre} - ${carne.carneCorte} - ${carne.carneCantidad} Kg / `;
-                    }
+        const resultadoCarne = carnesCompletas.map(carne => {
+            const cantidaValueEncontradaCarne = cantidadValueCarne.find(cv => cv.selectValue === carne.carneId.toString());
+            console.log(cantidaValueEncontradaCarne);
+            if (cantidaValueEncontradaCarne) {
+                const cantidad = cantidaValueEncontradaCarne.textFieldValue;
+                console.log(cantidad);
+                if (cantidad > carne.carneCantidad) {
+                    console.log(carne);
+                    return `${carne.carneNombre} - ${carne.carneCorte} - ${carne.carneCantidad} Kg / `;
                 }
-                return null;
+            }
+            return null;
+        })
+
+        const resultadoInsumo = insumosCompletos.map(insumo => {
+            const cantidaValueEncontradaInsumo = cantidadValueInsumo.find(cv => cv.selectValue === insumo.insumoId.toString());
+            console.log(cantidaValueEncontradaInsumo);
+            if (cantidaValueEncontradaInsumo) {
+                const cantidad = cantidaValueEncontradaInsumo.textFieldValue;
+                console.log(cantidad);
+                if (cantidad > insumo.insumoCantidad) {
+                    console.log(insumo);
+                    return `${insumo.insumoNombre} - ${insumo.insumoNroLote} - ${insumo.insumoCantidad} ${insumo.insumoUnidad} / `;
+                }
+            }
+            return null;
+        })
+
+        const elementoUndefinedCarne = resultadoCarne.some(elemento => elemento === null);
+        const elementoUndefinedInsumo = resultadoInsumo.some(elemento => elemento === null);
+        if (!elementoUndefinedInsumo || !elementoUndefinedCarne) {
+            updateErrorAlert(`La cantidad ingresada de carnes o aditivos utilizada en la producción, es mayor a la disponible, revise los datos ingresados.`);
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+            }, 7000);    
+        } else {
+            const listaCarneActualizada = [];
+            const listaCarneCantidad = [];
+            carnesCompletas.forEach((carne, index) => {
+                const cantidadCarne = cantidadValueCarne[index].textFieldValue;
+                const carneActualizada = { ...carne, carneCantidad: carne.carneCantidad - cantidadCarne };
+                listaCarneActualizada.push(carneActualizada);
+                const detalleCantidadCarne = {
+                    detalleCantidadCarneCarne: carneActualizada,
+                    detalleCantidadCarneCantidad: cantidadCarne,
+                };
+                listaCarneCantidad.push(detalleCantidadCarne);
             })
 
-            const resultadoInsumo = insumosCompletos.map(insumo => {
-                const cantidaValueEncontradaInsumo = cantidadValueInsumo.find(cv => cv.selectValue === insumo.insumoId.toString());
-                console.log(cantidaValueEncontradaInsumo);
-                if (cantidaValueEncontradaInsumo) {
-                    const cantidad = cantidaValueEncontradaInsumo.textFieldValue;
-                    console.log(cantidad);
-                    if (cantidad > insumo.insumoCantidad) {
-                        console.log(insumo);
-                        return `${insumo.insumoNombre} - ${insumo.insumoNroLote} - ${insumo.insumoCantidad} ${insumo.insumoUnidad} / `;
-                    }
-                }
-                return null;
+            const listaInsumoActualizado = [];
+            const listaInsumoCantidad = [];
+            insumosCompletos.forEach((insumo, index) => {
+                const cantidadInsumo = cantidadValueInsumo[index].textFieldValue;
+                const insumoActualizado = { ...insumo, insumoCantidad: insumo.insumoCantidad - cantidadInsumo };
+                listaInsumoActualizado.push(insumoActualizado);
+                const detalleCantidadInsumo = {
+                    detalleCantidadInsumoInsumo: insumoActualizado,
+                    detalleCantidadInsumoCantidad: cantidadInsumo,
+                };
+                listaInsumoCantidad.push(detalleCantidadInsumo);
             })
 
-            const elementoUndefinedCarne = resultadoCarne.some(elemento => elemento === null);
-            const elementoUndefinedInsumo = resultadoInsumo.some(elemento => elemento === null);
-            if (!elementoUndefinedInsumo || !elementoUndefinedCarne) {
-                updateErrorAlert(`La cantidad ingresada de carnes o aditivos utilizada en la producción, es mayor a la disponible, revise los datos ingresados.`);
+            const productoCompleto = productos.filter((producto) => producto.productoId.toString() === formDataWithoutCantidad.diariaDeProduccionProducto)[0];
+            console.log(productoCompleto);
+
+            const fechaDiariaProduccion = new Date(formData.diariaDeProduccionFecha);
+            const anio = fechaDiariaProduccion.getFullYear();
+            const mes = fechaDiariaProduccion.getMonth() + 1;
+            const dia = fechaDiariaProduccion.getDate();
+            const horas = fechaDiariaProduccion.getHours();
+            const minutos = fechaDiariaProduccion.getMinutes();
+
+            const horasFormateadas = horas.toString().padStart(2, '0');
+            const minutosFormateados = minutos.toString().padStart(2, '0');
+
+            const fechaNumero = parseInt(`${anio}${mes}${dia}${horasFormateadas}${minutosFormateados}${productoCompleto.productoCodigo}`);
+
+            const loteCompleto = {
+                loteCodigo: fechaNumero,
+                loteProducto: productoCompleto,
+                loteCantidad: formDataWithoutCantidad.diariaDeProduccionCantidadProducida,
+            };
+
+            const updateFormData = {
+                ...formDataWithoutCantidad,
+                diariaDeProduccionProducto: productoCompleto,
+                diariaDeProduccionInsumosCarnicos: listaCarneActualizada,
+                diariaDeProduccionAditivos: listaInsumoActualizado,
+                diariaDeProduccionResponsable: window.localStorage.getItem('user'),
+            };
+
+            const data = {
+                diariaDeProduccion: updateFormData,
+                listaCarneCantidad: listaCarneCantidad,
+                listaInsumoCantidad: listaInsumoCantidad,
+                lote: loteCompleto,
+            };
+
+            console.log(data);
+
+            const check = checkError(updateFormData.diariaDeProduccionProducto, updateFormData.diariaDeProduccionCantidadProducida,
+                updateFormData.diariaDeProduccionFecha, updateFormData.diariaDeProduccionEnvasado, updateFormData.diariaDeProduccionFechaVencimiento);
+
+            if (check === false) {
+                updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
                 }, 7000);
             } else {
-                const listaCarneActualizada = [];
-                const listaCarneCantidad = [];
-                carnesCompletas.forEach((carne, index) => {
-                    const cantidadCarne = cantidadValueCarne[index].textFieldValue;
-                    const carneActualizada = { ...carne, carneCantidad: carne.carneCantidad - cantidadCarne };
-                    listaCarneActualizada.push(carneActualizada);
-                    const detalleCantidadCarne = {
-                        detalleCantidadCarneCarne: carneActualizada,
-                        detalleCantidadCarneCantidad: cantidadCarne,
-                    };
-                    listaCarneCantidad.push(detalleCantidadCarne);
-                })
-
-                const listaInsumoActualizado = [];
-                const listaInsumoCantidad = [];
-                insumosCompletos.forEach((insumo, index) => {
-                    const cantidadInsumo = cantidadValueInsumo[index].textFieldValue;
-                    const insumoActualizado = { ...insumo, insumoCantidad: insumo.insumoCantidad - cantidadInsumo };
-                    listaInsumoActualizado.push(insumoActualizado);
-                    const detalleCantidadInsumo = {
-                        detalleCantidadInsumoInsumo: insumoActualizado,
-                        detalleCantidadInsumoCantidad: cantidadInsumo,
-                    };
-                    listaInsumoCantidad.push(detalleCantidadInsumo);
-                })
-
-                const productoCompleto = productos.filter((producto) => producto.productoId.toString() === formDataWithoutCantidad.diariaDeProduccionProducto)[0];
-                console.log(productoCompleto);
-
-                const fechaDiariaProduccion = new Date(formData.diariaDeProduccionFecha);
-                const anio = fechaDiariaProduccion.getFullYear();
-                const mes = fechaDiariaProduccion.getMonth() + 1;
-                const dia = fechaDiariaProduccion.getDate();
-                const horas = fechaDiariaProduccion.getHours();
-                const minutos = fechaDiariaProduccion.getMinutes();
-
-                const horasFormateadas = horas.toString().padStart(2, '0');
-                const minutosFormateados = minutos.toString().padStart(2, '0');
-
-                const fechaNumero = parseInt(`${anio}${mes}${dia}${horasFormateadas}${minutosFormateados}${productoCompleto.productoCodigo}`);
-
-                const loteCompleto = {
-                    loteCodigo: fechaNumero,
-                    loteProducto: productoCompleto,
-                    loteCantidad: formDataWithoutCantidad.diariaDeProduccionCantidadProducida,
-                };
-
-                const updateFormData = {
-                    ...formDataWithoutCantidad,
-                    diariaDeProduccionProducto: productoCompleto,
-                    diariaDeProduccionInsumosCarnicos: listaCarneActualizada,
-                    diariaDeProduccionAditivos: listaInsumoActualizado,
-                    diariaDeProduccionResponsable: window.localStorage.getItem('user'),
-                };
-
-                const data = {
-                    diariaDeProduccion: updateFormData,
-                    listaCarneCantidad: listaCarneCantidad,
-                    listaInsumoCantidad: listaInsumoCantidad,
-                    lote: loteCompleto,
-                };
-
-                console.log(data);
-
-                const check = checkError(updateFormData.diariaDeProduccionProducto, updateFormData.diariaDeProduccionCantidadProducida,
-                    updateFormData.diariaDeProduccionFecha, updateFormData.diariaDeProduccionEnvasado, updateFormData.diariaDeProduccionFechaVencimiento);
-
-                if (check === false) {
-                    updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
-                    setShowAlertError(true);
-                    setTimeout(() => {
-                        setShowAlertError(false);
-                    }, 7000);
-                } else {
-                    axios.post('/agregar-diaria-de-produccion', data, {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            "Content-Type": "application/json"
-                        }
-                    })
-                        .then(response => {
-                            if (response.status === 201) {
-                                setShowAlertSuccess(true);
-                                setTimeout(() => {
-                                    setShowAlertSuccess(false);
-                                }, 5000);
-                            } else {
-                                updateErrorAlert('No se logro agregar la diaria de producción, revise los datos ingresados.')
-                                setShowAlertError(true);
-                                setTimeout(() => {
-                                    setShowAlertError(false);
-                                }, 5000);
-                            }
-                        })
-                        .catch(error => {
-                            if (error.request.status === 401) {
-                                setShowAlertWarning(true);
-                                setTimeout(() => {
-                                    setShowAlertWarning(false);
-                                }, 5000);
-                            }
-                            else if (error.request.status === 500) {
-                                updateErrorAlert('No se logro agregar la diaria de producción, revise los datos ingresados.');
-                                setShowAlertError(true);
-                                setTimeout(() => {
-                                    setShowAlertError(false);
-                                }, 5000);
-                            }
-                        })
+            axios.post('/agregar-diaria-de-produccion', data, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    "Content-Type": "application/json"
                 }
-            }
+            })
+                .then(response => {
+                    if (response.status === 201) {
+                        setShowAlertSuccess(true);
+                        setTimeout(() => {
+                            setShowAlertSuccess(false);
+                        }, 5000);
+                    } else {
+                        updateErrorAlert('No se logro agregar la diaria de producción, revise los datos ingresados.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 5000);
+                    }
+                })
+                .catch(error => {
+                    if (error.request.status === 401) {
+                        setShowAlertWarning(true);
+                        setTimeout(() => {
+                            setShowAlertWarning(false);
+                        }, 5000);
+                    }
+                    else if (error.request.status === 500) {
+                        updateErrorAlert('No se logro agregar la diaria de producción, revise los datos ingresados.');
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 5000);
+                    }
+                })
         }
     }
+}
+}
 
-    return (
-        <Grid>
-            <Navbar />
-            <Container style={{ marginTop: 30 }}>
-                <Box sx={{ flexGrow: 1 }}>
-                    <Grid container spacing={0}>
-                        <Grid item lg={2} md={2} ></Grid>
-                        <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-                            <Typography component='h1' variant='h4'>Agregar Diaria de Producción</Typography>
-                            <div>
-                                <Button color="primary" onClick={handleClickOpen}>
-                                    <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                        <HelpOutlineIcon fontSize="large" color="primary" />
-                                    </IconButton>
-                                </Button>
-                                <Dialog
-                                    fullScreen={fullScreen}
-                                    fullWidth='md'
-                                    maxWidth='md'
-                                    open={open}
-                                    onClose={handleClose}
-                                    aria-labelledby="responsive-dialog-title"
-                                >
-                                    <DialogTitle id="responsive-dialog-title">Explicación del formulario.</DialogTitle>
-                                    <DialogContent>
-                                        <DialogContentText className={classes.text}>
-                                            <span>
-                                                En esta página puedes registrar los productos que se producen en la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
-                                            </span>
-                                            <br />
-                                            <span>
-                                                Este formulario cuenta con 7 campos:
-                                                <ul>
-                                                    <li>
-                                                        <span className={classes.liTitleBlue}>Producto</span>: en este campo se debe seleccionar el producto que se realizara.
-                                                    </li>
-                                                    <li>
-                                                        <span className={classes.liTitleBlue}>Carne y Cantidad</span>: en este campo se divide en 2, en el primero llamado carne donde se ingresa la carne que se utiliza para realizar el producto
-                                                        y el segundo es cantidad, en el cual se ingresa la cantidad que se utiliza de esa carne, a su vez,
-                                                        este campo cuenta con un icono de más a la derecha del campo de carne para añadir otros 2 campos también denominados carne y cantidad, en caso de que el producto este compuesto por más de una carne,
-                                                        cuando añades más campos de carne y cantidad, del que ya está predeterminado, el icono de más cambia por una X por si deseas eliminar los nuevos campos generados.
-                                                    </li>
-                                                    <li>
-                                                        <span className={classes.liTitleBlue}>Aditivo y Cantidad</span>: en este campo se divide en 2, el primero llamado aditivo donde se ingresa el aditivo que se utiliza para realizar el producto
-                                                        y el segundo es cantidad, en el cual se ingresa la cantidad que se utiliza de ese aditivo, a su vez,
-                                                        este campo cuenta con un icono de más a la derecha del campo de aditivo para añadir otros 2 campos también denominados aditivo y cantidad, en caso de que el producto este compuesto por más de un aditivo,
-                                                        cuando añades más campos de aditivo y cantidad, del que ya está predeterminado, el icono de más cambia por una X por si deseas eliminar los nuevos campos generados.
-                                                    </li>
-                                                    <li>
-                                                        <span className={classes.liTitleBlue}>Cantidad Producida</span>: en este campo se ingresa la cantidad producida del producto/lote.
-                                                    </li>
-                                                    <li>
-                                                        <span className={classes.liTitleBlue}>Fecha de Producción</span>: en este campo se ingresa la fecha y hora en la que se realizo el producto.
-                                                    </li>
-                                                    <li>
-                                                        <span className={classes.liTitleBlue}>Envasado</span>: en este campo se puede seleccionar si el producto esta envasado o no esta envasado.
-                                                    </li>
-                                                    <li>
-                                                        <span className={classes.liTitleBlue}>Fecha de Vencimiento</span>: en este campo se puede ingresar la fecha de vencimiento del producto/lote que se realizo.
-                                                    </li>
-                                                </ul>
-                                            </span>
-                                            <span>
-                                                Campos obligatorios y no obligatorios:
-                                                <ul>
-                                                    <li>
-                                                        <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
-                                                    </li>
-                                                    <li>
-                                                        <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
-                                                    </li>
-                                                </ul>
-                                            </span>
-                                        </DialogContentText>
-                                    </DialogContent>
-                                    <DialogActions>
-                                        <Button onClick={handleClose} color="primary" autoFocus>
-                                            Cerrar
-                                        </Button>
-                                    </DialogActions>
-                                </Dialog>
-                            </div>
-                        </Grid>
-                        <Grid item lg={2} md={2}></Grid>
+return (
+    <Grid>
+        <Navbar />
+        <Container style={{ marginTop: 30 }}>
+            <Box sx={{ flexGrow: 1 }}>
+                <Grid container spacing={0}>
+                    <Grid item lg={2} md={2} ></Grid>
+                    <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
+                        <Typography component='h1' variant='h4'>Agregar Diaria de Producción</Typography>
+                        <div>
+                            <Button color="primary" onClick={handleClickOpen}>
+                                <IconButton className={blinking ? classes.blinkingButton : ''}>
+                                    <HelpOutlineIcon fontSize="large" color="primary" />
+                                </IconButton>
+                            </Button>
+                            <Dialog
+                                fullScreen={fullScreen}
+                                fullWidth='md'
+                                maxWidth='md'
+                                open={open}
+                                onClose={handleClose}
+                                aria-labelledby="responsive-dialog-title"
+                            >
+                                <DialogTitle id="responsive-dialog-title">Explicación del formulario.</DialogTitle>
+                                <DialogContent>
+                                    <DialogContentText className={classes.text}>
+                                        <span>
+                                            En esta página puedes registrar los productos que se producen en la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                        </span>
+                                        <br />
+                                        <span>
+                                            Este formulario cuenta con 7 campos:
+                                            <ul>
+                                                <li>
+                                                    <span className={classes.liTitleBlue}>Producto</span>: en este campo se debe seleccionar el producto que se realizara.
+                                                </li>
+                                                <li>
+                                                    <span className={classes.liTitleBlue}>Carne y Cantidad</span>: en este campo se divide en 2, en el primero llamado carne donde se ingresa la carne que se utiliza para realizar el producto
+                                                    y el segundo es cantidad, en el cual se ingresa la cantidad que se utiliza de esa carne, a su vez,
+                                                    este campo cuenta con un icono de más a la derecha del campo de carne para añadir otros 2 campos también denominados carne y cantidad, en caso de que el producto este compuesto por más de una carne,
+                                                    cuando añades más campos de carne y cantidad, del que ya está predeterminado, el icono de más cambia por una X por si deseas eliminar los nuevos campos generados.
+                                                </li>
+                                                <li>
+                                                    <span className={classes.liTitleBlue}>Aditivo y Cantidad</span>: en este campo se divide en 2, el primero llamado aditivo donde se ingresa el aditivo que se utiliza para realizar el producto
+                                                    y el segundo es cantidad, en el cual se ingresa la cantidad que se utiliza de ese aditivo, a su vez,
+                                                    este campo cuenta con un icono de más a la derecha del campo de aditivo para añadir otros 2 campos también denominados aditivo y cantidad, en caso de que el producto este compuesto por más de un aditivo,
+                                                    cuando añades más campos de aditivo y cantidad, del que ya está predeterminado, el icono de más cambia por una X por si deseas eliminar los nuevos campos generados.
+                                                </li>
+                                                <li>
+                                                    <span className={classes.liTitleBlue}>Cantidad Producida</span>: en este campo se ingresa la cantidad producida del producto/lote.
+                                                </li>
+                                                <li>
+                                                    <span className={classes.liTitleBlue}>Fecha de Producción</span>: en este campo se ingresa la fecha y hora en la que se realizo el producto.
+                                                </li>
+                                                <li>
+                                                    <span className={classes.liTitleBlue}>Envasado</span>: en este campo se puede seleccionar si el producto esta envasado o no esta envasado.
+                                                </li>
+                                                <li>
+                                                    <span className={classes.liTitleBlue}>Fecha de Vencimiento</span>: en este campo se puede ingresar la fecha de vencimiento del producto/lote que se realizo.
+                                                </li>
+                                            </ul>
+                                        </span>
+                                        <span>
+                                            Campos obligatorios y no obligatorios:
+                                            <ul>
+                                                <li>
+                                                    <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                </li>
+                                                <li>
+                                                    <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                </li>
+                                            </ul>
+                                        </span>
+                                    </DialogContentText>
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={handleClose} color="primary" autoFocus>
+                                        Cerrar
+                                    </Button>
+                                </DialogActions>
+                            </Dialog>
+                        </div>
                     </Grid>
-                    <Grid container spacing={0}>
-                        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
-                        <Grid item lg={4} md={4} sm={4} xs={4}>
-                            <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
-                            <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
-                            <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
-                        </Grid>
-                        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+                    <Grid item lg={2} md={2}></Grid>
+                </Grid>
+                <Grid container spacing={0}>
+                    <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+                    <Grid item lg={4} md={4} sm={4} xs={4}>
+                        <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+                        <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+                        <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
                     </Grid>
-                </Box>
-            </Container>
-            <FormularioReutilizable
-                fields={formFields}
-                onSubmit={handleFormSubmit}
-                selectOptions={{
-                    diariaDeProduccionProducto: productoSelect,
-                    diariaDeProduccionInsumosCarnicos: carneSelect,
-                    diariaDeProduccionAditivos: insumoSelect,
-                    diariaDeProduccionEnvasado: envasado,
-                }}
-            />
-        </Grid>
-    )
+                    <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+                </Grid>
+            </Box>
+        </Container>
+        <FormularioReutilizable
+            fields={formFields}
+            onSubmit={handleFormSubmit}
+            selectOptions={{
+                diariaDeProduccionProducto: productoSelect,
+                diariaDeProduccionInsumosCarnicos: carneSelect,
+                diariaDeProduccionAditivos: insumoSelect,
+                diariaDeProduccionEnvasado: envasado,
+            }}
+        />
+    </Grid>
+)
 }
 
 export default AgregarDiariaDeProduccion;
