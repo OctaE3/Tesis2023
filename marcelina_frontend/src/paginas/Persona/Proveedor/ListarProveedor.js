@@ -64,14 +64,15 @@ function ListarProveedor() {
 
 
   const mapData = (item, key) => {
-    if (key === 'proveedorLocalidad.localidadNombre') {
-      if (item.proveedorLocalidad && item.proveedorLocalidad.localidadNombre) {
-        return item.proveedorLocalidad.localidadNombre;
+    if (key === 'proveedorLocalidad.localidadDepartamento') {
+      if (item.proveedorLocalidad && item.proveedorLocalidad.localidadDepartamento) {
+        return item.proveedorLocalidad.localidadDepartamento;
       } else {
         return '';
       }
     } else if (key === 'proveedorContacto') {
       if (item.proveedorContacto && item.proveedorContacto.length > 0) {
+        console.log(item.proveedorContacto)
         return item.proveedorContacto;
       } else {
         return [];
@@ -86,7 +87,7 @@ function ListarProveedor() {
     { id: 'proveedorEmail', numeric: false, disablePadding: false, label: 'Email' },
     { id: 'proveedorContacto', numeric: false, disablePadding: false, label: 'Telefonos' },
     { id: 'proveedorRUT', numeric: false, disablePadding: false, label: 'RUT' },
-    { id: 'proveedorLocalidad.localidadNombre', numeric: false, disablePadding: false, label: 'Localidad' },
+    { id: 'proveedorLocalidad.localidadDepartamento', numeric: false, disablePadding: false, label: 'Localidad' },
   ];
 
   const filters = [
@@ -111,15 +112,15 @@ function ListarProveedor() {
       proveedorEmail: item.proveedorEmail ? item.proveedorEmail.toLowerCase() : '',
       proveedorContacto: item.proveedorContacto.map(contacto => contacto.toLowerCase()), // Convertir todos los contactos a minúsculas
       proveedorRUT: item.proveedorRUT.toLowerCase(),
-      clienteLocalidad: item.clienteLocalidad ? item.clienteLocalidad.localidadDepartamento.toLowerCase() : '',
+      proveedorLocalidad: item.proveedorLocalidad ? item.proveedorLocalidad.localidadDepartamento.toLowerCase() : '',
     };
 
     if (
-      (!filtros.nombre || lowerCaseItem.clienteNombre.startsWith(filtros.nombre)) &&
-      (!filtros.email || lowerCaseItem.clienteEmail.startsWith(filtros.email)) &&
-      (!filtros.telefono || lowerCaseItem.clienteContacto.some(contacto => contacto.startsWith(filtros.telefono))) &&
+      (!filtros.nombre || lowerCaseItem.proveedorNombre.startsWith(filtros.nombre)) &&
+      (!filtros.email || lowerCaseItem.proveedorEmail.startsWith(filtros.email)) &&
+      (!filtros.telefono || lowerCaseItem.proveedorContacto.some(contacto => contacto.startsWith(filtros.telefono))) &&
       (!filtros.RUT || lowerCaseItem.proveedorRUT.startsWith(filtros.RUT)) &&
-      (!filtros.localidad || lowerCaseItem.clienteLocalidad.startsWith(filtros.localidad))
+      (!filtros.localidad || lowerCaseItem.proveedorLocalidad.startsWith(filtros.localidad))
     ) {
       return true;
     }
@@ -157,9 +158,9 @@ function ListarProveedor() {
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
-        dataKey="cliente"
+        dataKey="proveedor"
         tableHeadCells={tableHeadCells}
-        title="Clientes"
+        title="Proveedores"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditProveedor}

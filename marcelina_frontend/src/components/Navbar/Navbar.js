@@ -121,7 +121,7 @@ const Navbar = () => {
             </IconButton>
             <Grid container>
               <Grid item lg={2} md={2} sm={2} xs={2}>
-                <Avatar alt="La Marcelina" src={Logo} className={classes.logoStyle} />
+                <Avatar component={Link} to="/inicio" alt="La Marcelina" src={Logo} className={classes.logoStyle} />
               </Grid>
               <Grid item lg={11} md={11} sm={11} xs={11}></Grid>
             </Grid>
@@ -156,10 +156,13 @@ const Navbar = () => {
             <ListItem button component={Link} to="/localidad" onClick={handleDrawerClose}>
               <ListItemText primary="Localidades" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-localidad" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Localidades" />
+            </ListItem>
             <ListItem button component={Link} to="/cliente" onClick={handleDrawerClose}>
               <ListItemText primary="Clientes" />
             </ListItem>
-            <ListItem button component={Link} to="/listarcliente" onClick={handleDrawerClose}>
+            <ListItem button component={Link} to="/listar-cliente" onClick={handleDrawerClose}>
               <ListItemText primary="Ver Clientes" />
             </ListItem>
             <ListItem button component={Link} to="/modificar-cliente" onClick={handleDrawerClose}>
@@ -168,7 +171,7 @@ const Navbar = () => {
             <ListItem button component={Link} to="/carne" onClick={handleDrawerClose}>
               <ListItemText primary="Carne" />
             </ListItem>
-            <ListItem button component={Link} to="/listarcarne" onClick={handleDrawerClose}>
+            <ListItem button component={Link} to="/listar-carne" onClick={handleDrawerClose}>
               <ListItemText primary="Ver Carnes" />
             </ListItem>
             <ListItem button component={Link} to="/insumo" onClick={handleDrawerClose}>
@@ -180,62 +183,116 @@ const Navbar = () => {
             <ListItem button component={Link} to="/producto" onClick={handleDrawerClose}>
               <ListItemText primary="Producto" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-producto" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Producto" />
+            </ListItem>
             <ListItem button component={Link} to="/proveedor" onClick={handleDrawerClose}>
               <ListItemText primary="Proveedor" />
             </ListItem>
-            <ListItem button component={Link} to="/listarproveedor" onClick={handleDrawerClose}>
+            <ListItem button component={Link} to="/listar-proveedor" onClick={handleDrawerClose}>
               <ListItemText primary="Ver Proveedor" />
             </ListItem>
             <ListItem button component={Link} to="/control-de-alarma-luminica-y-sonora-de-cloro" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Alarma Luminica y Sonora de Cloro" />
             </ListItem>
-            <ListItem button component={Link} to="/listarcontrol-de-alarma-luminica-y-sonora-de-cloro" onClick={handleDrawerClose}>
+            <ListItem button component={Link} to="/listar-control-de-alarma-luminica-y-sonora-de-cloro" onClick={handleDrawerClose}>
               <ListItemText primary="Ver Control de Alarma Luminica y Sonora de Cloro" />
             </ListItem>
             <ListItem button component={Link} to="/control-de-cloro-libre" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Cloro Libre" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-cloro-libre" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Cloro Libre" />
+            </ListItem>
             <ListItem button component={Link} to="/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Limpieza y Desinfeccion de Depositos de Agua y Cañerias" />
+            </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Limpieza y Desinfeccion de Depositos de Agua y Cañerias" />
             </ListItem>
             <ListItem button component={Link} to="/control-de-mejoras-en-instalaciones" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Mejoras en Instalaciones" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-mejoras-en-instalaciones" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Mejoras en Instalaciones" />
+            </ListItem>
             <ListItem button component={Link} to="/control-de-reposicion-de-cloro" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Reposicion de Cloro" />
+            </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-reposicion-de-cloro" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Reposicion de Cloro" />
             </ListItem>
             <ListItem button component={Link} to="/control-de-temperatura-de-esterilizadores" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Temperatura de Esterilizadores" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-temperatura-de-esterilizadores" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Temperatura de Esterilizadores" />
+            </ListItem>
             <ListItem button component={Link} to="/control-de-temperatura-en-camaras" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Temperatura en Camaras" />
+            </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-temperatura-en-camaras" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Temperatura en Camaras" />
             </ListItem>
             <ListItem button component={Link} to="/control-de-nitratos" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Nitratos" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-nitratos" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Nitratos" />
+            </ListItem>
             <ListItem button component={Link} to="/control-de-nitritos" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Nitritos" />
+            </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-nitritos" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Nitritos" />
             </ListItem>
             <ListItem button component={Link} to="/expedicion-de-producto" onClick={handleDrawerClose}>
               <ListItemText primary="Expedición de Producto" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-expedicion-de-producto" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Expedición de Producto" />
+            </ListItem>
             <ListItem button component={Link} to="/control-de-productos-quimicos" onClick={handleDrawerClose}>
               <ListItemText primary="Control de Productos Quimicos" />
+            </ListItem>
+            <ListItem button component={Link} to="/listar-control-de-productos-quimicos" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Control de Productos Quimicos" />
             </ListItem>
             <ListItem button component={Link} to="/recepcion-de-materias-primas-carnicas" onClick={handleDrawerClose}>
               <ListItemText primary="Recepcion de Materias Primas Carnicas" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-recepcion-de-materias-primas-carnicas" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Recepcion de Materias Primas Carnicas" />
+            </ListItem>
             <ListItem button component={Link} to="/diaria-de-produccion" onClick={handleDrawerClose}>
               <ListItemText primary="Diaria de Producción" />
+            </ListItem>
+            <ListItem button component={Link} to="/listar-diaria-de-produccion" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Diaria de Producción" />
             </ListItem>
             <ListItem button component={Link} to="/resumen-de-trazabilidad" onClick={handleDrawerClose}>
               <ListItemText primary="Resumen de Trazabilidad" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-resumen-de-trazabilidad" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Resumen de Trazabilidad" />
+            </ListItem>
             <ListItem button component={Link} to="/monitoreo-de-ssop-operativo" onClick={handleDrawerClose}>
               <ListItemText primary="Monitoreo de SSOP Operativo" />
             </ListItem>
+            <ListItem button component={Link} to="/listar-monitoreo-de-ssop-operativo" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Monitoreo de SSOP Operativo" />
+            </ListItem>
             <ListItem button component={Link} to="/monitoreo-de-ssop-pre-operativo" onClick={handleDrawerClose}>
               <ListItemText primary="Monitoreo de SSOP Pre-Operativo" />
+            </ListItem>
+            <ListItem button component={Link} to="/listar-monitoreo-de-ssop-pre-operativo" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Monitoreo de SSOP Pre-Operativo" />
+            </ListItem>
+            <ListItem button component={Link} to="/listar-usuarios" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Usuarios" />
+            </ListItem>
+            <ListItem button component={Link} to="/listar-anual-de-insumos-carnicos" onClick={handleDrawerClose}>
+              <ListItemText primary="Ver Anual de insumos carnicos" />
             </ListItem>
           </List>
         </Drawer>

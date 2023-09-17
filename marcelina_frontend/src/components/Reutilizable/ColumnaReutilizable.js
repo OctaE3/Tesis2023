@@ -16,10 +16,11 @@ const useStyles = makeStyles((theme) => ({
 
 function renderRow(props) {
   const { index, style, contacts } = props;
+  const productName = contacts[index];
 
   return (
     <ListItem button style={style} key={index}>
-      <ListItemText primary={contacts[index]} />
+      <ListItemText primary={productName} />
     </ListItem>
   );
 }
@@ -35,7 +36,7 @@ function ColumnaReutilizable({ contacts }) {
 
   return (
     <div className={classes.root}>
-      <FixedSizeList height={46} width={300} itemSize={46} itemCount={contacts.length}>
+      <FixedSizeList height={46} width={250} itemSize={46} itemCount={contacts.length}>
         {({ index, style }) => renderRow({ index, style, contacts })}
       </FixedSizeList>
     </div>

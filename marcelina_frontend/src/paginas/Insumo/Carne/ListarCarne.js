@@ -119,7 +119,7 @@ function ListarCarne() {
       (!filtros.nombre || lowerCaseItem.carneNombre.startsWith(filtros.nombre)) &&
       (!filtros.tipo || lowerCaseItem.carneTipo.startsWith(filtros.tipo)) &&
       (!filtros.corte || lowerCaseItem.carneCorte.startsWith(filtros.corte)) &&
-      (!filtros.cantidad || lowerCaseItem.carneCantidad.startsWith(filtros.cantidad)) &&
+      (!filtros.cantidad || lowerCaseItem.carneCantidad.toString().startsWith(filtros.cantidad)) &&
       (!filtros.categoria || lowerCaseItem.carneCategoria.startsWith(filtros.cantidad)) &&
       (!filtros['fecha-desde'] || lowerCaseItem.carneFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.carneFecha <= new Date(filtros['fecha-hasta'])) && 

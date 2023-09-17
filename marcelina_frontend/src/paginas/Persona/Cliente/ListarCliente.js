@@ -47,11 +47,11 @@ function ListarCliente() {
         });
 
         const clientesData = clientesResponse.data.map((cliente) => ({
-            ...cliente,
-            Id: cliente.clienteId,
+          ...cliente,
+          Id: cliente.clienteId,
         }));
         const localidadesData = localidadesResponse.data;
-        
+
         setData(clientesData);
         setLocalidades(localidadesData.map((localidad) => localidad.localidadDepartamento)); // Obtener solo los nombres de las localidades
       } catch (error) {
