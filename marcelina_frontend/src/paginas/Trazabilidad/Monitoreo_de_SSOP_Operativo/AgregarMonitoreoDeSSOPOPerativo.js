@@ -142,13 +142,13 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
   };
 
   const checkError = (fecha, area, dias, correc, prevent) => {
-    if (fecha === undefined || fecha === null) {
+    if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
       return false;
     }
     else if (area === undefined || area === null || area === "Seleccionar") {
       return false;
     }
-    else if (dias === undefined || dias === null) {
+    else if (dias === undefined || dias === null || dias.length === 0) {
       return false;
     }
     else if (correc === undefined || correc === null || correc === '') {
@@ -170,7 +170,7 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
 
     const formattedFechaFinal = `${year}-${month}-${day}`;
 
-    const dias = formData.monitoreoDeSSOPOperativoDias;
+    const dias = formData.monitoreoDeSSOPOperativoDias ? formData.monitoreoDeSSOPOperativoDias : [];
 
     const valoresDias = dias.map(dia => dia.value);
 

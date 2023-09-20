@@ -92,6 +92,7 @@ const ModificarExpedicionDeProducto = () => {
     const classes = useStyles();
     const { id } = useParams();
     const [control, setControl] = useState({});
+    const [controles, setControles] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [clienteSelect, setClienteSelect] = useState([]);
     const [clienteExpedicion, setClienteExpedicion] = useState({});
@@ -148,8 +149,17 @@ const ModificarExpedicionDeProducto = () => {
             })
                 .then(response => {
                     const controlesData = response.data;
+                    setControles(
+                        controlesData.filter((exp) => exp.expedicionDeProductoId.toString() !== id.toString())
+                            .map((exp) => ({
+                                documento: exp.expedicionDeProductoDocumento,
+                            }))
+                    );
                     console.log(controlesData);
                     const controlEncontrado = controlesData.find((control) => control.expedicionDeProductoId.toString() === id.toString());
+                    if (!controlEncontrado) {
+                        navigate('/listar-expedicion-de-producto');
+                    }
                     console.log(controlEncontrado);
                     axios.get('/listar-lotes', {
                         headers: {
@@ -296,7 +306,7 @@ const ModificarExpedicionDeProducto = () => {
     };
 
     const checkError = (fecha, cliente, documento) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (cliente === undefined || cliente === null || cliente === "Seleccionar") {
@@ -309,17 +319,31 @@ const ModificarExpedicionDeProducto = () => {
     }
 
     const checkMultiple = (lotes) => {
-        console.log(lotes);
+        let resp = true;
         if (lotes) {
             const resul = lotes.forEach((lote) => {
-                console.log(lote);
                 if (lote.loteVendido.value === '' || lote.cantidad === '' || lote.loteVendido.value === "Seleccionar" || lote.cantidad === 0) {
-                    return false;
+                    resp = false;
                 } else { }
+
+                if (resp === false) { return }
             })
-            console.log(resul);
-            return resul ? resul : true;
+            return resp;
         } else { return false }
+        return resp;
+    }
+
+    const checkDoc = (documento) => {
+        let resp = true;
+        console.log(controles);
+        controles.forEach((exp) => {
+            if (exp.documento.toString() === documento.toString()) {
+                resp = false;
+            }
+
+            if (resp === false) { return }
+        })
+        return resp;
     }
 
     const handleFormSubmit = () => {
@@ -437,42 +461,51 @@ const ModificarExpedicionDeProducto = () => {
                         setShowAlertError(false);
                     }, 7000);
                 } else {
-                    console.log(dataCompleta.expedicionDeProducto.expedicionDeProductoCantidad);
-                    axios.put(`/modificar-expedicion-de-producto/${id}`, dataCompleta, {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            "Content-Type": "application/json"
-                        }
-                    })
-                        .then(response => {
-                            if (response.status === 200) {
-                                setShowAlertSuccess(true);
-                                setTimeout(() => {
-                                    setShowAlertSuccess(false);
-                                }, 5000);
-                            } else {
-                                updateErrorAlert('No se logro modificar la expedición de producto, revise los datos ingresados.')
-                                setShowAlertError(true);
-                                setTimeout(() => {
-                                    setShowAlertError(false);
-                                }, 5000);
+                    const checkD = checkDoc(data.expedicionDeProductoDocumento);
+                    if (checkD === false) {
+                        updateErrorAlert(`El documento ingresado ya le pertenece a otra expedición de producto.`);
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 7000);
+                    } else {
+                        axios.put(`/modificar-expedicion-de-producto/${id}`, dataCompleta, {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                "Content-Type": "application/json"
                             }
                         })
-                        .catch(error => {
-                            if (error.request.status === 401) {
-                                setShowAlertWarning(true);
-                                setTimeout(() => {
-                                    setShowAlertWarning(false);
-                                }, 5000);
-                            }
-                            else if (error.request.status === 500) {
-                                updateErrorAlert('No se logro modificar la expedición de producto, revise los datos ingresados.');
-                                setShowAlertError(true);
-                                setTimeout(() => {
-                                    setShowAlertError(false);
-                                }, 5000);
-                            }
-                        })
+                            .then(response => {
+                                if (response.status === 200) {
+                                    setShowAlertSuccess(true);
+                                    setTimeout(() => {
+                                        setShowAlertSuccess(false);
+                                        navigate('/listar-expedicion-de-producto');
+                                    }, 3000)
+                                } else {
+                                    updateErrorAlert('No se logro modificar la expedición de producto, revise los datos ingresados.')
+                                    setShowAlertError(true);
+                                    setTimeout(() => {
+                                        setShowAlertError(false);
+                                    }, 5000);
+                                }
+                            })
+                            .catch(error => {
+                                if (error.request.status === 401) {
+                                    setShowAlertWarning(true);
+                                    setTimeout(() => {
+                                        setShowAlertWarning(false);
+                                    }, 5000);
+                                }
+                                else if (error.request.status === 500) {
+                                    updateErrorAlert('No se logro modificar la expedición de producto, revise los datos ingresados.');
+                                    setShowAlertError(true);
+                                    setTimeout(() => {
+                                        setShowAlertError(false);
+                                    }, 5000);
+                                }
+                            })
+                    }
                 }
             } else {
                 updateErrorAlert(`La cantidad ingresada para vender del/los lote/lotes: ${resultadoLote} es mayor a la disponible.`);
@@ -584,7 +617,7 @@ const ModificarExpedicionDeProducto = () => {
                                             defaultValue={new Date()}
                                             type="date"
                                             name="expedicionDeProductoFecha"
-                                            value={control.expedicionDeProductoFecha}
+                                            value={control.expedicionDeProductoFecha || new Date()}
                                             onChange={handleChange}
                                         />
                                     </Grid>

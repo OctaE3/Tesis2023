@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
 import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import AddIcon from '@material-ui/icons/Add';
+import CloseIcon from '@material-ui/icons/Close';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
@@ -85,6 +87,13 @@ const useStyles = makeStyles(theme => ({
     text: {
         color: '#2D2D2D',
     },
+    addButton: {
+        justifyContent: 'flex-start',
+        marginTop: theme.spacing(0.5),
+    },
+    iconButton: {
+        minWidth: '50px',
+    },
 }));
 
 const ModificarCliente = () => {
@@ -148,11 +157,15 @@ const ModificarCliente = () => {
                     const clientes = response.data;
                     setClientes(clientes);
                     const clienteEncontrado = clientes.find((cliente) => cliente.clienteId.toString() === id.toString());
-                    if (clienteEncontrado === undefined) {
-                        navigate('/listarcliente');
+                    if (!clienteEncontrado) {
+                        navigate('/listar-cliente');
                     }
                     setCliente(clienteEncontrado);
-                    setTelefonos(clienteEncontrado.clienteContacto);
+                    setTelefonos(
+                        clienteEncontrado.clienteContacto.map((tel) => ({
+                            tel: tel,
+                        }))
+                    );
                     setClienteLocalidad({
                         value: clienteEncontrado.clienteLocalidad.localidadId,
                         label: clienteEncontrado.clienteLocalidad.localidadCiudad,
@@ -214,7 +227,7 @@ const ModificarCliente = () => {
             }
         }
         else if (name === "clienteEmail") {
-            const regex = new RegExp("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{0,3}");
+            const regex = new RegExp("^[A-Za-z0-9.@]{0,50}$");
             if (regex.test(value)) {
                 setCliente(prevState => ({
                     ...prevState,
@@ -236,76 +249,144 @@ const ModificarCliente = () => {
 
     const handleChangeTelefono = (index, telefono) => {
         const regex = new RegExp("^[0-9]{0,9}$");
+        console.log(index);
 
         if (regex.test(telefono)) {
             setTelefonos(prevTelefonos => {
                 const nuevosTelefonos = [...prevTelefonos];
-                nuevosTelefonos[index] = telefono;
+                nuevosTelefonos[index] = { tel: telefono };
                 return nuevosTelefonos;
             });
         }
     }
 
+    const handleAddTelefono = async () => {
+        setTelefonos([...telefonos, { tel: "" }]);
+    };
+
+    const handleRemoveTelefono = (index) => {
+        const nuevosTelefonos = [...telefonos];
+        nuevosTelefonos.splice(index, 1);
+
+        setTelefonos(nuevosTelefonos);
+        console.log(nuevosTelefonos);
+    };
+
     const checkTelefono = (telefonos) => {
         const telefonosClientes = [];
-        clientes.forEach(cliente => {
-            cliente.clienteContacto.forEach(telefono => {
-                telefonosClientes.push(telefono);
+        if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
+            return false;
+        } else {
+            clientes.forEach(cliente => {
+                cliente.clienteContacto.forEach(telefono => {
+                    console.log(telefono)
+                    if (cliente.clienteId.toString() === id.toString()) { }
+                    else {
+                        telefonosClientes.push(telefono);
+                    }
+                })
             })
-        })
 
-        const telefonosEncontrados = telefonos.filter(tel => {
-            return telefonosClientes.includes(tel);
-        });
+            let telCheck = false;
+            console.log(telefonosClientes);
 
-        return telefonosEncontrados.length > 0 ? telefonosEncontrados : null;
+            telefonosClientes.forEach((telC) => {
+                telefonos.forEach((tel) => {
+                    if (telC.toString() === tel.toString()) {
+                        telCheck = true;
+                    }
+                });
+                if (telCheck) {
+                    return;
+                }
+            });
+
+            console.log(telCheck);
+            return telCheck;
+        }
     }
 
     const checkEmail = (email) => {
-        const emailClientes = [];
-        clientes.forEach(cliente => {
-            emailClientes.push(cliente.clienteEmail);
-        })
+        if (email) {
+            const emailClientes = [];
+            clientes.forEach(cliente => {
+                if (cliente.clienteId.toString() === id.toString()) { }
+                else {
+                    emailClientes.push(cliente.clienteEmail);
+                }
+            })
+            console.log(emailClientes);
 
-        const emailEncontrado = emailClientes.includes(email);
-        return emailEncontrado;
+            const emailEncontrado = emailClientes.includes(email);
+            return emailEncontrado;
+        }
     }
 
-    const checkError = (nombre, email, telefonos, localidad) => {
+    const checkError = (nombre, email, localidad) => {
         if (nombre === undefined || nombre === null || nombre.trim() === '') {
             return false;
         }
-        else if (!email === undefined || !email === null || !email.trim() === '') {
-            if (!email.includes(".") && !email.includes("@")) {
-                return false;
+
+        if (email) {
+            if (email === undefined || email === null || email.trim() === '') { }
+            else {
+                if (!email.includes(".") && !email.includes("@")) {
+                    return false;
+                }
             }
         }
-        else if (telefonos !== undefined || telefonos !== null || telefonos.length !== 0) {
-            const regex = /^\d{9}$/;
-            telefonos.forEach((tel) => {
-                if (regex.test(tel.telefono)) { }
-                else { return false; }
-            })
-        }
-        else if (localidad === undefined || localidad === null) {
+
+        if (localidad === undefined || localidad === null || localidad === "Seleccionar") {
             return false;
         }
         return true;
     }
 
+    const checkErrorTelefono = (telefonos) => {
+        let resp = true;
+        console.log(telefonos)
+        if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
+            return false;
+        } else {
+            const regex = /^\d{9}$/;
+            telefonos.forEach((tel) => {
+                if (regex.test(tel)) {
+                    const primerNum = tel[0];
+                    const longitud = tel.length;
+                    console.log(primerNum)
+                    console.log(longitud)
+                    if (parseInt(primerNum) === 0 && longitud === 9) { }
+                    else { resp = false }
+                }
+                else { resp = false }
+            })
+        }
+        return resp;
+    }
+
     const handleFormSubmit = () => {
-        const localidadCompleta = localidades.find((localidad) => localidad.localidadId.toString() === clienteLocalidad.value.toString());
+        const localidadValue = clienteLocalidad === "Seleccionar" ? "Seleccionar" : clienteLocalidad.value;
+        console.log(cliente);
+        const localidadCompleta = localidades.find((localidad) => localidad.localidadId.toString() === localidadValue.toString());
+
+        const telefonosStrings = [];
+        telefonos.forEach((telefono) => {
+            telefonosStrings.push(telefono.tel);
+        })
+        console.log(telefonosStrings);
         const data = {
             ...cliente,
-            clienteContacto: telefonos,
+            clienteEmail: !cliente.clienteEmail || cliente.clienteEmail === '' ? undefined : cliente.clienteEmail,
+            clienteContacto: telefonosStrings,
             clienteLocalidad: localidadCompleta,
         };
         console.log(data);
 
-        const check = checkError(data.clienteNombre, data.clienteEmail, data.clienteContacto, data.clienteLocalidad);
-
+        const check = checkError(data.clienteNombre, data.clienteEmail, data.clienteLocalidad);
         const telefonoCheck = checkTelefono(data.clienteContacto);
         const emailCheck = checkEmail(data.clienteEmail);
+        console.log(emailCheck)
+        const telefonoErrorCheck = checkErrorTelefono(data.clienteContacto);
 
         if (check === false) {
             updateErrorAlert(`Revise los datos ingresados en cliente y no deje campos vacíos.`);
@@ -314,48 +395,116 @@ const ModificarCliente = () => {
                 setShowAlertError(false);
             }, 7000);
         } else {
-            if (telefonoCheck === null && emailCheck === false) {
-                axios.post(`/modificar-cliente/${id}`, data, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-                    .then(response => {
-                        if (response.status === 200) {
-                            setShowAlertSuccess(true);
-                            setTimeout(() => {
-                                setShowAlertSuccess(false);
-                            }, 5000);
-                        } else {
-                            updateErrorAlert('No se logro modificar el cliente, revise los datos ingresados.')
-                            setShowAlertError(true);
-                            setTimeout(() => {
-                                setShowAlertError(false);
-                            }, 5000);
-                        }
-                    })
-                    .catch(error => {
-                        if (error.request.status === 401) {
-                            setShowAlertWarning(true);
-                            setTimeout(() => {
-                                setShowAlertWarning(false);
-                            }, 5000);
-                        }
-                        else if (error.request.status === 500) {
-                            updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
-                            setShowAlertError(true);
-                            setTimeout(() => {
-                                setShowAlertError(false);
-                            }, 5000);
-                        }
-                    })
-            } else {
-                updateErrorAlert(`Revise los datos ingresados, no puede coincidir el email o los teléfonos, con los clientes ya registrados.`);
+            if (telefonoErrorCheck === false) {
+                updateErrorAlert(`Los teléfonos ingresados tienen que empezar con el número 0 y tener una longitud de 9 digitos, en caso de agregar otro campo de contacto, no lo deje vacío.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 5000);
+                }, 7000);
+            } else {
+                if (data.clienteEmail) {
+                    const regex = /^(([^<>()[\]\.,;:\s@"]+(\.[^<>()[\]\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                    if (regex.test(data.clienteEmail)) {
+                        if (telefonoCheck === false && emailCheck === false) {
+                            axios.put(`/modificar-cliente/${id}`, data, {
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    "Content-Type": "application/json"
+                                }
+                            })
+                                .then(response => {
+                                    if (response.status === 200) {
+                                        setShowAlertSuccess(true);
+                                        setTimeout(() => {
+                                            setShowAlertSuccess(false);
+                                            navigate('/listar-cliente');
+                                        }, 3000)
+                                    } else {
+                                        updateErrorAlert('No se logro modificar el cliente, revise los datos ingresados.')
+                                        setShowAlertError(true);
+                                        setTimeout(() => {
+                                            setShowAlertError(false);
+                                        }, 5000);
+                                    }
+                                })
+                                .catch(error => {
+                                    if (error.request.status === 401) {
+                                        setShowAlertWarning(true);
+                                        setTimeout(() => {
+                                            setShowAlertWarning(false);
+                                        }, 5000);
+                                    }
+                                    else if (error.request.status === 500) {
+                                        updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
+                                        setShowAlertError(true);
+                                        setTimeout(() => {
+                                            setShowAlertError(false);
+                                        }, 5000);
+                                    }
+                                })
+                        } else {
+                            updateErrorAlert(`Revise los datos ingresados, no puede coincidir el email o los teléfonos, con los clientes ya registrados.`);
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 7000);
+                        }
+                    } else {
+                        updateErrorAlert(`El mail ingresado no es válido.`);
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 7000);
+                    }
+                } else {
+                    if (telefonoCheck === false) {
+                        const dataMod = {
+                            ...data,
+                            clienteEmail: null,
+                        }
+                        axios.put(`/modificar-cliente/${id}`, dataMod, {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                "Content-Type": "application/json"
+                            }
+                        })
+                            .then(response => {
+                                if (response.status === 200) {
+                                    setShowAlertSuccess(true);
+                                    setTimeout(() => {
+                                        setShowAlertSuccess(false);
+                                    }, 5000);
+                                } else {
+                                    updateErrorAlert('No se logro modificar el cliente, revise los datos ingresados.')
+                                    setShowAlertError(true);
+                                    setTimeout(() => {
+                                        setShowAlertError(false);
+                                    }, 5000);
+                                }
+                            })
+                            .catch(error => {
+                                if (error.request.status === 401) {
+                                    setShowAlertWarning(true);
+                                    setTimeout(() => {
+                                        setShowAlertWarning(false);
+                                    }, 5000);
+                                }
+                                else if (error.request.status === 500) {
+                                    updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
+                                    setShowAlertError(true);
+                                    setTimeout(() => {
+                                        setShowAlertError(false);
+                                    }, 5000);
+                                }
+                            })
+                    } else {
+                        updateErrorAlert(`Revise los datos ingresados, no puede coincidir los teléfonos, con los clientes ya registrados.`);
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 7000);
+                    }
+                }
             }
         }
     };
@@ -471,9 +620,9 @@ const ModificarCliente = () => {
                                         <TextField
                                             fullWidth
                                             autoFocus
-                                            className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
-                                            color="primary"
+                                            className={classes.customOutlinedRed}
+                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Email"
@@ -484,7 +633,17 @@ const ModificarCliente = () => {
                                             onChange={handleChange}
                                         />
                                     </Grid>
-                                    {telefonos.map((telefono, index) => (
+                                    <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                                </Grid>
+                            </Grid>
+                            {telefonos.map((telefono, index) => (
+                                <Grid
+                                    container
+                                    justifyContent='flex-start'
+                                    alignItems="center"
+                                    key={index}>
+                                    <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                                    <Grid item lg={8} md={8} sm={8} xs={8}>
                                         <Grid item lg={12} md={12} sm={12} xs={12} key={index}>
                                             <TextField
                                                 fullWidth
@@ -497,11 +656,33 @@ const ModificarCliente = () => {
                                                 label={`Teléfono ${index + 1}`}
                                                 type="text"
                                                 name={`clienteContacto-${index}`}
-                                                value={telefono}
+                                                value={telefono.tel || ''}
                                                 onChange={(e) => handleChangeTelefono(index, e.target.value)}
                                             />
                                         </Grid>
-                                    ))}
+                                    </Grid>
+                                    <Grid item lg={2} md={2} sm={2} xs={2}>
+                                        {index === 0 && (
+                                            <Grid className={`${classes.addButton} align-left`}>
+                                                <Button className={classes.iconButton} onClick={handleAddTelefono}>
+                                                    <AddIcon color='primary' fontSize='large' />
+                                                </Button>
+                                            </Grid>
+                                        )}
+
+                                        {index !== 0 && (
+                                            <Grid className={`${classes.addButton} align-left`}>
+                                                <Button className={classes.iconButton} onClick={() => handleRemoveTelefono(index)}>
+                                                    <CloseIcon color='primary' fontSize='large' />
+                                                </Button>
+                                            </Grid>
+                                        )}
+                                    </Grid>
+                                </Grid>
+                            ))}
+                            <Grid container>
+                                <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                                <Grid item lg={8} md={8} sm={8} xs={8}>
                                     <Grid item lg={12} md={12} sm={12} xs={12}>
                                         <TextField
                                             fullWidth
@@ -547,6 +728,7 @@ const ModificarCliente = () => {
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>
+                            <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
@@ -558,7 +740,7 @@ const ModificarCliente = () => {
                     </Container>
                 </Grid>
             </CssBaseline>
-        </div>
+        </div >
     );
 };
 

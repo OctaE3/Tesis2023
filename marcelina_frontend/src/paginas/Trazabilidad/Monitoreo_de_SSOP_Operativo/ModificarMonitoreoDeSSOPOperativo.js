@@ -170,7 +170,9 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                 .then(response => {
                     const controlesData = response.data;
                     const controlEncontrado = controlesData.find((control) => control.monitoreoDeSSOPOperativoId.toString() === id.toString());
-
+                    if (!controlEncontrado) {
+                        navigate('/listar-monitoreo-de-ssop-operativo');
+                    }
                     setControles(controlesData);
                     console.log(controlEncontrado)
 
@@ -237,13 +239,13 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
     };
 
     const checkError = (fecha, area, dias, correc, prevent) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (area === undefined || area === null || area === "Seleccionar") {
             return false;
         }
-        else if (dias === undefined || dias === null) {
+        else if (dias === undefined || dias === null || dias.length === 0) {
             return false;
         }
         else if (correc === undefined || correc === null || correc === '') {
@@ -299,7 +301,8 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                        }, 5000);
+                            navigate('/listar-monitoreo-de-ssop-operativo');
+                        }, 3000)
                     } else {
                         updateErrorAlert('No se logro modificar el monitoreo de ssop operativo, revise los datos ingresados.')
                         setShowAlertError(true);

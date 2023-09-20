@@ -127,12 +127,18 @@ public class PDiaria_de_ProduccionServicioImpl implements PDiaria_de_ProduccionS
             if (carne.getCarneCantidad() == 0) {
                 carne.setCarneEliminado(true);
             }
+            else if (carne.getCarneCantidad() > 0) {
+                carne.setCarneEliminado(false);
+            } 
             carneRepositorio.save(carne);
         }
 
         for (Control_de_Insumos aditivo : aditivos) {
             if (aditivo.getInsumoCantidad() == 0) {
                 aditivo.setInsumoEliminado(true);
+            }
+            else if (aditivo.getInsumoCantidad() > 0) {
+                aditivo.setInsumoEliminado(false);
             }
             insumoRepositorio.save(aditivo);
         }
@@ -183,7 +189,8 @@ public class PDiaria_de_ProduccionServicioImpl implements PDiaria_de_ProduccionS
         Set<PDiaria_de_Produccion> diaria = new HashSet<>();
         diaria.add(diariaDeProduccion);
         for (Carne carne : diariaDeProduccion.getDiariaDeProduccionInsumosCarnicos()) {
-            if (carne.getCarneCantidad().equals(0)) {
+            int cantidadEnt = carne.getCarneCantidad().intValue();
+            if (cantidadEnt == 0) {
                 carne.setCarneEliminado(true);
                 carneRepositorio.save(carne);
             } else {
@@ -192,7 +199,7 @@ public class PDiaria_de_ProduccionServicioImpl implements PDiaria_de_ProduccionS
         }
 
         for (Control_de_Insumos insumo : diariaDeProduccion.getDiariaDeProduccionAditivos()) {
-            if (insumo.getInsumoCantidad().equals(0)) {
+            if (insumo.getInsumoCantidad() == 0) {
                 insumo.setInsumoEliminado(true);
                 insumoRepositorio.save(insumo);
             } else {

@@ -61,21 +61,20 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
-  const text = "Este campo es Obligatorio";
 
   const formFields = [
     { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha', label: 'Fecha', type: 'date', color: 'primary' },
     { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', label: 'Depositos *', type: 'selector', multiple: 'si', color: 'primary' },
-    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias', label: 'Cañerias', type: 'text', pattern: "^[A-Za-z0-9\\s]+$", obligatorio: true, text: text, color: 'primary' },
+    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias', label: 'Cañerias', type: 'text', pattern: "^[A-Za-z0-9\\s]{0,30}$", obligatorio: true, color: 'primary' },
     { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones', label: 'Observaciones', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'secondary' },
   ];
 
   const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se registro el control de limpieza y desinfeccion de depositos de agua y canierias con éxito!', severity: 'success', type: 'description'
+    title: 'Correcto', body: 'Se registro el control de limpieza y desinfeccion de depositos de agua y cañerías con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro regristrar el control de limpieza y desinfeccion de depositos de agua y canierias, revise los datos ingresados', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logro regristrar el control de limpieza y desinfeccion de depositos de agua y cañerías, revise los datos ingresados', severity: 'error', type: 'description'
   });
 
   const [alertWarning, setAlertWarning] = useState({
@@ -130,22 +129,32 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
   };
 
   const checkError = (fecha, depositos, canierias) => {
-    if (fecha === undefined || fecha === null) {
+    if (fecha === undefined || fecha === null || fecha === '') {
       return false;
     }
     else if (depositos.length === 0 || depositos === undefined || depositos === null) {
       return false;
     }
-    else if (canierias === undefined || canierias === null) {
+    else if (canierias === undefined || canierias === null || canierias === '') {
       return false;
     }
     return true;
   }
 
   const handleFormSubmit = (formData) => {
-    const depositos = formData.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.map(deposito => deposito.value);
+    let data = formData;
+    if (formData.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito === undefined) {
+      data = {
+        ...formData,
+        controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: [],
+      }
+    }
+    const fechaData = new Date(data.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha);
+    fechaData.setDate(fechaData.getDate() + 1);
+    const depositos = data.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.map(deposito => deposito.value);
     const controlDeLimpiezaConResponsable = {
-      ...formData,
+      ...data,
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha: fechaData,
       controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: depositos,
       controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable: window.localStorage.getItem('user'),
     }

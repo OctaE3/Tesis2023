@@ -66,9 +66,9 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
   const formFields = [
     { name: 'controlDeTemperaturaEnCamarasNroCamara', label: 'Número de Camara *', type: 'selector', color: 'primary' },
     { name: 'controlDeTemperaturaEnCamarasFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeTemperaturaEnCamarasHora', label: 'Hora', type: 'text', obligatorio: true, text: text, pattern: "^[0-9]{0,10}$", color: 'primary' },
-    { name: 'controlDeTemperaturaEnCamarasTempInterna', label: 'Temperatura Interna', type: 'text', obligatorio: true, text: text, pattern: "^-?[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
-    { name: 'controlDeTemperaturaEnCamaraTempExterna', label: 'Temperatura Externa', type: 'text', obligatorio: true, text: text, pattern: "^-?[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaEnCamarasHora', label: 'Hora', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", color: 'primary' },
+    { name: 'controlDeTemperaturaEnCamarasTempInterna', label: 'Temperatura Interna', type: 'text', obligatorio: true, pattern: "^-?[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaEnCamaraTempExterna', label: 'Temperatura Externa', type: 'text', obligatorio: true, pattern: "^-?[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
   ];
 
   const [alertSuccess, setAlertSuccess] = useState({
@@ -134,19 +134,19 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
   };
 
   const checkError = (nroC, fecha, hora, tempI, tempE) => {
-    if (nroC === undefined || nroC === null) {
+    if (nroC === undefined || nroC === null || nroC === "Seleccionar") {
       return false;
     }
-    else if (fecha === undefined || fecha === null) {
+    else if (fecha === undefined || fecha === null || fecha === '') {
       return false;
     }
-    else if (hora === undefined || hora === null || hora.trim() === '') {
+    else if (hora === undefined || hora === null || hora === '') {
       return false;
     }
-    else if (tempI === undefined || tempI === null || tempI.trim() === '') {
+    else if (tempI === undefined || tempI === null || tempI === '') {
       return false;
     }
-    else if (tempE === undefined || tempE === null || tempE.trim() === '') {
+    else if (tempE === undefined || tempE === null || tempE === '') {
       return false;
     }
     return true;

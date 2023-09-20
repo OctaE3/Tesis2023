@@ -146,6 +146,9 @@ const ModificarControlDeProductosQuimicos = () => {
                 .then(response => {
                     const controlesData = response.data;
                     const controlEncontrado = controlesData.find((control) => control.controlDeProductosQuimicosId.toString() === id.toString());
+                    if (!controlEncontrado) {
+                        navigate('/listar-control-de-productos-quimicos')
+                    }
                     const controlesRestantes = controlesData.filter(
                         (control) => control.controlDeProductosQuimicosId.toString() !== controlEncontrado.controlDeProductosQuimicosId.toString()
                     );
@@ -250,10 +253,10 @@ const ModificarControlDeProductosQuimicos = () => {
     }
 
     const checkError = (fecha, proveedor, quimico, lote) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha === 'Invalid Date') {
             return false;
         }
-        else if (proveedor === undefined || proveedor === null) {
+        else if (proveedor === undefined || proveedor === null || proveedor === 'Seleccionar') {
             return false;
         }
         else if (quimico === undefined || quimico === null || quimico === '') {
@@ -266,11 +269,24 @@ const ModificarControlDeProductosQuimicos = () => {
     }
 
     const handleFormSubmit = () => {
-        const proveedorCompleto = proveedores.find((proveedor) => proveedor.proveedorId.toString() === quimicoProveedor.value.toString());
+        let proveedorCompleto = '';
+        if (quimicoProveedor.value) {
+            proveedorCompleto = proveedores.find((proveedor) => proveedor.proveedorId.toString() === quimicoProveedor.value.toString());
+        } else {
+            proveedorCompleto =proveedores.find((proveedor) => proveedor.proveedorId.toString() === quimicoProveedor.toString());
+        }
+
         const fecha = control.controlDeProductosQuimicosFecha;
-        const fechaNueva = new Date(fecha);
+        let fechaNueva = new Date(fecha);
+        let fechaFormateada = '';
         fechaNueva.setDate(fechaNueva.getDate() + 1);
-        const fechaFormateada = fechaNueva.toISOString().split('T')[0];
+        console.log(fechaNueva)
+        if (fechaNueva.toString() === 'Invalid Date') { 
+            fechaFormateada = undefined;
+        }
+        else {
+            fechaFormateada = fechaNueva.toISOString().split('T')[0];
+        }
         const data = {
             ...control,
             controlDeProductosQuimicosFecha: fechaFormateada,
@@ -306,7 +322,8 @@ const ModificarControlDeProductosQuimicos = () => {
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
-                            }, 5000);
+                                navigate('/listar-control-de-productos-quimicos');
+                            }, 3000)
                         } else {
                             updateErrorAlert('No se logro modificar el control de productos quimicos, revise los datos ingresados.')
                             setShowAlertError(true);
@@ -344,7 +361,7 @@ const ModificarControlDeProductosQuimicos = () => {
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2}></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
-                                    <Typography component='h1' variant='h4'>Modificar Control de Nitrito</Typography>
+                                    <Typography component='h1' variant='h4'>Modificar Control de Productos Químicos</Typography>
                                     <div>
                                         <Button color="primary" onClick={handleClickOpen}>
                                             <IconButton className={blinking ? classes.blinkingButton : ''}>

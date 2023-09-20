@@ -70,6 +70,8 @@ import ListarMonitoreoDeSSOPPreOPerativo from '../../paginas/Trazabilidad/Monito
 import ListarExpedicionDeProducto from '../../paginas/Trazabilidad/Expedicion_de_Producto/ListarExpedicionDeProducto';
 import ListarResumenDeTrazabilidad from '../../paginas/Trazabilidad/Resumen_de_Trazabilidad/ListarResumenDeTrazabilidad';
 import ListarAnualDeInsumosCarnicos from '../../paginas/Trazabilidad/Anual_de_Insumos_Carnicos/ListarAnualDeInsumosCarnicos';
+import AgregarUsuario from '../../paginas/Persona/Usuario/AgregarUsuario';
+import ModificarUsuario from '../../paginas/Persona/Usuario/ModificarUsuario';
 
 const AppRouter = () => {
     return (
@@ -77,6 +79,8 @@ const AppRouter = () => {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/inicio" element={<Home />} />
+          <Route path="/agregar-usuario" element={<AgregarUsuario />} />
+          <Route path="/modificar-usuario/:id" element={<ModificarUsuario />} />
           <Route path="/localidad" element={<AgregarLocalidad />} />
           <Route path="/modificar-localidad/:id" element={<ModificarLocalidad />} />
           <Route path="/listar-localidad" element={<ListarLocalidad />} />

@@ -3,8 +3,10 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { useNavigate } from 'react-router-dom';
 
 
 const theme = createTheme({
@@ -28,6 +30,24 @@ function ListarProducto() {
   const [data, setData] = useState([]);
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
+  const [deleteItem, setDeleteItem] = useState(false);
+  const navigate = useNavigate();
+
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se elimino el producto con éxito!', severity: 'success', type: 'description'
+  });
+
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logró eliminar el producto, recargue la pagina.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,7 +67,7 @@ function ListarProducto() {
     };
 
     fetchData();
-  }, []);
+  }, [deleteItem]);
 
 
   const mapData = (item, key) => {
@@ -61,21 +81,21 @@ function ListarProducto() {
 
   const filters = [
     { id: 'codigo', label: 'Codigo', type: 'text' },
-    { id: 'nombre', label: 'Nombre', type: 'text'},
+    { id: 'nombre', label: 'Nombre', type: 'text' },
   ];
 
   const handleFilter = (filter) => {
     const lowerCaseFilter = Object.keys(filter).reduce((acc, key) => {
-        acc[key] = filter[key] ? filter[key].toLowerCase() : '';
-        return acc;
-      }, {});
-      setFiltros(lowerCaseFilter);
+      acc[key] = filter[key] ? filter[key].toLowerCase() : '';
+      return acc;
+    }, {});
+    setFiltros(lowerCaseFilter);
   };
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-        productoCodigo: item.productoCodigo,
-        productoNombre: item.productoNombre ? item.productoNombre.toLowerCase() : ''
+      productoCodigo: item.productoCodigo,
+      productoNombre: item.productoNombre ? item.productoNombre.toLowerCase() : ''
     };
 
     if (
@@ -86,6 +106,49 @@ function ListarProducto() {
     }
     return false;
   });
+
+  const handleEditProducto = (rowData) => {
+    const id = rowData.Id;
+    navigate(`/modificar-producto/${id}`);
+  };
+
+  const handleDeleteProducto = (rowData) => {
+    const id = rowData.Id;
+    axios.put(`/borrar-producto/${id}`, null, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 204) {
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 5000);
+          setDeleteItem(true);
+        } else {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setShowAlertWarning(true);
+          setTimeout(() => {
+            setShowAlertWarning(false);
+          }, 5000);
+        }
+        else if (error.request.status === 500) {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+  }
 
   return (
     <div>
@@ -106,6 +169,15 @@ function ListarProducto() {
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
+      <Grid container spacing={0}>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}>
+          <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+          <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+          <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+        </Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+      </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
@@ -114,6 +186,8 @@ function ListarProducto() {
         title="Productos"
         dataMapper={mapData}
         columnRenderers={""}
+        onEditButton={handleEditProducto}
+        onDeleteButton={handleDeleteProducto}
       />
 
     </div>

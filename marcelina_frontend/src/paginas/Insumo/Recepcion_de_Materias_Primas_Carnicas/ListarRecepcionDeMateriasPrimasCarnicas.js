@@ -3,6 +3,7 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { format } from 'date-fns';
@@ -33,7 +34,24 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
   const [responsable, setResponsable] = useState([]);
   const [proveedor, setProveedor] = useState([]);
   const [carne, setCarne] = useState([]);
+  const [deleteItem, setDeleteItem] = useState(false);
   const navigate = useNavigate();
+
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se elimino la recepción de materias primas carnicas con éxito!', severity: 'success', type: 'description'
+  });
+
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logró eliminar la recepción de materias primas carnicas, recargue la pagina.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,15 +72,15 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
           }
         });
         const carneResponse = await axios.get('/listar-carnes', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
 
 
         const data = response.data.map((recepcionDeMateriasPrimasCarnicas) => ({
-            ...recepcionDeMateriasPrimasCarnicas,
-            Id: recepcionDeMateriasPrimasCarnicas.recepcionDeMateriasPrimasCarnicas,
+          ...recepcionDeMateriasPrimasCarnicas,
+          Id: recepcionDeMateriasPrimasCarnicas.recepcionDeMateriasPrimasCarnicas,
         }));
         const ResponsableData = ResponsableResponse.data;
         const ProveedorData = ProveedorResponse.data;
@@ -78,7 +96,7 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
     };
 
     fetchData();
-  }, []);
+  }, [deleteItem]);
 
   const tableHeadCells = [
     { id: 'recepcionDeMateriasPrimasCarnicasFecha', numeric: false, disablePadding: false, label: 'Fecha' },
@@ -89,15 +107,15 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
     { id: 'recepcionDeMateriasPrimasCarnicasMotivoDeRechazo', numeric: false, disablePadding: false, label: 'Motivo de Rechazo' },
     { id: 'recepcionDeMateriasPrimasCarnicasResponsable', numeric: false, disablePadding: false, label: 'Responsable' },
   ];
- 
+
   const filters = [
-    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta']},
+    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
     { id: 'proveedor', label: 'Proveedor', type: 'select', options: proveedor },
     { id: 'producto', label: 'Producto', type: 'select', options: carne },
     { id: 'paseSanitario', label: 'Pase Sanitario', type: 'text' },
     { id: 'temperatura', label: 'Temperatura', type: 'text' },
     { id: 'motivoDeRechazo', label: 'MotivoDeRechazo', type: 'text' },
-    { id: 'resposable', label: 'responsable', type: 'select',options: responsable },
+    { id: 'resposable', label: 'responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -124,14 +142,14 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
       } else {
         return '';
       }
-    } 
-    else if(key === 'recepcionDeMateriasPrimasCarnicasResponsable.usuarioNombre') {
+    }
+    else if (key === 'recepcionDeMateriasPrimasCarnicasResponsable.usuarioNombre') {
       if (item.recepcionDeMateriasPrimasCarnicasResponsable && item.recepcionDeMateriasPrimasCarnicasResponsable.usuarioNombre) {
         return item.recepcionDeMateriasPrimasCarnicasResponsable.usuarioNombre;
       } else {
         return '';
       }
-    }else if(key === 'recepcionDeMateriasPrimasCarnicasProveedor.proveedorNombre') {
+    } else if (key === 'recepcionDeMateriasPrimasCarnicasProveedor.proveedorNombre') {
       if (item.recepcionDeMateriasPrimasCarnicasProveedor && item.recepcionDeMateriasPrimasCarnicasProveedor.proveedorNombre) {
         return item.recepcionDeMateriasPrimasCarnicasProveedor.proveedorNombre;
       } else {
@@ -163,14 +181,14 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
 
     if (
       (!filtros['fecha-desde'] || lowerCaseItem.recepcionDeMateriasPrimasCarnicasFecha >= new Date(filtros['fecha-desde'])) &&
-      (!filtros['fecha-hasta'] || lowerCaseItem.recepcionDeMateriasPrimasCarnicasFecha <= new Date(filtros['fecha-hasta'])) && 
-      (!filtros.proveedor || lowerCaseItem.recepcionDeMateriasPrimasCarnicasProveedor.startsWith(filtros.proveedor)) && 
+      (!filtros['fecha-hasta'] || lowerCaseItem.recepcionDeMateriasPrimasCarnicasFecha <= new Date(filtros['fecha-hasta'])) &&
+      (!filtros.proveedor || lowerCaseItem.recepcionDeMateriasPrimasCarnicasProveedor.startsWith(filtros.proveedor)) &&
       (!filtros.producto || lowerCaseItem.recepcionDeMateriasPrimasCarnicasProductos.some(producto => producto.carneNombre.toLowerCase().includes(filtros.producto))) &&
       (!filtros.paseSanitario || lowerCaseItem.recepcionDeMateriasPrimasCarnicasPaseSanitario.startsWith(filtros.paseSanitario)) &&
       (!filtros.temperatura || lowerCaseItem.recepcionDeMateriasPrimasCarnicasTemperatura.toString().startsWith(filtros.temperatura)) &&
-      (!filtros.motivoDeRechazo|| lowerCaseItem.recepcionDeMateriasPrimasCarnicasMotivoDeRechazo.startsWith(filtros.motivoDeRechazo)) &&
-      (!filtros.responsable || lowerCaseItem.recepcionDeMateriasPrimasCarnicasResponsable.startsWith(filtros.responsable)) 
-      ) {
+      (!filtros.motivoDeRechazo || lowerCaseItem.recepcionDeMateriasPrimasCarnicasMotivoDeRechazo.startsWith(filtros.motivoDeRechazo)) &&
+      (!filtros.responsable || lowerCaseItem.recepcionDeMateriasPrimasCarnicasResponsable.startsWith(filtros.responsable))
+    ) {
       return true;
     }
     return false;
@@ -182,10 +200,48 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
     recepcionDeMateriasPrimasCarnicasProductos: (products) => <ColumnaReutilizable contacts={products} />,
   };
 
-  const handleEditCliente = (rowData) => {
+  const handleEditRecepcion = (rowData) => {
     const id = rowData.Id;
     navigate(`/modificar-recepcion-de-materias-primas-carnicas/${id}`);
   };
+
+  const handleDeleteRecepcion = (rowData) => {
+    const id = rowData.Id;
+    axios.delete(`/borrar-recepcion-de-materias-primas-carnicas/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 204) {
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 5000);
+          setDeleteItem(true);
+        } else {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setShowAlertWarning(true);
+          setTimeout(() => {
+            setShowAlertWarning(false);
+          }, 5000);
+        }
+        else if (error.request.status === 500) {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+  }
 
   return (
     <div>
@@ -206,6 +262,15 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
+      <Grid container spacing={0}>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}>
+          <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+          <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+          <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+        </Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+      </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
@@ -214,7 +279,8 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
         title="Recepcion De Materias Primas Carnicas"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
-        onEditButton={handleEditCliente}
+        onEditButton={handleEditRecepcion}
+        onDeleteButton={handleDeleteRecepcion}
       />    </div>
   );
 }

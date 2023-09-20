@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
 import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import AddIcon from '@material-ui/icons/Add';
+import CloseIcon from '@material-ui/icons/Close';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { tr } from 'date-fns/locale';
 
 const theme = createTheme({
     palette: {
@@ -148,8 +151,15 @@ const ModificarCliente = () => {
                     const proveedores = response.data;
                     setProveedores(proveedores);
                     const proveedorEncontrado = proveedores.find((proveedor) => proveedor.proveedorId.toString() === id.toString());
+                    if (!proveedorEncontrado) {
+                        navigate('/listar-proveedor')
+                    }
                     setProveedor(proveedorEncontrado);
-                    setTelefonos(proveedorEncontrado.proveedorContacto);
+                    setTelefonos(
+                        proveedorEncontrado.proveedorContacto.map((telefono) => ({
+                            tel: telefono,
+                        }))
+                    );
                     setProveedorLocalidad({
                         value: proveedorEncontrado.proveedorLocalidad.localidadId,
                         label: proveedorEncontrado.proveedorLocalidad.localidadCiudad,
@@ -211,7 +221,7 @@ const ModificarCliente = () => {
             }
         }
         else if (name === "proveedorEmail") {
-            const regex = new RegExp("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{0,3}");
+            const regex = new RegExp("^[A-Za-z0-9.@]{0,50}$");
             if (regex.test(value)) {
                 setProveedor(prevState => ({
                     ...prevState,
@@ -237,31 +247,60 @@ const ModificarCliente = () => {
         if (regex.test(telefono)) {
             setTelefonos(prevTelefonos => {
                 const nuevosTelefonos = [...prevTelefonos];
-                nuevosTelefonos[index] = telefono;
+                nuevosTelefonos[index] = { tel: telefono };
                 return nuevosTelefonos;
             });
         }
     }
 
+    const handleAddTelefono = async () => {
+        setTelefonos([...telefonos, { tel: "" }]);
+    };
+
+    const handleRemoveTelefono = (index) => {
+        const nuevosTelefonos = [...telefonos];
+        nuevosTelefonos.splice(index, 1);
+
+        setTelefonos(nuevosTelefonos);
+        console.log(nuevosTelefonos);
+    };
+
     const checkTelefono = (telefonos) => {
         const telefonosProveedores = [];
-        proveedores.forEach(proveedor => {
-            proveedor.proveedorContacto.forEach(telefono => {
-                telefonosProveedores.push(telefono);
+        if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
+            return true;
+        } else {
+            proveedores.forEach(proveedor => {
+                proveedor.proveedorContacto.forEach(telefono => {
+                    if (proveedor.proveedorId.toString() === id.toString()) { }
+                    else {
+                        telefonosProveedores.push(telefono);
+                    }
+                })
             })
-        })
 
-        const telefonosEncontrados = telefonos.filter(tel => {
-            return telefonosProveedores.includes(tel);
-        });
+            let telCheck = false;
 
-        return telefonosEncontrados.length > 0 ? telefonosEncontrados : null;
+            telefonosProveedores.forEach((telC) => {
+                telefonos.forEach((tel) => {
+                    if (telC.toString() === tel.toString()) {
+                        telCheck = true;
+                    }
+                });
+                if (telCheck) { return }
+            });
+
+            return telCheck;
+        }
     }
 
     const checkRut = (rut) => {
         const rutProveedores = [];
         proveedores.forEach(proveedor => {
-            rutProveedores.push(proveedor.proveedorRUT);
+            if (proveedor.proveedorId.toString() === id.toString()) { }
+            else {
+                rutProveedores.push(proveedor.proveedorRUT);
+            }
         })
 
         const rutEncontrado = rutProveedores.includes(rut);
@@ -269,59 +308,97 @@ const ModificarCliente = () => {
     }
 
     const checkEmail = (email) => {
-        const emailProveedores = [];
-        proveedores.forEach(proveedor => {
-            emailProveedores.push(proveedor.proveedorEmail);
-        })
+        if (email) {
+            const emailProveedores = [];
+            proveedores.forEach(proveedor => {
+                if (proveedor.proveedorId.toString() === id.toString()) { }
+                else {
+                    emailProveedores.push(proveedor.proveedorEmail);
+                }
+            })
 
-        const emailEncontrado = emailProveedores.includes(email);
-        return emailEncontrado;
+            const emailEncontrado = emailProveedores.includes(email);
+            console.log(emailEncontrado);
+            return emailEncontrado;
+        }
     }
 
-    const checkError = (nombre, rut, email, telefonos, localidad) => {
+    const checkError = (nombre, rut, email, localidad) => {
         if (nombre === undefined || nombre === null || nombre.trim() === '') {
             return false;
         }
-        else if (!rut === undefined || !rut === null || !rut.trim() === '') {
-            const regex = /^\d{12}$/;
+
+        if (rut === undefined || rut === null || rut === '') { return false }
+        else {
+            const regex = /^\d{1,12}$/;
             if (regex.test(rut)) { }
             else { return false; }
         }
-        else if (!email === undefined || !email === null || !email.trim() === '') {
-            if (!email.includes(".") && !email.includes("@")) {
-                return false;
+
+        if (email) {
+            if (email === undefined || email === null || email.trim() === '') { return false }
+            else {
+                if (!email.includes(".") && !email.includes("@")) {
+                    return false;
+                } else { }
             }
         }
-        else if (telefonos !== undefined || telefonos !== null || telefonos.length !== 0) {
-            const regex = /^\d{9}$/;
-            telefonos.forEach((tel) => {
-                if (regex.test(tel.telefono)) { }
-                else { return false; }
-            })
-        }
-        else if (localidad === undefined || localidad === null) {
+
+        if (localidad === undefined || localidad === null) {
             return false;
         }
+
         return true;
     }
 
+    const checkErrorTelefono = (telefonos) => {
+        let resp = true;
+        console.log(telefonos)
+        if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
+            return false;
+        } else {
+            const regex = /^\d{9}$/;
+            telefonos.forEach((tel) => {
+                if (regex.test(tel)) {
+                    const primerNum = tel[0];
+                    const longitud = tel.length;
+                    console.log(primerNum)
+                    console.log(longitud)
+                    if (parseInt(primerNum) === 0 && longitud === 9) { }
+                    else { resp = false }
+                }
+                else { resp = false }
+            })
+            return resp;
+        }
+    }
+
     const handleFormSubmit = () => {
-        const localidadCompleta = localidades.find((localidad) => localidad.localidadId.toString() === proveedorLocalidad.toString());
+        const localidadValue = proveedorLocalidad === "Seleccionar" ? "Seleccionar" : proveedorLocalidad.value;
+        console.log(localidadValue);
+        const localidadCompleta = localidades.find((localidad) => localidad.localidadId.toString() === localidadValue.toString());
+        console.log(localidadCompleta)
+        const telefonosStrings = [];
+        telefonos.forEach((telefono) => {
+            telefonosStrings.push(telefono.tel);
+        })
         const data = {
             ...proveedor,
+            proveedorContacto: telefonosStrings,
             proveedorLocalidad: localidadCompleta,
         };
 
-        const nombre = data.prveedorNombre;
+        const nombre = data.proveedorNombre;
         const rut = data.proveedorRUT;
         const email = data.proveedorEmail;
-        const tel = data.proveedorLocalidad;
         const localidad = data.proveedorLocalidad;
 
-        const check = checkError(nombre, rut, email, tel, localidad);
+
+        const check = checkError(nombre, rut, email, localidad);
+        console.log(check)
 
         if (check === false) {
-            updateErrorAlert(`Revise los datos ingresados del proveedor y no deje campos vacíos.`);
+            updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
@@ -331,49 +408,132 @@ const ModificarCliente = () => {
                 const telefonoCheck = checkTelefono(data.proveedorContacto);
                 const rutCheck = checkRut(data.proveedorRUT);
                 const emailCheck = checkEmail(data.proveedorEmail);
-
-                if (telefonoCheck === null && rutCheck === false && emailCheck === false) {
-                    axios.put(`/modificar-proveedor/${id}`, data, {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            "Content-Type": "application/json"
-                        }
-                    })
-                        .then(response => {
-                            if (response.status === 200) {
-                                setShowAlertSuccess(true);
-                                setTimeout(() => {
-                                    setShowAlertSuccess(false);
-                                }, 5000);
+                const telefonoCheckError = checkErrorTelefono(data.proveedorContacto);
+                console.log(telefonoCheck)
+                console.log(rutCheck)
+                console.log(emailCheck)
+                console.log(telefonoCheckError)
+                if (email) {
+                    const regex = /^(([^<>()[\]\.,;:\s@"]+(\.[^<>()[\]\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                    if (regex.test(email)) {
+                        if (telefonoCheckError === false) {
+                            updateErrorAlert(`Los teléfonos ingresados tienen que empezar con el número 0 y tener una longitud de 9 digitos, en caso de agregar otro campo de contacto, no lo deje vacío.`);
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 7000);
+                        } else {
+                            if (telefonoCheck === false && rutCheck === false && emailCheck === false) {
+                                console.log(data)
+                                axios.put(`/modificar-proveedor/${id}`, data, {
+                                    headers: {
+                                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                        "Content-Type": "application/json"
+                                    }
+                                })
+                                    .then(response => {
+                                        if (response.status === 200) {
+                                            setShowAlertSuccess(true);
+                                            setTimeout(() => {
+                                                setShowAlertSuccess(false);
+                                                navigate('/listar-proveedor');
+                                            }, 3000)
+                                        } else {
+                                            updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.')
+                                            setShowAlertError(true);
+                                            setTimeout(() => {
+                                                setShowAlertError(false);
+                                            }, 5000);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        if (error.request.status === 401) {
+                                            setShowAlertWarning(true);
+                                            setTimeout(() => {
+                                                setShowAlertWarning(false);
+                                            }, 5000);
+                                        }
+                                        else if (error.request.status === 500) {
+                                            updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.');
+                                            setShowAlertError(true);
+                                            setTimeout(() => {
+                                                setShowAlertError(false);
+                                            }, 5000);
+                                        }
+                                    })
                             } else {
-                                updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.')
+                                updateErrorAlert('Revise los datos ingresados, no puede coincidir el email, el codigo rut o los teléfonos, con los proveedores ya registrados.');
                                 setShowAlertError(true);
                                 setTimeout(() => {
                                     setShowAlertError(false);
-                                }, 5000);
+                                }, 7000);
                             }
-                        })
-                        .catch(error => {
-                            if (error.request.status === 401) {
-                                setShowAlertWarning(true);
-                                setTimeout(() => {
-                                    setShowAlertWarning(false);
-                                }, 5000);
-                            }
-                            else if (error.request.status === 500) {
-                                updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.');
-                                setShowAlertError(true);
-                                setTimeout(() => {
-                                    setShowAlertError(false);
-                                }, 5000);
-                            }
-                        })
+                        }
+                    } else {
+                        updateErrorAlert(`El mail ingresado no es válido.`);
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 7000);
+                    }
                 } else {
-                    updateErrorAlert('Revise los datos ingresados, no puede coincidir el email, el codigo rut o los teléfonos, con los proveedores ya registrados.');
-                    setShowAlertError(true);
-                    setTimeout(() => {
-                        setShowAlertError(false);
-                    }, 7000);
+                    if (telefonoCheckError === false) {
+                        updateErrorAlert(`Los teléfonos ingresados tienen que empezar con el número 0 y tener una longitud de 9 digitos, en caso de agregar otro campo de contacto, no lo deje vacío.`);
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 7000);
+                    } else {
+                        if (telefonoCheck === false && rutCheck === false) {
+                            console.log(data)
+                            const dataMod = {
+                                ...data,
+                                proveedorEmail: null,
+                            }
+                            axios.put(`/modificar-proveedor/${id}`, data, {
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    "Content-Type": "application/json"
+                                }
+                            })
+                                .then(response => {
+                                    if (response.status === 200) {
+                                        setShowAlertSuccess(true);
+                                        setTimeout(() => {
+                                            setShowAlertSuccess(false);
+                                            navigate('/listar-proveedor');
+                                        }, 3000)
+                                    } else {
+                                        updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.')
+                                        setShowAlertError(true);
+                                        setTimeout(() => {
+                                            setShowAlertError(false);
+                                        }, 5000);
+                                    }
+                                })
+                                .catch(error => {
+                                    if (error.request.status === 401) {
+                                        setShowAlertWarning(true);
+                                        setTimeout(() => {
+                                            setShowAlertWarning(false);
+                                        }, 5000);
+                                    }
+                                    else if (error.request.status === 500) {
+                                        updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.');
+                                        setShowAlertError(true);
+                                        setTimeout(() => {
+                                            setShowAlertError(false);
+                                        }, 5000);
+                                    }
+                                })
+                        } else {
+                            updateErrorAlert('Revise los datos ingresados, no puede coincidir el codigo rut o los teléfonos, con los proveedores ya registrados.');
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 7000);
+                        }
+                    }
                 }
             } else {
                 updateErrorAlert(`Seleccione una localidad válida.`);
@@ -513,9 +673,9 @@ const ModificarCliente = () => {
                                         <TextField
                                             fullWidth
                                             autoFocus
-                                            className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
-                                            color="primary"
+                                            className={classes.customOutlinedRed}
+                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Email"
@@ -526,7 +686,18 @@ const ModificarCliente = () => {
                                             onChange={handleChange}
                                         />
                                     </Grid>
-                                    {telefonos.map((telefono, index) => (
+                                </Grid>
+                                <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                            </Grid>
+
+                            {telefonos.map((telefono, index) => (
+                                <Grid
+                                    container
+                                    justifyContent='flex-start'
+                                    alignItems="center"
+                                    key={index}>
+                                    <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                                    <Grid item lg={8} md={8} sm={8} xs={8}>
                                         <Grid item lg={12} md={12} sm={12} xs={12} key={index}>
                                             <TextField
                                                 fullWidth
@@ -539,34 +710,54 @@ const ModificarCliente = () => {
                                                 label={`Teléfono ${index + 1}`}
                                                 type="text"
                                                 name={`proveedorContacto-${index}`}
-                                                value={telefono}
+                                                value={telefono.tel || ''}
                                                 onChange={(e) => handleChangeTelefono(index, e.target.value)}
                                             />
                                         </Grid>
-                                    ))}
-                                    <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <FormControl variant="outlined" className={classes.formControl}>
-                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-localidad-native-simple`}>Localidad</InputLabel>
-                                            <Select
-                                                className={classes.select}
-                                                native
-                                                value={proveedorLocalidad.value}
-                                                label="Localidad"
-                                                inputProps={{
-                                                    name: "proveedorLocalidad",
-                                                    id: `outlined-localidad-native-simple`,
-                                                }}
-                                                onChange={(e) => setProveedorLocalidad(e.target.value)}
-                                            >
-                                                <option>Seleccionar</option>
-                                                {localidadesSelect.map((option, ind) => (
-                                                    <option key={ind} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
                                     </Grid>
+                                    <Grid item lg={2} md={2} sm={2} xs={2}>
+                                        {index === 0 && (
+                                            <Grid className={`${classes.addButton} align-left`}>
+                                                <Button className={classes.iconButton} onClick={handleAddTelefono}>
+                                                    <AddIcon color='primary' fontSize='large' />
+                                                </Button>
+                                            </Grid>
+                                        )}
+
+                                        {index !== 0 && (
+                                            <Grid className={`${classes.addButton} align-left`}>
+                                                <Button className={classes.iconButton} onClick={() => handleRemoveTelefono(index)}>
+                                                    <CloseIcon color='primary' fontSize='large' />
+                                                </Button>
+                                            </Grid>
+                                        )}
+                                    </Grid>
+                                </Grid>
+                            ))}
+                            <Grid container>
+                                <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+                                <Grid item lg={8} md={8} sm={8} xs={8}>
+                                    <FormControl variant="outlined" className={classes.formControl}>
+                                        <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-localidad-native-simple`}>Localidad</InputLabel>
+                                        <Select
+                                            className={classes.select}
+                                            native
+                                            value={proveedorLocalidad.value}
+                                            label="Localidad"
+                                            inputProps={{
+                                                name: "proveedorLocalidad",
+                                                id: `outlined-localidad-native-simple`,
+                                            }}
+                                            onChange={(e) => setProveedorLocalidad(e.target.value)}
+                                        >
+                                            <option>Seleccionar</option>
+                                            {localidadesSelect.map((option, ind) => (
+                                                <option key={ind} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>
@@ -579,9 +770,9 @@ const ModificarCliente = () => {
                             </Grid>
                         </Box>
                     </Container>
-                </Grid>
-            </CssBaseline>
-        </div>
+                </Grid >
+            </CssBaseline >
+        </div >
     );
 };
 

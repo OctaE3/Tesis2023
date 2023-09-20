@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.chacineria.marcelina.entidad.insumo.Carne;
 
 public interface CarneServicio {
+    public Iterable<Carne> findAll();
     public Iterable<Carne> findAllByCarneEliminado(Boolean eliminado);
 
     public List<Carne> findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(Boolean eliminado,

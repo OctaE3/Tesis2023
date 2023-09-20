@@ -64,8 +64,8 @@ const AgregarLocalidad = () => {
   const text = "Este campo es Obligatorio";
 
   const formFields = [
-    { name: 'localidadDepartamento', label: 'Departamento', type: 'text', obligatorio: true, text: text, pattern: "^[A-Za-z\\s]*$", color: 'primary' },
-    { name: 'localidadCiudad', label: 'Ciudad', type: 'text', obligatorio: true, text: text, pattern: "^[A-Za-z\\s]*$", color: 'primary' },
+    { name: 'localidadDepartamento', label: 'Departamento', type: 'text', obligatorio: true, pattern: "^[A-Za-z\\s]*$", color: 'primary' },
+    { name: 'localidadCiudad', label: 'Ciudad', type: 'text', obligatorio: true, pattern: "^[A-Za-z\\s]*$", color: 'primary' },
   ];
 
   const [alertSuccess, setAlertSuccess] = useState({
@@ -148,10 +148,10 @@ const AgregarLocalidad = () => {
   };
 
   const checkErrorLocalidad = (ciudad, departamento) => {
-    if (ciudad === undefined || ciudad === null || ciudad.trim() === '') {
+    if (ciudad === undefined || ciudad === null || ciudad === '') {
       return false;
     }
-    else if (departamento === undefined || departamento === null || departamento.trim() === '') {
+    else if (departamento === undefined || departamento === null || departamento === '') {
       return false;
     }
     return true;
@@ -161,8 +161,8 @@ const AgregarLocalidad = () => {
     setLocalidad(formData);
     console.log(formData);
 
-    const localidadDepartamento = formData.localidadDepartamento;
-    const localidadCiudad = formData.localidadCiudad;
+    const localidadDepartamento = formData.localidadDepartamento ? formData.localidadDepartamento : '';
+    const localidadCiudad = formData.localidadCiudad ? formData.localidadCiudad : '';
 
     const localidadesExisten = localidades.some(localidad => {
       return localidad.localidadDepartamento.toString().toLowerCase() === localidadDepartamento.toString().toLowerCase() && localidad.localidadCiudad.toString().toLowerCase() === localidadCiudad.toString().toLowerCase();

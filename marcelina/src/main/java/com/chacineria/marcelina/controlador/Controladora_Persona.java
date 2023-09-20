@@ -72,13 +72,12 @@ public class Controladora_Persona {
     }
 
     @PutMapping("/borrar-cliente/{clienteId}")
-    public ResponseEntity<HttpStatus> eliminarCliente(@PathVariable Long clienteId){
+    public ResponseEntity<Cliente> eliminarCliente(@PathVariable Long clienteId){
         try{
             Optional<Cliente> cliente = clienteServicioImpl.findById(clienteId);
             if(cliente.isPresent()){
                 cliente.get().setClienteEliminado(true);
-                clienteServicioImpl.save(cliente.get());
-                return new ResponseEntity<>(HttpStatus.OK);
+                return new ResponseEntity<>(clienteServicioImpl.save(cliente.get()), HttpStatus.OK);
             }
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch(Exception e){

@@ -52,7 +52,6 @@ function FiltroReutilizable({ filters, handleFilter }) {
     const validFilterValues = Object.keys(filterValues).reduce((acc, key) => {
       if (filterValues[key] && filterValues[key] !== 'Seleccionar') {
         if (key.includes('fecha')) {
-          // Realizar la conversión del formato de fecha aquí
           const formattedDate = filterValues[key].replace('T', ' ');
           acc[key] = formattedDate;
         } else {
@@ -61,7 +60,7 @@ function FiltroReutilizable({ filters, handleFilter }) {
       }
       return acc;
     }, {});
-  
+
     handleFilter(validFilterValues);
   };
   

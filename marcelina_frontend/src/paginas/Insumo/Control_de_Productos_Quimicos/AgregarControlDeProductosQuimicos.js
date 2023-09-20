@@ -162,7 +162,7 @@ const AgregarControlDeProductosQuimicos = () => {
     };
 
     const checkError = (fecha, proveedor, quimico, lote) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (proveedor === undefined || proveedor === null) {

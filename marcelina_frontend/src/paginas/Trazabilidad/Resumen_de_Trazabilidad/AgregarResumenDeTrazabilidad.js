@@ -172,13 +172,13 @@ const AgregarResumenDeTrazabilidad = () => {
     };
 
     const checkError = (fecha, lote, destino) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (lote === undefined || lote === null || lote === "Seleccionar") {
             return false;
         }
-        else if (destino === undefined || destino === null) {
+        else if (destino === undefined || destino === null || destino.length === 0) {
             return false;
         }
         return true;

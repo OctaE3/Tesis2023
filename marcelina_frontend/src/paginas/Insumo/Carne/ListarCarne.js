@@ -3,6 +3,7 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { format } from 'date-fns';
@@ -29,7 +30,24 @@ function ListarCarne() {
   const [data, setData] = useState([]);
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
+  const [deleteItem, setDeleteItem] = useState(false);
   const navigate = useNavigate();
+
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se elimino la carne con éxito!', severity: 'success', type: 'description'
+  });
+
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logró eliminar la carne, recargue la pagina.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,7 +70,7 @@ function ListarCarne() {
     };
 
     fetchData();
-  }, []);
+  }, [deleteItem]);
 
   const tableHeadCells = [
     { id: 'carneNombre', numeric: false, disablePadding: true, label: 'Nombre' },
@@ -70,7 +88,7 @@ function ListarCarne() {
     { id: 'corte', label: 'Corte', type: 'text' },
     { id: 'categoria', label: 'Categoria', type: 'text' },
     { id: 'cantidad', label: 'Cantidad', type: 'text' },
-    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta']},
+    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
     { id: 'paseSanitario', label: 'Pase sanitario', type: 'text' },
   ];
 
@@ -114,7 +132,7 @@ function ListarCarne() {
       carneFecha: new Date(item.carneFecha),
       carnePaseSanitario: item.carnePaseSanitario.toLowerCase(),
     };
-  
+
     if (
       (!filtros.nombre || lowerCaseItem.carneNombre.startsWith(filtros.nombre)) &&
       (!filtros.tipo || lowerCaseItem.carneTipo.startsWith(filtros.tipo)) &&
@@ -122,7 +140,7 @@ function ListarCarne() {
       (!filtros.cantidad || lowerCaseItem.carneCantidad.toString().startsWith(filtros.cantidad)) &&
       (!filtros.categoria || lowerCaseItem.carneCategoria.startsWith(filtros.cantidad)) &&
       (!filtros['fecha-desde'] || lowerCaseItem.carneFecha >= new Date(filtros['fecha-desde'])) &&
-      (!filtros['fecha-hasta'] || lowerCaseItem.carneFecha <= new Date(filtros['fecha-hasta'])) && 
+      (!filtros['fecha-hasta'] || lowerCaseItem.carneFecha <= new Date(filtros['fecha-hasta'])) &&
       (!filtros.paseSanitario || lowerCaseItem.carnePaseSanitario.startsWith(filtros.paseSanitario))
     ) {
       return true;
@@ -130,9 +148,47 @@ function ListarCarne() {
     return false;
   });
 
-  const handleEditControl = (rowData) => {
+  const handleEditCarne = (rowData) => {
     const id = rowData.Id;
     navigate(`/modificar-carne/${id}`);
+  }
+
+  const handleDeleteCarne = (rowData) => {
+    const id = rowData.Id;
+    axios.put(`/borrar-carne/${id}`, null, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 204) {
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 5000);
+          setDeleteItem(true);
+        } else {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setShowAlertWarning(true);
+          setTimeout(() => {
+            setShowAlertWarning(false);
+          }, 5000);
+        }
+        else if (error.request.status === 500) {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
   }
 
   return (
@@ -154,6 +210,15 @@ function ListarCarne() {
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
+      <Grid container spacing={0}>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}>
+          <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+          <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+          <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+        </Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+      </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
@@ -162,7 +227,8 @@ function ListarCarne() {
         title="Carnes"
         dataMapper={mapData}
         columnRenderers={""}
-        onEditButton={handleEditControl}
+        onEditButton={handleEditCarne}
+        onDeleteButton={handleDeleteCarne}
       />    </div>
   );
 }

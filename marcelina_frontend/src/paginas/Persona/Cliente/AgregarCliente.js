@@ -64,14 +64,14 @@ const AgregarCliente = () => {
   const text = "Este campo es Obligatorio";
 
   const formFieldsModal = [
-    { name: 'localidadDepartamento', label: 'Departamento', obligatorio: true, text: text, pattern: "^[A-Za-z\\s]{0,40}$", type: 'text', color: 'primary' },
-    { name: 'localidadCiudad', label: 'Ciudad', type: 'text', obligatorio: true, text: text, pattern: "^[A-Za-z\\s]{0,50}$", color: 'primary' },
+    { name: 'localidadDepartamento', label: 'Departamento', obligatorio: true, pattern: "^[A-Za-z\\s]{0,40}$", type: 'text', color: 'primary' },
+    { name: 'localidadCiudad', label: 'Ciudad', type: 'text', obligatorio: true, pattern: "^[A-Za-z\\s]{0,50}$", color: 'primary' },
   ];
 
   const formFields = [
-    { name: 'clienteNombre', label: 'Nombre', type: 'text', obligatorio: true, text: text, pattern: "^[A-Za-z0-9\\s]{0,50}$", color: 'primary' },
-    { name: 'clienteEmail', label: 'Email', type: 'email', obligatorio: true, text: text, color: 'primary' },
-    { name: 'clienteContacto', label: 'Contacto', type: 'phone', obligatorio: true, text: text, pattern: "^[0-9]{0,9}$", color: 'primary' },
+    { name: 'clienteNombre', label: 'Nombre', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,50}$", color: 'primary' },
+    { name: 'clienteEmail', label: 'Email', type: 'text', pattern: "^[A-Za-z0-9.@]{0,50}$", color: 'secondary' },
+    { name: 'clienteContacto', label: 'Contacto', type: 'phone', obligatorio: true, pattern: "^[0-9]{0,9}$", color: 'primary' },
     { name: 'clienteObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
     { name: 'clienteLocalidad', label: 'Localidad *', type: 'selector', alta: 'si', altaCampos: formFieldsModal, color: 'primary' }
   ];
@@ -188,49 +188,84 @@ const AgregarCliente = () => {
 
   const checkTelefono = (telefonos) => {
     const telefonosClientes = [];
-    clientes.forEach(cliente => {
-      cliente.clienteContacto.forEach(telefono => {
-        telefonosClientes.push(telefono);
+    if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
+      return false;
+    } else {
+      clientes.forEach(cliente => {
+        cliente.clienteContacto.forEach(telefono => {
+          console.log(telefono)
+          telefonosClientes.push(telefono);
+        })
       })
-    })
 
-    const telefonosEncontrados = telefonos.filter(tel => {
-      return telefonosClientes.includes(tel);
-    });
+      let telCheck = false;
 
-    return telefonosEncontrados.length > 0 ? telefonosEncontrados : null;
+      telefonosClientes.forEach((telC) => {
+        telefonos.forEach((tel) => {
+          if (telC.toString() === tel.telefono.toString()) {
+            telCheck = true;
+          }
+        });
+        if (telCheck) {
+          return;
+        }
+      });
+
+      return telCheck;
+    }
   }
 
   const checkEmail = (email) => {
-    const emailClientes = [];
-    clientes.forEach(cliente => {
-      emailClientes.push(cliente.clienteEmail);
-    })
+    if (email) {
+      const emailClientes = [];
+      clientes.forEach(cliente => {
+        emailClientes.push(cliente.clienteEmail);
+      })
 
-    const emailEncontrado = emailClientes.includes(email);
-    return emailEncontrado;
+      const emailEncontrado = emailClientes.includes(email);
+      return emailEncontrado;
+    }
   }
 
-  const checkError = (nombre, email, telefonos, localidad) => {
+  const checkError = (nombre, email, localidad) => {
     if (nombre === undefined || nombre === null || nombre.trim() === '') {
       return false;
     }
-    else if (!email === undefined || !email === null || !email.trim() === '') {
-      if (!email.includes(".") && !email.includes("@")) {
+
+    if (email) {
+      if (email === undefined || email === null || email.trim() === '') {
         return false;
+      } else {
+        if (!email.includes(".") && !email.includes("@")) {
+          return false;
+        }
       }
     }
-    else if (telefonos !== undefined || telefonos !== null || telefonos.length !== 0) {
-      const regex = /^\d{9}$/;
-      telefonos.forEach((tel) => {
-        if (regex.test(tel.telefono)) { }
-        else { return false; }
-      })
-    }
-    else if (localidad === undefined || localidad === null) {
+
+    if (localidad === undefined || localidad === null || localidad === "Seleccionar") {
       return false;
     }
     return true;
+  }
+
+  const checkErrorTelefono = (telefonos) => {
+    let resp = true;
+    console.log(telefonos)
+    if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
+      return false;
+    } else {
+      const regex = /^\d{9}$/;
+      telefonos.forEach((tel) => {
+        if (regex.test(tel.telefono)) {
+          const primerNum = tel.telefono[0];
+          const longitud = tel.telefono.length;
+          if (parseInt(primerNum) === 0 && parseInt(longitud) === 9) { }
+          else { resp = false }
+        }
+        else { resp = false }
+      })
+    }
+    return resp;
   }
 
   const handleFormSubmit = (formData, telefonos) => {
@@ -245,66 +280,150 @@ const AgregarCliente = () => {
     };
 
     const nombre = clienteConLocalidad.clienteNombre;
-    const email = clienteConLocalidad.clienteEmail;
+    const email = !clienteConLocalidad.clienteEmail || clienteConLocalidad.clienteEmail === '' ? undefined : clienteConLocalidad.clienteEmail;
     const tel = clienteConLocalidad.clienteContacto;
     const localidad = clienteConLocalidad.clienteLocalidad;
+
+    console.log(email);
 
     const check = checkError(nombre, email, tel, localidad);
     const emailCheck = checkEmail(email);
     const telefonoCheck = checkTelefono(tel);
+    const telefonoErrorCheck = checkErrorTelefono(tel);
 
     console.log(clienteConLocalidad);
 
     if (check === false) {
-      updateErrorAlert(`Revise los datos ingresados en cliente y no deje campos vacíos.`);
+      updateErrorAlert(`Revise los datos ingresados en cliente y no deje campos vacíos, no se permite seleccionar la opción "Seleccionar".`);
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
       }, 7000);
     } else {
-      if (telefonoCheck === null && emailCheck === false) {
-        axios.post('/agregar-cliente', clienteConLocalidad, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            "Content-Type": "application/json"
-          }
-        })
-          .then(response => {
-            if (response.status === 201) {
-              updateSuccessAlert('Cliente registrado con éxito!')
-              setShowAlertSuccess(true);
-              setTimeout(() => {
-                setShowAlertSuccess(false);
-              }, 5000);
-            } else {
-              updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.')
-              setShowAlertError(true);
-              setTimeout(() => {
-                setShowAlertError(false);
-              }, 5000);
-            }
-          })
-          .catch(error => {
-            if (error.request.status === 401) {
-              setShowAlertWarning(true);
-              setTimeout(() => {
-                setShowAlertWarning(false);
-              }, 5000);
-            }
-            else if (error.request.status === 500) {
-              updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
-              setShowAlertError(true);
-              setTimeout(() => {
-                setShowAlertError(false);
-              }, 5000);
-            }
-          })
-      } else {
-        updateErrorAlert('Revise los datos ingresados, no puede coincidir el email o los teléfonos, con los clientes ya registrados.');
+      if (telefonoErrorCheck === false) {
+        updateErrorAlert(`Los teléfonos ingresados tienen que empezar con el número 0 y tener una longitud de 9 digitos, en caso de agregar otro campo de contacto, no lo deje vacío.`);
         setShowAlertError(true);
         setTimeout(() => {
           setShowAlertError(false);
         }, 7000);
+      } else {
+        if (email) {
+          const regex = /^(([^<>()[\]\.,;:\s@"]+(\.[^<>()[\]\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+          if (regex.test(email)) {
+            if (telefonoCheck === false && emailCheck === false) {
+              const telefonosConvertidos = clienteConLocalidad.clienteContacto.map((tel) => tel.telefono);
+              console.log(telefonosConvertidos);
+              const data = {
+                ...clienteConLocalidad,
+                clienteContacto: telefonosConvertidos,
+              };
+              console.log(data);
+              axios.post('/agregar-cliente', data, {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                  "Content-Type": "application/json"
+                }
+              })
+                .then(response => {
+                  if (response.status === 201) {
+                    updateSuccessAlert('Cliente registrado con éxito!')
+                    setShowAlertSuccess(true);
+                    setTimeout(() => {
+                      setShowAlertSuccess(false);
+                    }, 5000);
+                  } else {
+                    updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.')
+                    setShowAlertError(true);
+                    setTimeout(() => {
+                      setShowAlertError(false);
+                    }, 5000);
+                  }
+                })
+                .catch(error => {
+                  console.error(error);
+                  if (error.request.status === 401) {
+                    setShowAlertWarning(true);
+                    setTimeout(() => {
+                      setShowAlertWarning(false);
+                    }, 5000);
+                  }
+                  else if (error.request.status === 500) {
+                    updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
+                    setShowAlertError(true);
+                    setTimeout(() => {
+                      setShowAlertError(false);
+                    }, 5000);
+                  }
+                })
+            } else {
+              updateErrorAlert('Revise los datos ingresados, no puede coincidir el email o los teléfonos, con los clientes ya registrados.');
+              setShowAlertError(true);
+              setTimeout(() => {
+                setShowAlertError(false);
+              }, 7000);
+            }
+          } else {
+            updateErrorAlert(`El mail ingresado no es válido.`);
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 7000);
+          }
+        } else {
+          if (telefonoCheck === false) {
+            const telefonosConvertidos = clienteConLocalidad.clienteContacto.map((tel) => tel.telefono);
+            console.log(telefonosConvertidos);
+            const data = {
+              ...clienteConLocalidad,
+              clienteEmail: null,
+              clienteContacto: telefonosConvertidos,
+            };
+            console.log(data);
+            axios.post('/agregar-cliente', data, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                "Content-Type": "application/json"
+              }
+            })
+              .then(response => {
+                if (response.status === 201) {
+                  updateSuccessAlert('Cliente registrado con éxito!')
+                  setShowAlertSuccess(true);
+                  setTimeout(() => {
+                    setShowAlertSuccess(false);
+                  }, 5000);
+                } else {
+                  updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.')
+                  setShowAlertError(true);
+                  setTimeout(() => {
+                    setShowAlertError(false);
+                  }, 5000);
+                }
+              })
+              .catch(error => {
+                console.error(error);
+                if (error.request.status === 401) {
+                  setShowAlertWarning(true);
+                  setTimeout(() => {
+                    setShowAlertWarning(false);
+                  }, 5000);
+                }
+                else if (error.request.status === 500) {
+                  updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
+                  setShowAlertError(true);
+                  setTimeout(() => {
+                    setShowAlertError(false);
+                  }, 5000);
+                }
+              })
+          } else {
+            updateErrorAlert('Revise los datos ingresados, no puede coincidir los teléfonos, con los clientes ya registrados.');
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 7000);
+          }
+        }
       }
     }
   }
@@ -324,8 +443,11 @@ const AgregarCliente = () => {
     const localidadDepartamento = formDataModal.localidadDepartamento;
     const localidadCiudad = formDataModal.localidadCiudad;
 
+    console.log(localidadDepartamento)
+    console.log(localidadCiudad)
+
     const localidadesExisten = localidades.some(localidad => {
-      return localidad.localidadDepartamento.toString() === localidadDepartamento.toString() && localidad.localidadCiudad.toString() === localidadCiudad.toString();
+      return localidad.localidadDepartamento.toString() === localidadDepartamento && localidad.localidadCiudad.toString() === localidadCiudad;
     });
 
     console.log(localidadesExisten);
@@ -350,6 +472,8 @@ const AgregarCliente = () => {
         })
           .then(response => {
             if (response.status === 201) {
+              formDataModal.localidadDepartamento = '';
+              formDataModal.localidadCiudad = '';
               updateSuccessAlert('Localidad registrada con éxito!')
               setShowAlertSuccess(true);
               setTimeout(() => {

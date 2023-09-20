@@ -19,6 +19,12 @@ public class Control_de_InsumosServicioImpl implements Control_de_InsumosServici
 
     @Override
     @Transactional
+    public Iterable<Control_de_Insumos> findAll(){
+        return controlDeInsumosRepositorio.findAll();
+    }
+
+    @Override
+    @Transactional
     public Iterable<Control_de_Insumos> findAllByInsumoEliminado(Boolean eliminado){
         return controlDeInsumosRepositorio.findAllByInsumoEliminado(eliminado);
     }
@@ -27,6 +33,12 @@ public class Control_de_InsumosServicioImpl implements Control_de_InsumosServici
     @Transactional
     public Iterable<Control_de_Insumos> findAllByInsumoEliminadoAndInsumoTipo(Boolean eliminado, String tipo){
         return controlDeInsumosRepositorio.findAllByInsumoEliminadoAndInsumoTipo(eliminado, tipo);
+    }
+
+    @Override
+    @Transactional
+    public Iterable<Control_de_Insumos> findAllByInsumoTipo(String tipo){
+        return controlDeInsumosRepositorio.findAllByInsumoTipo(tipo);
     }
 
     @Override
