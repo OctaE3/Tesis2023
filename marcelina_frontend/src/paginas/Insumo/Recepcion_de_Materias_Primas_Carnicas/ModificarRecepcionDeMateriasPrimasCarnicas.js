@@ -167,7 +167,9 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                 .then(response => {
                     const controlesData = response.data;
                     const controlEncontrado = controlesData.find((control) => control.recepcionDeMateriasPrimasCarnicasId.toString() === id.toString());
-
+                    if (!controlEncontrado) {
+                        navigate('/listar-recepcion-de-materias-primas-carnicas')
+                    }
                     setControles(controlesData);
                     console.log(controlEncontrado)
 
@@ -280,7 +282,7 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
     }
 
     const checkError = (fecha, proveedor, pase, temperatura) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (proveedor === undefined || proveedor === null || proveedor === "Seleccionar") {
@@ -297,6 +299,7 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
 
     const handleFormSubmit = () => {
         const proveedorSeleccionadaObj = proveedores.find((proveedor) => proveedor.proveedorId.toString() === recepcionProveedor.toString());
+        console.log(recepcionProveedor);
         const data = {
             ...control,
             recepcionDeMateriasPrimasCarnicasProveedor: proveedorSeleccionadaObj,
@@ -313,7 +316,14 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                 setShowAlertError(false);
             }, 5000);
         } else {
-            axios.put(`/modificar-recepcion-de-materias-primas-carnicas/${id}`, data, {
+            const fecha = new Date(data.recepcionDeMateriasPrimasCarnicasFecha);
+            fecha.setDate(fecha.getDate() + 2);
+            const fechaPars = format(fecha, 'yyyy-MM-dd');
+            const dataA = {
+                ...data,
+                recepcionDeMateriasPrimasCarnicasFecha: fechaPars,
+            }
+            axios.put(`/modificar-recepcion-de-materias-primas-carnicas/${id}`, dataA, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     "Content-Type": "application/json"
@@ -324,7 +334,8 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                        }, 5000);
+                            navigate('/listar-recepcion-de-materias-primas-carnicas');
+                        }, 3000)
                     } else {
                         updateErrorAlert('No se logro modificar la recepcion de materia primas carnicas, revise los datos ingresados.')
                         setShowAlertError(true);

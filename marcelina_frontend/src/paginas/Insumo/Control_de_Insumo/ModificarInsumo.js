@@ -277,19 +277,19 @@ const ModificarInsumo = () => {
     }
 
     const checkError = (nombre, fecha, cantidad, lote, fechaV) => {
-        if (nombre === undefined || nombre === null || nombre.Trim() === '') {
+        if (nombre === undefined || nombre === null || nombre === '') {
             return false;
         }
-        else if (fecha === undefined || fecha === null) {
+        else if (fecha === undefined || fecha === null || fecha === '') {
             return false;
         }
-        else if (cantidad === undefined || cantidad === null || cantidad.Trim() === '') {
+        else if (cantidad === undefined || cantidad === null || cantidad === '') {
             return false;
         }
-        else if (lote === undefined || lote === null || lote.Trim() === '') {
+        else if (lote === undefined || lote === null || lote === '') {
             return false;
         }
-        else if (fechaV === undefined || fechaV === null) {
+        else if (fechaV === undefined || fechaV === null || fechaV === '') {
             return false;
         }
         return true;
@@ -347,7 +347,8 @@ const ModificarInsumo = () => {
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
-                            }, 5000);
+                                navigate('/listar-control-de-insumos');
+                            }, 3000)
                         } else {
                             updateErrorAlert(`No se logro modificar el Insumo, revise los datos ingresados.`);
                             setShowAlertError(true);

@@ -148,6 +148,9 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                     const controlesData = response.data;
                     console.log(controlesData);
                     const controlEncontrado = controlesData.find((control) => control.controlDeTemperaturaDeEsterilizadoresId.toString() === id.toString());
+                    if (!controlEncontrado) {
+                        navigate('/listar-control-de-temperatura-de-esterilizadores')
+                    }
                     const fechaArray = controlEncontrado.controlDeTemperaturaDeEsterilizadoresFecha;
                     const fecha = new Date(fechaArray[0], fechaArray[1] - 1, fechaArray[2], fechaArray[3], fechaArray[4]);
                     const fechaFormateada = format(fecha, 'yyyy-MM-dd HH:mm');
@@ -209,16 +212,17 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
     }
 
     const checkError = (fecha, temp1, temp2, temp3) => {
-        if (fecha === undefined || fecha === null) {
+        console.log(temp1)
+        if (fecha === undefined || fecha === null || fecha === '') {
             return false;
         }
-        else if (temp1 === undefined || temp1 === null || temp1 === "") {
+        else if (temp1 === undefined || temp1 === null || temp1 === "" || temp1.toString() === 'NaN') {
             return false;
         }
-        else if (temp2 === undefined || temp2 === null || temp2 === "") {
+        else if (temp2 === undefined || temp2 === null || temp2 === "" || temp2.toString() === 'NaN') {
             return false;
         }
-        else if (temp3 === undefined || temp3 === null || temp3 === "") {
+        else if (temp3 === undefined || temp3 === null || temp3 === "" || temp3.toString() === 'NaN') {
             return false;
         }
         return true;
@@ -262,7 +266,8 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                        }, 5000);
+                            navigate('/listar-control-de-temperatura-de-esterilizadores');
+                        }, 3000);
                     } else {
                         updateErrorAlert('No se logro modificar el control de temperatura de esterilizadores, revise los datos ingresados.');
                         setShowAlertError(true);

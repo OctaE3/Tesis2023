@@ -3,6 +3,7 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { format } from 'date-fns';
@@ -30,7 +31,24 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
   const [responsable, setResponsable] = useState([]);
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
+  const [deleteItem, setDeleteItem] = useState(false);
   const navigate = useNavigate();
+
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se elimino el control de temperatura de esterilizadores con éxito!', severity: 'success', type: 'description'
+  });
+
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logró eliminar el control de temperatura de esterilizadores, recargue la pagina.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,8 +65,8 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
         });
 
         const data = response.data.map((controlDeTemperaturaDeEsterilizadores) => ({
-            ...controlDeTemperaturaDeEsterilizadores,
-            Id: controlDeTemperaturaDeEsterilizadores.controlDeTemperaturaDeEsterilizadoresId,
+          ...controlDeTemperaturaDeEsterilizadores,
+          Id: controlDeTemperaturaDeEsterilizadores.controlDeTemperaturaDeEsterilizadoresId,
         }));
         const ResponsableData = ResponsableResponse.data;
 
@@ -60,7 +78,7 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
     };
 
     fetchData();
-  }, []);
+  }, [deleteItem]);
 
   const tableHeadCells = [
     { id: 'controlDeTemperaturaDeEsterilizadoresFecha', numeric: false, disablePadding: true, label: 'Fecha' },
@@ -72,12 +90,12 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
   ];
 
   const filters = [
-    { id: 'fecha', label: 'Fecha', type: 'datetime', options: ['desde', 'hasta']},
+    { id: 'fecha', label: 'Fecha', type: 'datetime', options: ['desde', 'hasta'] },
     { id: 'temperatura1', label: 'Temperatura 1', type: 'text' },
     { id: 'temperatura2', label: 'Temperatura 2', type: 'text' },
     { id: 'temperatura3', label: 'Temperatura 3', type: 'text' },
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
-    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable},
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -98,13 +116,13 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
 
   const mapData = (item, key) => {
     if (key === 'controlDeTemperaturaDeEsterilizadoresFecha') {
-        if (item.controlDeTemperaturaDeEsterilizadoresFecha) {
-            const fechaArray = item.controlDeTemperaturaDeEsterilizadoresFecha;
-            const fecha = new Date(fechaArray[0], fechaArray[1] - 1, fechaArray[2], fechaArray[3], fechaArray[4]);
-            return format(fecha, 'yyyy-MM-dd HH:mm');
-          } else {
-            return '';
-          }
+      if (item.controlDeTemperaturaDeEsterilizadoresFecha) {
+        const fechaArray = item.controlDeTemperaturaDeEsterilizadoresFecha;
+        const fecha = new Date(fechaArray[0], fechaArray[1] - 1, fechaArray[2], fechaArray[3], fechaArray[4]);
+        return format(fecha, 'yyyy-MM-dd HH:mm');
+      } else {
+        return '';
+      }
     }
     else {
       return item[key];
@@ -117,17 +135,17 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
     const fechaFromat = format(fecha, 'yyyy-MM-dd HH:mm');
 
     const lowerCaseItem = {
-        controlDeTemperaturaDeEsterilizadoresFecha: fechaFromat,
-        controlDeTemperaturaDeEsterilizadoresTemperatura1: item.controlDeTemperaturaDeEsterilizadoresTemperatura1,
-        controlDeTemperaturaDeEsterilizadoresTemperatura2: item.controlDeTemperaturaDeEsterilizadoresTemperatura2,
-        controlDeTemperaturaDeEsterilizadoresTemperatura3: item.controlDeTemperaturaDeEsterilizadoresTemperatura3,
-        controlDeTemperaturaDeEsterilizadoresObservaciones: item.controlDeTemperaturaDeEsterilizadoresObservaciones ? item.controlDeTemperaturaDeEsterilizadoresObservaciones.toLowerCase() : '',
-        controlDeTemperaturaDeEsterilizadoresResponsable: item.controlDeTemperaturaDeEsterilizadoresResponsable ? item.controlDeTemperaturaDeEsterilizadoresResponsable.usuarioNombre.toLowerCase() : '',
+      controlDeTemperaturaDeEsterilizadoresFecha: fechaFromat,
+      controlDeTemperaturaDeEsterilizadoresTemperatura1: item.controlDeTemperaturaDeEsterilizadoresTemperatura1,
+      controlDeTemperaturaDeEsterilizadoresTemperatura2: item.controlDeTemperaturaDeEsterilizadoresTemperatura2,
+      controlDeTemperaturaDeEsterilizadoresTemperatura3: item.controlDeTemperaturaDeEsterilizadoresTemperatura3,
+      controlDeTemperaturaDeEsterilizadoresObservaciones: item.controlDeTemperaturaDeEsterilizadoresObservaciones ? item.controlDeTemperaturaDeEsterilizadoresObservaciones.toLowerCase() : '',
+      controlDeTemperaturaDeEsterilizadoresResponsable: item.controlDeTemperaturaDeEsterilizadoresResponsable ? item.controlDeTemperaturaDeEsterilizadoresResponsable.usuarioNombre.toLowerCase() : '',
     };
-  
+
     if (
       (!filtros['fecha-desde'] || fechaFromat >= filtros['fecha-desde']) &&
-      (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) && 
+      (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) &&
       (!filtros.temperatura1 || lowerCaseItem.controlDeTemperaturaDeEsterilizadoresTemperatura1.toString().startsWith(filtros.temperatura1)) &&
       (!filtros.temperatura2 || lowerCaseItem.controlDeTemperaturaDeEsterilizadoresTemperatura2.toString().startsWith(filtros.temperatura2)) &&
       (!filtros.temperatura3 || lowerCaseItem.controlDeTemperaturaDeEsterilizadoresTemperatura3.toString().startsWith(filtros.temperatura3)) &&
@@ -143,10 +161,48 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
     controlDeTemperaturaDeEsterilizadoresResponsable: (responsable) => responsable.usuarioNombre
   };
 
-  const handleEditCliente = (rowData) => {
+  const handleEditControl = (rowData) => {
     const id = rowData.Id;
     navigate(`/modificar-control-de-temperatura-de-esterilizadores/${id}`);
   };
+
+  const handleDeleteControl = (rowData) => {
+    const id = rowData.Id;
+    axios.delete(`/borrar-control-de-temperatura-de-esterilizadores/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 204) {
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 5000);
+          setDeleteItem(true);
+        } else {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setShowAlertWarning(true);
+          setTimeout(() => {
+            setShowAlertWarning(false);
+          }, 5000);
+        }
+        else if (error.request.status === 500) {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+  }
 
   return (
     <div>
@@ -167,6 +223,15 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
+      <Grid container spacing={0}>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}>
+          <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+          <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+          <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+        </Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+      </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
@@ -175,7 +240,8 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
         title="Control De Temperatura De Esterilizadores"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
-        onEditButton={handleEditCliente}
+        onEditButton={handleEditControl}
+        onDeleteButton={handleDeleteControl}
       />    </div>
   );
 }

@@ -15,6 +15,7 @@ import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
   toolbar: {
@@ -100,19 +101,21 @@ EnhancedTableHead.propTypes = {
   tableHeadCells: PropTypes.array.isRequired,
 };
 
-function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, columnRenderers, onEditButton }) {
+function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, columnRenderers, onEditButton, onDeleteButton }) {
   const classes = useStyles();
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState(tableHeadCells[0].id);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [rows, setRows] = useState([]);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [elementToDelete, setElementToDelete] = useState(null);
 
   useEffect(() => {
     const mappedRows = data.map((item) => {
-      const row = {Id: item.Id};
+      const row = { Id: item.Id };
       tableHeadCells.forEach((column) => {
-        row[column.id] = dataMapper(item, column.id); // Utilizar la función dataMapper para acceder a los datos
+        row[column.id] = dataMapper(item, column.id);
       });
       return row;
     });
@@ -137,75 +140,110 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
-  const handleButtonClick = (rowData) => {
-    
-    console.log('Botón clickeado:', rowData);
+  const sortedRows = stableSort(rows, getComparator(order, orderBy));
+
+  const handleOpenDeleteDialog = (row) => {
+    setElementToDelete(row)
+    setOpenDeleteDialog(true);
   };
 
-  const sortedRows = stableSort(rows, getComparator(order, orderBy));
+  const handleCloseDeleteDialog = () => {
+    setElementToDelete(null)
+    setOpenDeleteDialog(false);
+  };
+
+  const handleDelete = () => {
+    onDeleteButton(elementToDelete);
+    setOpenDeleteDialog(false);
+  };
 
   const handleClick = (event, property) => {
     handleRequestSort(event, property);
   };
 
   return (
-    <div className={classes.root}>
-      <Paper className={classes.paper}>
-        <Toolbar className={classes.toolbar}>
-          <Typography className={classes.titleT} variant="h6" id="tableTitle" component="div">
-            {title}
-          </Typography>
-        </Toolbar>
-        <TableContainer className={classes.tableContainer}>
-          <Table className={classes.table}>
-            <EnhancedTableHead
-              order={order}
-              orderBy={orderBy}
-              onRequestSort={handleClick}
-              tableHeadCells={tableHeadCells}
-            />
-            <TableBody>
-        {sortedRows
-          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-          .map((row, index) => (
-            <TableRow key={index}>
-              {tableHeadCells.map((column) => (
-                <TableCell key={column.id} align={column.numeric ? 'right' : 'left'}>
-                  {columnRenderers[column.id] ? (
-                    columnRenderers[column.id](row[column.id])
-                  ) : (
-                    row[column.id]
-                  )}
-                </TableCell>
-              ))}
-              <TableCell align="right">
-                <Button className={classes.button} variant="contained" color="primary" onClick={() => onEditButton(row)}>
-                  <EditIcon />
-                </Button>
-                <Button className={classes.button} variant="contained" color="secondary" onClick={() => handleButtonClick(row)}>
-                  <DeleteIcon />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-              {emptyRows > 0 && (
-                <TableRow style={{ height: 53 * emptyRows }}>
-                  <TableCell colSpan={tableHeadCells.length + 1} />
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={rows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onChangePage={handleChangePage}
-          onChangeRowsPerPage={handleChangeRowsPerPage}
-        />
-      </Paper>
+    <div>
+      <div>
+        <Dialog
+          open={openDeleteDialog}
+          onClose={handleCloseDeleteDialog}
+          aria-labelledby="responsive-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="responsive-dialog-title">Confirmación</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              ¿Estás seguro de que deseas eliminar este elemento?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDeleteDialog} color="primary" autoFocus>
+              No
+            </Button>
+            <Button onClick={handleDelete} color="primary" autoFocus>
+              Sí
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+      <div className={classes.root}>
+        <Paper className={classes.paper}>
+          <Toolbar className={classes.toolbar}>
+            <Typography className={classes.titleT} variant="h6" id="tableTitle" component="div">
+              {title}
+            </Typography>
+          </Toolbar>
+          <TableContainer className={classes.tableContainer}>
+            <Table className={classes.table}>
+              <EnhancedTableHead
+                order={order}
+                orderBy={orderBy}
+                onRequestSort={handleClick}
+                tableHeadCells={tableHeadCells}
+              />
+              <TableBody>
+                {sortedRows
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row, index) => (
+                    <TableRow key={index}>
+                      {tableHeadCells.map((column) => (
+                        <TableCell key={column.id} align={column.numeric ? 'right' : 'left'}>
+                          {columnRenderers[column.id] ? (
+                            columnRenderers[column.id](row[column.id])
+                          ) : (
+                            row[column.id]
+                          )}
+                        </TableCell>
+                      ))}
+                      <TableCell align="right">
+                        <Button className={classes.button} variant="contained" color="primary" onClick={() => onEditButton(row)}>
+                          <EditIcon />
+                        </Button>
+                        <Button className={classes.button} variant="contained" color="secondary" onClick={() => handleOpenDeleteDialog(row)}>
+                          <DeleteIcon />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                {emptyRows > 0 && (
+                  <TableRow style={{ height: 53 * emptyRows }}>
+                    <TableCell colSpan={tableHeadCells.length + 1} />
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={rows.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+          />
+        </Paper>
+      </div>
     </div>
   );
 }

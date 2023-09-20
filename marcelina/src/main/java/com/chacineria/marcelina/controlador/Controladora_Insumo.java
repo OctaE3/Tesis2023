@@ -62,6 +62,14 @@ public class Controladora_Insumo {
     @Autowired
     private CarneServicioImpl carneServicioImpl;
 
+    @GetMapping("/listar-carnes-todas")
+    public List<Carne> listadoCarneTodas() {
+        List<Carne> carnes = StreamSupport
+                .stream(carneServicioImpl.findAll().spliterator(), false)
+                .collect(Collectors.toList());
+        return carnes;
+    }
+
     @GetMapping("/listar-carnes")
     public List<Carne> listadoCarne() {
         List<Carne> carnes = StreamSupport
@@ -142,6 +150,15 @@ public class Controladora_Insumo {
     public List<Control_de_Insumos> listadoAditivos() {
         List<Control_de_Insumos> controlDeInsumos = StreamSupport
                 .stream(controlDeInsumosServicioImpl.findAllByInsumoEliminadoAndInsumoTipo(false, "Aditivo")
+                        .spliterator(), false)
+                .collect(Collectors.toList());
+        return controlDeInsumos;
+    }
+
+    @GetMapping("/listar-aditivos-todos")
+    public List<Control_de_Insumos> listadoAditivosTodos() {
+        List<Control_de_Insumos> controlDeInsumos = StreamSupport
+                .stream(controlDeInsumosServicioImpl.findAllByInsumoTipo("Aditivo")
                         .spliterator(), false)
                 .collect(Collectors.toList());
         return controlDeInsumos;

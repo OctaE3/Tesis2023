@@ -75,7 +75,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
         { name: 'recepcionDeMateriasPrimasCarnicasProveedor', label: 'Proveedor *', type: 'selector', color: 'primary' },
         { name: 'recepcionDeMateriasPrimasCarnicasProductos', label: 'Productos *', type: 'selectorMultiple', alta: 'si', altaCampos: formFieldsModal, color: 'primary' },
         { name: 'recepcionDeMateriasPrimasCarnicasPaseSanitario', label: 'Pase Sanitario', type: 'text', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,15}$" },
-        { name: 'recepcionDeMateriasPrimasCarnicasTemperatura', label: 'Temperatura', type: 'number', adornment: 'si', unit: '°C', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,10}$" },
+        { name: 'recepcionDeMateriasPrimasCarnicasTemperatura', label: 'Temperatura', type: 'text', adornment: 'si', unit: '°C', color: 'primary', obligatorio: true, pattern: "^-?[0-9]{0,10}$" },
         { name: 'recepcionDeMateriasPrimasCarnicasMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3', color: 'secondary', pattern: "^[A-Za-z0-9\\s,.]{0,250}$" },
     ];
 
@@ -199,7 +199,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
     };
 
     const checkError = (fecha, proveedor, pase, temperatura) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (proveedor === undefined || proveedor === null || proveedor === "Seleccionar") {
@@ -214,26 +214,29 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
         return true;
     }
 
-    const checkMultiple = (productos) => {
-        if (productos && productos.length > 0) {
-            const resp = productos.forEach((carne) => {
+    const checkMultiple = (carnes) => {
+        if (carnes && carnes.length > 0) {
+            let resp = true;
+            carnes.forEach((carne) => {
                 if (carne.carneNombre === undefined || carne.carneNombre === null || carne.carneNombre === '') {
-                    return false;
+                    resp = false;
                 }
                 else if (carne.carneTipo === undefined || carne.carneTipo === null || carne.carneTipo === "Seleccionar") {
-                    return false;
+                    resp = false;
                 }
                 else if (carne.carneCorte === undefined || carne.carneCorte === null || carne.carneCorte === "Seleccionar") {
-                    return false;
+                    resp = false;
                 }
                 else if (carne.carneCategoria === undefined || carne.carneCategoria === null || carne.carneCategoria === "Seleccionar") {
-                    return false;
+                    resp = false;
                 }
                 else if (carne.carneCantidad === undefined || carne.carneCantidad === null || carne.carneCantidad === '') {
-                    return false;
+                    resp = false;
                 }
+
+                if (resp === false) { return }
             })
-            return resp ? resp : true;
+            return resp;
         } else { return false }
     }
 
@@ -244,7 +247,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
         const checkMul = checkMultiple(carnesAgregadas);
 
         if (checkMul === false) {
-            updateErrorAlert(`Revise los productos ingresados, no se permite dejar campos vacíos y seleccionar la opción "Seleccionar".`);
+            updateErrorAlert(`Revise los productos ingresados, no se permite dejar campos vacíos y seleccionar la opción "Seleccionar", elimine el producto e ingreselo nuevamente.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
@@ -278,8 +281,8 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                 listaCarne: carnes,
             }
 
-            const check = checkError(data.recepcionDeMateriasPrimasCarnicasFecha, data.recepcionDeMateriasPrimasCarnicasProveedor,
-                data.recepcionDeMateriasPrimasCarnicasPaseSanitario, data.recepcionDeMateriasPrimasCarnicasTemperatura);
+            const check = checkError(materiasPrimasConProveedor.recepcionDeMateriasPrimasCarnicasFecha, materiasPrimasConProveedor.recepcionDeMateriasPrimasCarnicasProveedor,
+                materiasPrimasConProveedor.recepcionDeMateriasPrimasCarnicasPaseSanitario, materiasPrimasConProveedor.recepcionDeMateriasPrimasCarnicasTemperatura);
 
             if (check === false) {
                 updateErrorAlert(`Revise los datos ingresados, no se permite dejar campos vacíos y tampoco se permite seleccionar la opción "Seleccionar".`);

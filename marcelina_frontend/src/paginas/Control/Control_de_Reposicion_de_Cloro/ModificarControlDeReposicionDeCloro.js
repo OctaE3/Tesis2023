@@ -133,6 +133,9 @@ const ModificarControlDeReposicionDeCloro = () => {
                     const controlesData = response.data;
                     console.log(controlesData);
                     const controlEncontrado = controlesData.find((control) => control.controlDeReposicionDeCloroId.toString() === id.toString());
+                    if (!controlEncontrado) {
+                        navigate('/listar-control-de-reposicion-de-cloro');
+                    }
                     const fechaControl = controlEncontrado.controlDeReposicionDeCloroFecha;
                     const fecha = new Date(fechaControl);
                     const fechaFormateada = fecha.toISOString().split('T')[0];
@@ -200,7 +203,7 @@ const ModificarControlDeReposicionDeCloro = () => {
     }
 
     const checkError = (fecha, agua, cloro) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (agua === undefined || agua === null || agua === "") {
@@ -213,14 +216,17 @@ const ModificarControlDeReposicionDeCloro = () => {
     }
 
     const handleFormSubmit = () => {
-        const fecha = control.controlDeReposicionDeCloroFecha;
-        const fechaNueva = new Date(fecha);
-        fechaNueva.setDate(fechaNueva.getDate() + 1);
-        const fechaFormateada = fechaNueva.toISOString().split('T')[0];
-        console.log(fechaFormateada);
+        let fechaControl = new Date(control.controlDeReposicionDeCloroFecha);
+        let fechaPars = '';
+        if (fechaControl.toString() === 'Invalid Date') { } 
+        else {
+          fechaControl.setDate(fechaControl.getDate() + 2);
+          fechaPars = format(fechaControl, 'yyyy-MM-dd');
+        }
+
         const data = {
             ...control,
-            controlDeReposicionDeCloroFecha: fechaFormateada,
+            controlDeReposicionDeCloroFecha: fechaPars === fechaPars === '' ? fechaControl : fechaPars,
         };
         console.log(data);
 
@@ -245,10 +251,11 @@ const ModificarControlDeReposicionDeCloro = () => {
             })
                 .then(response => {
                     if (response.status === 200) {
-                        setShowAlertSuccess(true);
+                        setAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                        }, 5000);
+                            navigate('/listar-control-de-reposicion-de-cloro');
+                        }, 3000);
                     } else {
                         updateErrorAlert('No se logro regristrar el control de reposicion de cloro, revise los datos ingresados.');
                         setShowAlertError(true);

@@ -231,17 +231,8 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const handleChange = (event, type) => {
     const { name, value, id } = event.target;
     const regex = new RegExp(id);
-    
-    if (type === "email") {
-      const emailReg = new RegExp("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{0,3}");
-      if (emailReg.test(value)) {
-        setFormData(prevState => ({
-          ...prevState,
-          [name]: value,
-        }));
-      }
-    }
-    else if (type === 'date' || type === "datetime-local" || type === "selector") {
+
+    if (type === 'date' || type === "datetime-local" || type === "selector") {
       setFormData(prevState => ({
         ...prevState,
         [name]: value,
@@ -435,7 +426,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   };
 
   const handleChangeSelectMultiple = (fieldName, newValue) => {
-    const filteredOptions = newValue.filter(option => option.label !== ' ');
+    const filteredOptions = newValue.filter(option => option.label !== '');
     setSelectedOptions(filteredOptions);
   };
 
@@ -459,45 +450,46 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
 
   const handleSubmitSelectModal = async event => {
     event.preventDefault();
-    try {
-      await validationSchema.validateSync(formDataModal, { abortEarly: false });
-      console.log(formDataModal);
 
+    console.log(formDataModal);
+    if (Object.keys(formDataModal).length > 0) {
       setFormData(prevState => ({
         ...prevState,
-        carnesAgregadas: prevState.carnesAgregadas ? [...prevState.carnesAgregadas, formDataModal] : [formDataModal],
+        carnesAgregadas: prevState.carnesAgregadas
+          ? [...prevState.carnesAgregadas, formDataModal]
+          : [formDataModal],
       }));
-
-      console.log(formData);
-      const newOption = createOption(formDataModal.carneNombre);
-      setSelectedOptions(prevSelectedOptions => [...prevSelectedOptions, newOption]);
-      console.log(selectedOptions);
-      setFormDataModal({});
-
-      setOpen(false);
-    } catch (error) {
-      console.error('Error de validacion: ', error.message);
     }
+
+    console.log(formData);
+    const newOption = createOption(formDataModal.carneNombre);
+    setSelectedOptions(prevSelectedOptions => [...prevSelectedOptions, newOption]);
+    console.log(selectedOptions);
+    setFormDataModal({});
+
+    setOpen(false);
   };
 
   const handleSubmit = async event => {
     event.preventDefault();
     const tel = telefonos[0];
-    if (tel.telefono !== "") {
+    console.log(tel);
+    if (tel.telefono === "") {
+      onSubmit(formData);
+      setFormData({});
+    } else {
+      console.log(telefonos)
       onSubmit(formData, telefonos);
+      setFormData({});
+      setTelefonos({});
     }
-    onSubmit(formData);
   };
 
   const handleSubmitModal = async event => {
     event.preventDefault();
-    try {
-      await validationSchema.validateSync(formData, { abortEarly: false });
-      onSubmitModal(formDataModal);
-      setOpen(false);
-    } catch (error) {
-      console.error('Error de validacion: ', error.message);
-    }
+    onSubmitModal(formDataModal);
+    setOpen(false);
+    setFormDataModal({});
   };
 
   const handleOpenModal = () => {

@@ -143,6 +143,9 @@ const ModificarControlDeNitrato = () => {
                     const controlesData = response.data;
                     const lastNitrato = response.data[response.data.length - 1];
                     const controlEncontrado = controlesData.find((control) => control.controlDeNitratoId.toString() === id.toString());
+                    if (!controlEncontrado) {
+                        navigate('/listar-control-de-nitratos')
+                    }
                     const controlesRestantes = controlesData.filter(
                         (control) => control.controlDeNitratoId.toString() !== controlEncontrado.controlDeNitratoId.toString()
                     );
@@ -234,16 +237,16 @@ const ModificarControlDeNitrato = () => {
     }
 
     const checkError = (fecha, lote, cantidad, stock) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
-        else if (lote === undefined || lote === null) {
+        else if (lote === undefined || lote === null || lote === '') {
             return false;
         }
-        else if (cantidad === undefined || cantidad === null) {
+        else if (cantidad === undefined || cantidad === null || cantidad === '') {
             return false;
         }
-        else if (stock === undefined || stock === null) {
+        else if (stock === undefined || stock === null || stock === '' || parseInt(stock) === 0) {
             return false;
         }
         return true;
@@ -257,7 +260,7 @@ const ModificarControlDeNitrato = () => {
             data.controlDeNitratoCantidadUtilizada, data.controlDeNitratoStock);
 
         if (data.controlDeNitratoStock < data.controlDeNitratoCantidadUtilizada) {
-            updateErrorAlert(`La cantidad utilizada no puede ser mayor al stock.`);
+            updateErrorAlert(`La cantidad utilizada no puede ser mayor al stock y tampoco se permite dejar el stock vacío.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
@@ -285,7 +288,8 @@ const ModificarControlDeNitrato = () => {
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
-                            }, 5000);
+                                navigate('/listar-control-de-nitratos');
+                            }, 3000)
                         } else {
                             updateErrorAlert('No se logro modificar el control de nitrato, revise los datos ingresados.')
                             setShowAlertError(true);

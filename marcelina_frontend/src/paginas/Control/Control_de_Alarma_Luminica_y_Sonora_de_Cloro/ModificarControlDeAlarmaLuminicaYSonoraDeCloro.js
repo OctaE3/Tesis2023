@@ -161,7 +161,7 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                     const controlesData = response.data;
                     const controlEncontrado = controlesData.find((control) => control.controlDeAlarmaLuminicaYSonaraDeCloroId.toString() === id.toString());
                     if (!controlEncontrado) {
-                        navigate('/listarcontrol-de-alarma-luminica-y-sonora-de-cloro');
+                        navigate('/listar-control-de-alarma-luminica-y-sonora-de-cloro');
                     }
                     const fechaArray = controlEncontrado.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora;
                     const fecha = new Date(fechaArray[0], fechaArray[1] - 1, fechaArray[2], fechaArray[3], fechaArray[4]);
@@ -230,14 +230,14 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
         const alarmaS = data.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora;
         const fechaHora = data.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora;
 
-        if (alarmaL === "Seleccionar" || alarmaS === "Seleccionar") {
+        if (alarmaL === "Seleccionar" || alarmaL === undefined || alarmaS === "Seleccionar" || alarmaS === undefined) {
             updateErrorAlert(`No se permite el valor de alarma "Seleccionar", seleccione una opción válida.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
             }, 7000);
         }
-        else if (fechaHora === undefined || fechaHora === null) {
+        else if (fechaHora === undefined || fechaHora === null || fechaHora === '') {
             updateErrorAlert(`Seleccione una fecha y hora, no deje el campo vacío.`);
             setShowAlertError(true);
             setTimeout(() => {
@@ -255,8 +255,8 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                            navigate('/listarcontrol-de-alarma-luminica-y-sonora-de-cloro');
-                        }, 5000);
+                            navigate('/listar-control-de-alarma-luminica-y-sonora-de-cloro');
+                        }, 3000);
                     } else {
                         updateErrorAlert('No se logró modificar el estado de las alarmas, revise los datos ingresados');
                         setShowAlertError(true);

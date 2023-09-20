@@ -66,9 +66,9 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
 
   const formFields = [
     { name: 'controlDeMejorasEnInstalacionesFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeMejorasEnInstalacionesSector', label: 'Sector', type: 'text', text: text, obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,50}$", color: 'primary' },
-    { name: 'controlDeMejorasEnInstalacionesDefecto', label: 'Defecto', type: 'text', text: text, obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'primary' },
-    { name: 'controlDeMejorasEnInstalacionesMejoraRealizada', label: 'Mejora Realizada', text: text, obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
+    { name: 'controlDeMejorasEnInstalacionesSector', label: 'Sector', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,50}$", color: 'primary' },
+    { name: 'controlDeMejorasEnInstalacionesDefecto', label: 'Defecto', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'primary' },
+    { name: 'controlDeMejorasEnInstalacionesMejoraRealizada', label: 'Mejora Realizada', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
   ];
 
   const [alertSuccess, setAlertSuccess] = useState({
@@ -126,7 +126,7 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
   };
 
   const checkError = (fecha, sector, defecto, mejora) => {
-    if (fecha === undefined || fecha === null) {
+    if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
       return false;
     }
     else if (sector === undefined || sector === "" || sector === null) {
@@ -142,13 +142,18 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
   }
 
   const handleFormSubmit = (formData) => {
-    const fechaControl = new Date(formData.controlDeMejorasEnInstalacionesFecha);
-    fechaControl.setDate(fechaControl.getDate() + 2);
-    const fechaPars = format(fechaControl, 'yyyy-MM-dd')
-    console.log(fechaPars);
+    let fechaControl = new Date(formData.controlDeMejorasEnInstalacionesFecha);
+    let fechaPars = '';
+    if (fechaControl.toString() === 'Invalid Date') {
+      fechaControl.setDate(null);
+    } else {
+      fechaControl.setDate(fechaControl.getDate() + 2);
+      fechaPars = format(fechaControl, 'yyyy-MM-dd')
+    }
+
     const controlDeMejorasConResponsable = {
       ...formData,
-      controlDeMejorasEnInstalacionesFecha: fechaPars,
+      controlDeMejorasEnInstalacionesFecha: fechaPars === '' ? fechaControl : fechaPars,
       controlDeMejorasEnInstalacionesResponsable: window.localStorage.getItem('user'),
     }
 

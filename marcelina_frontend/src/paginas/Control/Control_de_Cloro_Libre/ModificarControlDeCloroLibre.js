@@ -140,6 +140,9 @@ const ModificarControlDeCloroLibre = () => {
                 .then(response => {
                     const controlesData = response.data;
                     const controlEncontrado = controlesData.find((control) => control.controlDeCloroLibreId.toString() === id.toString());
+                    if (!controlEncontrado) {
+                        navigate('/listar-control-de-cloro-libre');
+                    }
                     console.log(controlEncontrado)
                     const fechaArray = controlEncontrado.controlDeCloroLibreFecha;
                     const fecha = new Date(fechaArray[0], fechaArray[1] - 1, fechaArray[2], fechaArray[3], fechaArray[4]);
@@ -176,13 +179,13 @@ const ModificarControlDeCloroLibre = () => {
 
     const handleChange = event => {
         const { name, value, id, type } = event.target;
-        const regex = new RegExp(id);
         if (type === "datetime-local") {
             setControl(prevState => ({
                 ...prevState,
                 [name]: value,
             }));
         } else {
+            const regex = new RegExp(id);
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -193,7 +196,7 @@ const ModificarControlDeCloroLibre = () => {
     }
 
     const checkError = (fecha, grifo, resultado) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '') {
             return false;
         }
         else if (grifo === undefined || grifo === "" || grifo === null) {
@@ -206,14 +209,11 @@ const ModificarControlDeCloroLibre = () => {
     }
 
     const handleFormSubmit = () => {
+        console.log(control);
         const numResultado = parseFloat(control.controlDeCloroLibreResultado);
-        const fecha = control.controlDeCloroLibreFecha;
-        const formato = 'yyyy-MM-dd HH:mm';
-        const fechaHoraFormateada = parse(fecha, formato, new Date());
         const data = {
             ...control,
-            controlDeCloroLibreFecha: fechaHoraFormateada,
-            controlDeCloroLibreResultado: numResultado,
+            controlDeCloroLibreResultado: numResultado ? numResultado : undefined,
         };
         console.log(data);
 
@@ -221,9 +221,16 @@ const ModificarControlDeCloroLibre = () => {
         const grifo = data.controlDeCloroLibreGrifoPico;
         const resultado = data.controlDeCloroLibreResultado;
 
+        console.log(fechaHora);
+        console.log(grifo);
+        console.log(resultado);
+
         const check = checkError(fechaHora, grifo, resultado);
 
+        console.log(check);
+
         if (check === false) {
+            updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
@@ -241,7 +248,8 @@ const ModificarControlDeCloroLibre = () => {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                        }, 5000);
+                            navigate('/listar-control-de-cloro-libre');
+                        }, 3000);
                     } else {
                         updateErrorAlert('No se logró registrar el estado de las alarmas, revise los datos ingresados');
                         setShowAlertError(true);
@@ -382,9 +390,9 @@ const ModificarControlDeCloroLibre = () => {
                                             margin="normal"
                                             variant="outlined"
                                             label="Número del Grifo"
-                                            defaultValue="Número del Grifo"
-                                            id="^[0-9]+$"
-                                            type="number"
+                                            defaultValue={0}
+                                            id="^[0-9]{0,10}"
+                                            type="text"
                                             name="controlDeCloroLibreGrifoPico"
                                             value={control.controlDeCloroLibreGrifoPico}
                                             onChange={handleChange}
@@ -401,9 +409,9 @@ const ModificarControlDeCloroLibre = () => {
                                             margin="normal"
                                             variant="outlined"
                                             label="Resultado"
-                                            defaultValue="Resultado"
-                                            id="^[0-9.]+$"
-                                            type="number"
+                                            id="^[0-9]{0,4}\,?[0-9]{0,3}$"
+                                            defaultValue={0}
+                                            type="text"
                                             name="controlDeCloroLibreResultado"
                                             value={control.controlDeCloroLibreResultado}
                                             onChange={handleChange}

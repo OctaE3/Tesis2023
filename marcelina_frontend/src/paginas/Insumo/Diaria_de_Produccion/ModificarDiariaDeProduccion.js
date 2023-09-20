@@ -158,9 +158,12 @@ const ModificarDiariaDeProduccion = () => {
                 .then(response => {
                     const controlesData = response.data;
                     const controlEncontrado = controlesData.find((control) => control.diariaDeProduccionId.toString() === id.toString());
+                    if (!controlEncontrado) {
+                        navigate('/listar-diaria-de-produccion')
+                    }
                     setCodigoLote(controlEncontrado.diariaDeProduccionLote.loteCodigo);
                     console.log(controlEncontrado);
-                    axios.get('/listar-carnes', {
+                    axios.get('/listar-carnes-todas', {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('token')}`
                         }
@@ -192,7 +195,7 @@ const ModificarDiariaDeProduccion = () => {
                             console.error(error);
                         });
 
-                    axios.get('/listar-aditivos', {
+                    axios.get('/listar-aditivos-todos', {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('token')}`
                         }
@@ -369,19 +372,19 @@ const ModificarDiariaDeProduccion = () => {
     };
 
     const checkError = (producto, cantidad, fechaProd, envasado, fechaVenc) => {
-        if (producto === undefined || producto === null) {
+        if (producto === undefined || producto === null || producto === 'Seleccionar') {
             return false;
         }
         else if (cantidad === undefined || cantidad === null || cantidad === '') {
             return false;
         }
-        else if (fechaProd === undefined || fechaProd === null || fechaProd === '') {
+        else if (fechaProd === undefined || fechaProd === null || fechaProd === '' || fechaProd.toString() === 'Invalid Date') {
             return false;
         }
-        else if (envasado === undefined || envasado === null) {
+        else if (envasado === undefined || envasado === null || envasado === 'Seleccionar') {
             return false;
         }
-        else if (fechaVenc === undefined || fechaVenc === null || fechaVenc === '') {
+        else if (fechaVenc === undefined || fechaVenc === null || fechaVenc === '' || fechaVenc.toString() === 'Invalid Date') {
             return false;
         }
         return true;
@@ -394,13 +397,13 @@ const ModificarDiariaDeProduccion = () => {
                     return false;
                 } else { }
             });
-
+            console.log(aditivos)
             aditivos.forEach((aditivo) => {
-                if (aditivo.aditivoUtilizada.value === '' || aditivo.cantidad === '' || aditivo.aditivoUtilizada.value === 'Seleccionar' || aditivo.cantidad === 0) {
+                if (aditivo.aditivoUtilizado.value === '' || aditivo.cantidad === '' || aditivo.aditivoUtilizado.value === 'Seleccionar' || aditivo.cantidad === 0) {
                     return false;
                 } else { }
             });
-            
+
         } else {
             return false;
         }
@@ -411,220 +414,231 @@ const ModificarDiariaDeProduccion = () => {
         console.log(aditivosCantidad)
 
         const checkMul = checkMultiple(carneCantidad, aditivosCantidad);
+        const checkE = checkError(control.diariaDeProduccionProducto, control.diariaDeProduccionCantidadProducida,
+            control.diariaDeProduccionFecha, control.diariaDeProduccionEnvasado, control.diariaDeProduccionFechaVencimiento);
 
-        if (checkMul === false) {
-            updateErrorAlert(`Seleccione e ingrese la/el carne/aditivo y la cantidad, no seleccione la opción "Seleccionar" y no deje el campo cantida vacío.`);
+        if (checkE === false) {
+            updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
             }, 7000);
         } else {
-            const idCarnes = carneCantidad.map(carne => parseInt(carne.carneUtilizada.value));
-            const idAditivos = aditivosCantidad.map(aditivo => parseInt(aditivo.aditivoUtilizado.value));
-
-            console.log(idCarnes);
-            console.log(idAditivos);
-
-            const carnesCompletas = [];
-            const insumosCompletos = [];
-
-            for (const carne of carnes) {
-                if (idCarnes.includes(carne.carneId)) {
-                    carnesCompletas.push(carne);
-                }
-            }
-
-            for (const aditivo of aditivos) {
-                if (idAditivos.includes(aditivo.insumoId)) {
-                    insumosCompletos.push(aditivo);
-                }
-            }
-
-            console.log(carnesCompletas)
-            console.log(insumosCompletos);
-
-            const resultadoCarne = carnesCompletas.map(carne => {
-                const cantidaValueEncontradaCarne = carneCantidad.find(cv => cv.carneUtilizada.value.toString() === carne.carneId.toString());
-                console.log(cantidaValueEncontradaCarne);
-                console.log(carne);
-                if (cantidaValueEncontradaCarne) {
-                    const cantidad = cantidaValueEncontradaCarne.cantidad;
-                    console.log(cantidad);
-                    if (cantidad > carne.carneCantidad) {
-                        console.log(carne);
-                        return `${carne.carneNombre} - ${carne.carneCorte} - ${carne.carneCantidad} Kg / `;
-                    }
-                }
-                return null;
-            })
-
-            const resultadoInsumo = insumosCompletos.map(insumo => {
-                const cantidaValueEncontradaInsumo = aditivosCantidad.find(cv => cv.aditivoUtilizado.value.toString() === insumo.insumoId.toString());
-                console.log(cantidaValueEncontradaInsumo);
-                if (cantidaValueEncontradaInsumo) {
-                    const cantidad = cantidaValueEncontradaInsumo.cantidad;
-                    console.log(cantidad);
-                    if (cantidad > insumo.insumoCantidad) {
-                        console.log(insumo);
-                        return `${insumo.insumoNombre} - ${insumo.insumoNroLote} - ${insumo.insumoCantidad} ${insumo.insumoUnidad} / `;
-                    }
-                }
-                return null;
-            })
-
-            console.log(resultadoCarne)
-            console.log(resultadoInsumo);
-
-            const elementoUndefinedCarne = resultadoCarne.some(elemento => elemento === null);
-            const elementoUndefinedInsumo = resultadoInsumo.some(elemento => elemento === null);
-
-            console.log(elementoUndefinedCarne);
-
-            if (!elementoUndefinedInsumo || !elementoUndefinedCarne) {
-                updateErrorAlert(`La cantidad ingresada de carnes o aditivos utilizada en la producción, es mayor a la disponible, revise los datos ingresados.`);
+            if (checkMul === false) {
+                updateErrorAlert(`Seleccione e ingrese la/el carne/aditivo y la cantidad, no seleccione la opción "Seleccionar" y no deje el campo cantida vacío.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
                 }, 7000);
             } else {
-                const productoCompleto = productos.find((producto) => producto.productoId.toString() === control.diariaDeProduccionProducto.productoId.toString());
+                const idCarnes = carneCantidad.map(carne => parseInt(carne.carneUtilizada.value));
+                const idAditivos = aditivosCantidad.map(aditivo => parseInt(aditivo.aditivoUtilizado.value));
 
-                const loteControl = control.diariaDeProduccionLote;
-                const loteCompleto = {
-                    ...loteControl,
-                    loteCodigo: codigoLote,
-                    loteProducto: productoCompleto,
-                    loteCantidad: control.diariaDeProduccionCantidadProducida,
-                };
+                console.log(idCarnes);
+                console.log(idAditivos);
 
-                const listaCarneActualizada = [];
-                const listaCarneCantidad = [];
-                carnesCompletas.forEach((carne, index) => {
-                    const cantidadCarne = carneCantidad[index].cantidad;
-                    console.log(cantidadCarne);
-                    const carneActualizada = { ...carne, carneCantidad: carne.carneCantidad - cantidadCarne };
-                    console.log(carneActualizada);
-                    listaCarneActualizada.push(carneActualizada);
-                    const detalleCantidad = control.diariaDeProduccionCantidadUtilizadaCarnes.find(detalle => detalle.detalleCantidadCarneCarne.carneId.toString() === carne.carneId.toString());
-                    console.log(detalleCantidad);
-                    const detalleCantidadCarne = {
-                        ...detalleCantidad,
-                        detalleCantidadCarneCarne: carneActualizada,
-                        detalleCantidadCarneCantidad: cantidadCarne,
-                    };
-                    listaCarneCantidad.push(detalleCantidadCarne);
-                })
-                console.log(listaCarneActualizada);
-                console.log(listaCarneCantidad);
+                const carnesCompletas = [];
+                const insumosCompletos = [];
 
-                const listaInsumoActualizado = [];
-                const listaInsumoCantidad = [];
-                insumosCompletos.forEach((insumo, index) => {
-                    const cantidadInsumo = aditivosCantidad[index].cantidad;
-                    const insumoActualizado = { ...insumo, insumoCantidad: insumo.insumoCantidad - cantidadInsumo };
-                    listaInsumoActualizado.push(insumoActualizado);
-                    const detalleCantidad = control.diariaDeProduccionCantidadUtilizadaInsumos.find(detalle => detalle.detalleCantidadInsumoInsumo.insumoId.toString() === insumo.insumoId.toString());
-                    const detalleCantidadInsumo = {
-                        ...detalleCantidad,
-                        detalleCantidadInsumoInsumo: insumoActualizado,
-                        detalleCantidadInsumoCantidad: cantidadInsumo,
-                    };
-                    listaInsumoCantidad.push(detalleCantidadInsumo);
-                })
-
-                console.log(listaInsumoActualizado);
-                console.log(listaInsumoCantidad);
-
-                console.log(listaCarneActualizada);
-                console.log(carnesRemplazadas);
-
-                const listaCarnesDesusadas = [];
-
-                listaCarneActualizada.map((carne) => {
-                    carnesRemplazadas.forEach((car) => {
-                        if (carne.carneId.toString() !== car.carneId.toString()) {
-                            listaCarnesDesusadas.push(car);
-                        }
-                    })
-                })
-
-                const listaAditivosDesusados = [];
-
-                listaInsumoActualizado.map((aditivo) => {
-                    aditivosRemplazados.forEach((adi) => {
-                        if (aditivo.insumoId.toString() !== adi.insumoId.toString()) {
-                            listaAditivosDesusados.push(adi);
-                        }
-                    })
-                })
-
-                console.log(listaCarnesDesusadas);
-
-                const data = {
-                    ...control,
-                    diariaDeProduccionProducto: productoCompleto,
-                    diariaDeProduccionLote: loteCompleto,
-                    diariaDeProduccionInsumosCarnicos: listaCarneActualizada,
-                    diariaDeProduccionCantidadUtilizadaCarnes: listaCarneCantidad,
-                    diariaDeProduccionAditivos: listaInsumoActualizado,
-                    diariaDeProduccionCantidadUtilizadaInsumos: listaInsumoCantidad,
-
-                };
-
-                const dataCompleta = {
-                    diariaDeProduccion: data,
-                    listaCarneDesusadas: listaCarnesDesusadas,
-                    listaAditivosDesusadas: listaAditivosDesusados,
+                for (const carne of carnes) {
+                    if (idCarnes.includes(carne.carneId)) {
+                        carnesCompletas.push(carne);
+                    }
                 }
 
-                console.log(dataCompleta);
+                for (const aditivo of aditivos) {
+                    if (idAditivos.includes(aditivo.insumoId)) {
+                        insumosCompletos.push(aditivo);
+                    }
+                }
 
-                const check = checkError(data.diariaDeProduccionProducto, data.diariaDeProduccionCantidadProducida,
-                    data.diariaDeProduccionFecha, data.diariaDeProduccionEnvasado, data.diariaDeProduccionFechaVencimiento);
+                console.log(carnesCompletas)
+                console.log(insumosCompletos);
 
+                const resultadoCarne = carnesCompletas.map(carne => {
+                    const cantidaValueEncontradaCarne = carneCantidad.find(cv => cv.carneUtilizada.value.toString() === carne.carneId.toString());
+                    console.log(cantidaValueEncontradaCarne);
+                    console.log(carne);
+                    if (cantidaValueEncontradaCarne) {
+                        const cantidad = cantidaValueEncontradaCarne.cantidad;
+                        console.log(cantidad);
+                        if (cantidad > carne.carneCantidad) {
+                            console.log(carne);
+                            return `${carne.carneNombre} - ${carne.carneCorte} - ${carne.carneCantidad} Kg / `;
+                        }
+                    }
+                    return null;
+                })
 
-                if (check === false) {
-                    updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+                const resultadoInsumo = insumosCompletos.map(insumo => {
+                    const cantidaValueEncontradaInsumo = aditivosCantidad.find(cv => cv.aditivoUtilizado.value.toString() === insumo.insumoId.toString());
+                    console.log(cantidaValueEncontradaInsumo);
+                    if (cantidaValueEncontradaInsumo) {
+                        const cantidad = cantidaValueEncontradaInsumo.cantidad;
+                        console.log(cantidad);
+                        if (cantidad > insumo.insumoCantidad) {
+                            console.log(insumo);
+                            return `${insumo.insumoNombre} - ${insumo.insumoNroLote} - ${insumo.insumoCantidad} ${insumo.insumoUnidad} / `;
+                        }
+                    }
+                    return null;
+                })
+
+                console.log(resultadoCarne)
+                console.log(resultadoInsumo);
+
+                const elementoUndefinedCarne = resultadoCarne.some(elemento => elemento === null);
+                const elementoUndefinedInsumo = resultadoInsumo.some(elemento => elemento === null);
+
+                console.log(elementoUndefinedCarne);
+
+                if (!elementoUndefinedInsumo || !elementoUndefinedCarne) {
+                    updateErrorAlert(`La cantidad ingresada de carnes o aditivos utilizada en la producción, es mayor a la disponible, revise los datos ingresados.`);
                     setShowAlertError(true);
                     setTimeout(() => {
                         setShowAlertError(false);
                     }, 7000);
                 } else {
-                    axios.put(`/modificar-diaria-de-produccion/${id}`, dataCompleta, {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            "Content-Type": "application/json"
-                        }
+                    const productoCompleto = productos.find((producto) => producto.productoId.toString() === control.diariaDeProduccionProducto.productoId.toString());
+
+                    const loteControl = control.diariaDeProduccionLote;
+                    const loteCompleto = {
+                        ...loteControl,
+                        loteCodigo: codigoLote,
+                        loteProducto: productoCompleto,
+                        loteCantidad: control.diariaDeProduccionCantidadProducida,
+                    };
+
+                    const listaCarneActualizada = [];
+                    const listaCarneCantidad = [];
+                    carnesCompletas.forEach((carne, index) => {
+                        const cantidadCarne = carneCantidad[index].cantidad;
+                        console.log(cantidadCarne);
+                        const carneActualizada = { ...carne, carneCantidad: carne.carneCantidad - cantidadCarne };
+                        console.log(carneActualizada);
+                        listaCarneActualizada.push(carneActualizada);
+                        const detalleCantidad = control.diariaDeProduccionCantidadUtilizadaCarnes.find(detalle => detalle.detalleCantidadCarneCarne.carneId.toString() === carne.carneId.toString());
+                        console.log(detalleCantidad);
+                        const detalleCantidadCarne = {
+                            ...detalleCantidad,
+                            detalleCantidadCarneCarne: carneActualizada,
+                            detalleCantidadCarneCantidad: cantidadCarne,
+                        };
+                        listaCarneCantidad.push(detalleCantidadCarne);
                     })
-                        .then(response => {
-                            if (response.status === 200) {
-                                setShowAlertSuccess(true);
-                                setTimeout(() => {
-                                    setShowAlertSuccess(false);
-                                }, 5000);
-                            } else {
-                                updateErrorAlert('No se logro modificar la diaria de producción, revise los datos ingresados.')
-                                setShowAlertError(true);
-                                setTimeout(() => {
-                                    setShowAlertError(false);
-                                }, 5000);
+                    console.log(listaCarneActualizada);
+                    console.log(listaCarneCantidad);
+
+                    const listaInsumoActualizado = [];
+                    const listaInsumoCantidad = [];
+                    insumosCompletos.forEach((insumo, index) => {
+                        const cantidadInsumo = aditivosCantidad[index].cantidad;
+                        const insumoActualizado = { ...insumo, insumoCantidad: insumo.insumoCantidad - cantidadInsumo };
+                        listaInsumoActualizado.push(insumoActualizado);
+                        const detalleCantidad = control.diariaDeProduccionCantidadUtilizadaInsumos.find(detalle => detalle.detalleCantidadInsumoInsumo.insumoId.toString() === insumo.insumoId.toString());
+                        const detalleCantidadInsumo = {
+                            ...detalleCantidad,
+                            detalleCantidadInsumoInsumo: insumoActualizado,
+                            detalleCantidadInsumoCantidad: cantidadInsumo,
+                        };
+                        listaInsumoCantidad.push(detalleCantidadInsumo);
+                    })
+
+                    console.log(listaInsumoActualizado);
+                    console.log(listaInsumoCantidad);
+
+                    console.log(listaCarneActualizada);
+                    console.log(carnesRemplazadas);
+
+                    const listaCarnesDesusadas = [];
+
+                    listaCarneActualizada.map((carne) => {
+                        carnesRemplazadas.forEach((car) => {
+                            if (carne.carneId.toString() !== car.carneId.toString()) {
+                                listaCarnesDesusadas.push(car);
                             }
                         })
-                        .catch(error => {
-                            if (error.request.status === 401) {
-                                setShowAlertWarning(true);
-                                setTimeout(() => {
-                                    setShowAlertWarning(false);
-                                }, 5000);
-                            }
-                            else if (error.request.status === 500) {
-                                updateErrorAlert('No se logro modificar la diaria de producción, revise los datos ingresados.');
-                                setShowAlertError(true);
-                                setTimeout(() => {
-                                    setShowAlertError(false);
-                                }, 5000);
+                    })
+
+                    const listaAditivosDesusados = [];
+
+                    listaInsumoActualizado.map((aditivo) => {
+                        aditivosRemplazados.forEach((adi) => {
+                            if (aditivo.insumoId.toString() !== adi.insumoId.toString()) {
+                                listaAditivosDesusados.push(adi);
                             }
                         })
+                    })
+
+                    console.log(listaCarnesDesusadas);
+
+                    const data = {
+                        ...control,
+                        diariaDeProduccionProducto: productoCompleto,
+                        diariaDeProduccionLote: loteCompleto,
+                        diariaDeProduccionInsumosCarnicos: listaCarneActualizada,
+                        diariaDeProduccionCantidadUtilizadaCarnes: listaCarneCantidad,
+                        diariaDeProduccionAditivos: listaInsumoActualizado,
+                        diariaDeProduccionCantidadUtilizadaInsumos: listaInsumoCantidad,
+
+                    };
+
+                    const dataCompleta = {
+                        diariaDeProduccion: data,
+                        listaCarneDesusadas: listaCarnesDesusadas,
+                        listaAditivosDesusadas: listaAditivosDesusados,
+                    }
+
+                    console.log(dataCompleta);
+
+                    const check = checkError(data.diariaDeProduccionProducto, data.diariaDeProduccionCantidadProducida,
+                        data.diariaDeProduccionFecha, data.diariaDeProduccionEnvasado, data.diariaDeProduccionFechaVencimiento);
+
+
+                    if (check === false) {
+                        updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 7000);
+                    } else {
+                        axios.put(`/modificar-diaria-de-produccion/${id}`, dataCompleta, {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                "Content-Type": "application/json"
+                            }
+                        })
+                            .then(response => {
+                                if (response.status === 200) {
+                                    setShowAlertSuccess(true);
+                                    setTimeout(() => {
+                                        setShowAlertSuccess(false);
+                                        navigate('/listar-diaria-de-produccion');
+                                    }, 3000)
+                                } else {
+                                    updateErrorAlert('No se logro modificar la diaria de producción, revise los datos ingresados.')
+                                    setShowAlertError(true);
+                                    setTimeout(() => {
+                                        setShowAlertError(false);
+                                    }, 5000);
+                                }
+                            })
+                            .catch(error => {
+                                if (error.request.status === 401) {
+                                    setShowAlertWarning(true);
+                                    setTimeout(() => {
+                                        setShowAlertWarning(false);
+                                    }, 5000);
+                                }
+                                else if (error.request.status === 500) {
+                                    updateErrorAlert('No se logro modificar la diaria de producción, revise los datos ingresados.');
+                                    setShowAlertError(true);
+                                    setTimeout(() => {
+                                        setShowAlertError(false);
+                                    }, 5000);
+                                }
+                            })
+                    }
                 }
             }
         }

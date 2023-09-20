@@ -82,6 +82,9 @@ public class PExpedicion_de_ProductoServicioImpl implements PExpedicion_de_Produ
             if (lote.getLoteCantidad() == 0) {
                 lote.setLoteEliminado(true);
             }
+            else if (lote.getLoteCantidad() > 0) {
+                lote.setLoteEliminado(false);
+            }
             loteRepositorio.save(lote);
         }
 
@@ -117,7 +120,7 @@ public class PExpedicion_de_ProductoServicioImpl implements PExpedicion_de_Produ
         exp.add(expedicionDeProducto);
 
         for (Lote lote : expedicionDeProducto.getExpedicionDeProductoLotes()) {
-            if (lote.getLoteCantidad().equals(0)) {
+            if (lote.getLoteCantidad() == 0) {
                 lote.setLoteEliminado(true);
                 loteRepositorio.save(lote);
             } else {

@@ -65,9 +65,9 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
 
   const formFields = [
     { name: 'controlDeTemperaturaDeEsterilizadoresFecha', label: 'Fecha y Hora', type: 'datetime-local', color: 'primary' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura1', label: 'Temperatura 1', type: 'text', obligatorio: true, text: text, pattern: "^[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura2', label: 'Temperatura 2', type: 'text', obligatorio: true, text: text, pattern: "^[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura3', label: 'Temperatura 3', type: 'text', obligatorio: true, text: text, pattern: "^[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura1', label: 'Temperatura 1', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura2', label: 'Temperatura 2', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura3', label: 'Temperatura 3', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
     { name: 'controlDeTemperaturaDeEsterilizadoresObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
   ];
 
@@ -126,7 +126,7 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
   };
 
   const checkError = (fecha, temp1, temp2, temp3) => {
-    if (fecha === undefined || fecha === null) {
+    if (fecha === undefined || fecha === null || fecha === '') {
       return false;
     }
     else if (temp1 === undefined || temp1 === null || temp1 === "") {
@@ -152,6 +152,8 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
     const temp1 = controlDeTemperaturaConResponsable.controlDeTemperaturaDeEsterilizadoresTemperatura1;
     const temp2 = controlDeTemperaturaConResponsable.controlDeTemperaturaDeEsterilizadoresTemperatura2;
     const temp3 = controlDeTemperaturaConResponsable.controlDeTemperaturaDeEsterilizadoresTemperatura3;
+
+    console.log(fecha);
 
     const check = checkError(fecha, temp1, temp2, temp3);
 

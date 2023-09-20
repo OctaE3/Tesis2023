@@ -185,7 +185,9 @@ const ModificarCarne = () => {
                 .then(response => {
                     const controlesData = response.data;
                     const controlEncontrado = controlesData.find((control) => control.carneId.toString() === id.toString());
-                    console.log(controlEncontrado)
+                    if (!controlEncontrado) {
+                        navigate('/listar-carne')
+                    }
                     const fechaControl = controlEncontrado.carneFecha;
                     const fecha = new Date(fechaControl);
                     const fechaFormateada = fecha.toISOString().split('T')[0];
@@ -313,7 +315,8 @@ const ModificarCarne = () => {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                        }, 5000);
+                            navigate('/listar-carne');
+                        }, 3000)
                     } else {
                         updateErrorAlert('No se logro modificar la carne, revise los datos ingresados.')
                         setShowAlertError(true);

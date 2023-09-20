@@ -3,6 +3,7 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +31,24 @@ function ListarControlDeCloroLibre() {
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
+  const [deleteItem, setDeleteItem] = useState(false);
   const navigate = useNavigate();
+
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se elimino el control de cloro libre con éxito!', severity: 'success', type: 'description'
+  });
+
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logró eliminar el control de cloro libre, recargue la pagina.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,8 +65,8 @@ function ListarControlDeCloroLibre() {
         });
 
         const data = response.data.map((controlDeCloroLibre) => ({
-            ...controlDeCloroLibre,
-            Id: controlDeCloroLibre.controlDeCloroLibreId,
+          ...controlDeCloroLibre,
+          Id: controlDeCloroLibre.controlDeCloroLibreId,
         }));
         const ResponsableData = ResponsableResponse.data;
 
@@ -60,22 +78,22 @@ function ListarControlDeCloroLibre() {
     };
 
     fetchData();
-  }, []);
+  }, [deleteItem]);
 
   const tableHeadCells = [
     { id: 'controlDeCloroLibreFecha', numeric: false, disablePadding: false, label: 'Fecha' },
-    { id: 'controlDeCloroLibreGrifoPico', numeric: false, disablePadding: false, label: 'Pico/Grafo'},
+    { id: 'controlDeCloroLibreGrifoPico', numeric: false, disablePadding: false, label: 'Pico/Grafo' },
     { id: 'controlDeCloroLibreResultado', numeric: false, disablePadding: false, label: 'Resultado' },
     { id: 'controlDeCloroLibreObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
     { id: 'controlDeCloroLibreResponsable', numeric: false, disablePadding: false, label: 'Resposnsable' }
   ];
- 
+
   const filters = [
-    { id: 'fecha', label: 'Fecha', type: 'datetime', options: ['desde', 'hasta']},
+    { id: 'fecha', label: 'Fecha', type: 'datetime', options: ['desde', 'hasta'] },
     { id: 'pico', label: 'Pico/Grafo', type: 'text' },
     { id: 'resultado', label: 'Resultado', type: 'text' },
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select',options: responsable },
+    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -104,13 +122,13 @@ function ListarControlDeCloroLibre() {
         return '';
       }
     }
-    else if(key === 'controlDeCloroLibreResponsable.usuarioNombre') {
+    else if (key === 'controlDeCloroLibreResponsable.usuarioNombre') {
       if (item.controlDeCloroLibreResponsable && item.controlDeCloroLibreResponsable.usuarioNombre) {
         return item.controlDeCloroLibreResponsable.usuarioNombre;
       } else {
         return '';
       }
-    }else {
+    } else {
       return item[key];
     }
   };
@@ -121,21 +139,21 @@ function ListarControlDeCloroLibre() {
     const fechaFromat = format(fecha, 'yyyy-MM-dd HH:mm');
 
     const lowerCaseItem = {
-        controlDeCloroLibreFecha: fechaFromat,
-        controlDeCloroLibreGrifoPico : item.controlDeCloroLibreGrifoPico,
-        controlDeCloroLibreResultado : item.controlDeCloroLibreResultado,
-        controlDeCloroLibreObservaciones: item.controlDeCloroLibreObservaciones ? item.controlDeCloroLibreObservaciones.toLowerCase() : '',
-        controlDeCloroLibreResponsable: item.controlDeCloroLibreResponsable.usuarioNombre ? item.controlDeCloroLibreResponsable.usuarioNombre.toLowerCase() : '',
+      controlDeCloroLibreFecha: fechaFromat,
+      controlDeCloroLibreGrifoPico: item.controlDeCloroLibreGrifoPico,
+      controlDeCloroLibreResultado: item.controlDeCloroLibreResultado,
+      controlDeCloroLibreObservaciones: item.controlDeCloroLibreObservaciones ? item.controlDeCloroLibreObservaciones.toLowerCase() : '',
+      controlDeCloroLibreResponsable: item.controlDeCloroLibreResponsable.usuarioNombre ? item.controlDeCloroLibreResponsable.usuarioNombre.toLowerCase() : '',
     };
 
     if (
       (!filtros['fecha-desde'] || fechaFromat >= filtros['fecha-desde']) &&
-      (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) && 
-      (!filtros.pico || lowerCaseItem.controlDeCloroLibreGrifoPico.toString().startsWith(filtros.pico)) && 
-      (!filtros.resultado || lowerCaseItem.controlDeCloroLibreResultado.toString().startsWith(filtros.resultado)) && 
-      (!filtros.observaciones || lowerCaseItem.controlDeCloroLibreObservaciones.startsWith(filtros.observaciones)) && 
-      (!filtros.responsable || lowerCaseItem.controlDeCloroLibreResponsable.startsWith(filtros.responsable))     
-      ) {
+      (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) &&
+      (!filtros.pico || lowerCaseItem.controlDeCloroLibreGrifoPico.toString().startsWith(filtros.pico)) &&
+      (!filtros.resultado || lowerCaseItem.controlDeCloroLibreResultado.toString().startsWith(filtros.resultado)) &&
+      (!filtros.observaciones || lowerCaseItem.controlDeCloroLibreObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.responsable || lowerCaseItem.controlDeCloroLibreResponsable.startsWith(filtros.responsable))
+    ) {
       return true;
     }
     return false;
@@ -145,10 +163,48 @@ function ListarControlDeCloroLibre() {
     controlDeCloroLibreResponsable: (responsable) => responsable.usuarioNombre
   };
 
-  const handleEditCliente = (rowData) => {
+  const handleEditControl = (rowData) => {
     const id = rowData.Id;
-    navigate(`/modificar-controlDeCloroLibre/${id}`);
+    navigate(`/modificar-control-de-cloro-libre/${id}`);
   };
+
+  const handleDeleteControl = (rowData) => {
+    const id = rowData.Id;
+    axios.delete(`/borrar-control-de-cloro-libre/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 204) {
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 5000);
+          setDeleteItem(true);
+        } else {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setShowAlertWarning(true);
+          setTimeout(() => {
+            setShowAlertWarning(false);
+          }, 5000);
+        }
+        else if (error.request.status === 500) {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+  }
 
   return (
     <div>
@@ -169,6 +225,15 @@ function ListarControlDeCloroLibre() {
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
+      <Grid container spacing={0}>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}>
+          <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+          <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+          <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+        </Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+      </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
@@ -177,7 +242,8 @@ function ListarControlDeCloroLibre() {
         title="Control De Cloro Libre Responsable"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
-        onEditButton={handleEditCliente}
+        onEditButton={handleEditControl}
+        onDeleteButton={handleDeleteControl}
       />    </div>
   );
 }

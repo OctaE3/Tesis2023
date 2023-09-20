@@ -160,6 +160,9 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                     const controlesData = response.data;
                     console.log(controlesData);
                     const controlEncontrado = controlesData.find((control) => control.controlDeTemperaturaEnCamarasId.toString() === id.toString());
+                    if (!controlEncontrado) {
+                        navigate('/listar-control-de-temperatura-en-camaras')
+                    }
                     const fechaControl = controlEncontrado.controlDeTemperaturaEnCamarasFecha;
                     const fecha = new Date(fechaControl);
                     const fechaFormateada = fecha.toISOString().split('T')[0];
@@ -212,32 +215,35 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
     }
 
     const checkError = (nroC, fecha, hora, tempI, tempE) => {
-        if (nroC === undefined || nroC === null) {
+        if (nroC === undefined || nroC === null || nroC === "Seleccionar") {
             return false;
         }
-        else if (fecha === undefined || fecha === null) {
+        else if (fecha === undefined || fecha === null || fecha === '') {
             return false;
         }
-        else if (hora === undefined || hora === null || hora.trim() === '') {
+        else if (hora === undefined || hora === null || hora === '') {
             return false;
         }
-        else if (tempI === undefined || tempI === null || tempI.trim() === '') {
+        else if (tempI === undefined || tempI === null || tempI === '') {
             return false;
         }
-        else if (tempE === undefined || tempE === null || tempE.trim() === '') {
+        else if (tempE === undefined || tempE === null || tempE === '') {
             return false;
         }
         return true;
     }
 
     const handleFormSubmit = () => {
-        const fecha = control.controlDeTemperaturaEnCamarasFecha;
-        const fechaNueva = new Date(fecha);
-        fechaNueva.setDate(fechaNueva.getDate() + 2);
-        const fechaFormateada = format(fechaNueva, 'yyyy-MM-dd');
+        let fechaControl = new Date(control.controlDeReposicionDeCloroFecha);
+        let fechaPars = '';
+        if (fechaControl.toString() === 'Invalid Date') { }
+        else {
+            fechaControl.setDate(fechaControl.getDate() + 2);
+            fechaPars = format(fechaControl, 'yyyy-MM-dd');
+        }
         const data = {
             ...control,
-            controlDeTemperaturaEnCamarasFecha: fechaFormateada,
+            controlDeTemperaturaEnCamarasFecha: fechaPars === fechaPars === '' ? fechaControl : fechaPars,
         };
         console.log(data);
 
@@ -268,7 +274,8 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                        }, 5000);
+                            navigate('/listar-control-de-temperatura-en-camaras');
+                        }, 3000)
                     } else {
                         updateErrorAlert('No se logro modificar el control de temperatura en camaras, revise los datos ingresados.');
                         setShowAlertError(true);

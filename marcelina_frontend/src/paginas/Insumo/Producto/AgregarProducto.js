@@ -106,7 +106,12 @@ const AgregarProducto = () => {
         }
       })
         .then(response => {
-          setProductos(response.data);
+          setProductos(
+            response.data.map((producto) => ({
+              productoNombre: producto.productoNombre,
+              productoCodigo: producto.productoCodigo,
+            }))
+          );
         })
         .catch(error => {
           console.error(error);
@@ -139,23 +144,32 @@ const AgregarProducto = () => {
   };
 
   const checkError = (nombre, codigo) => {
+    console.log(nombre)
+    console.log(codigo)
     if (nombre === undefined || nombre === null || nombre === '') {
       return false;
     }
-    else if (codigo === codigo || codigo === null || codigo === '') {
+    else if (codigo === undefined || codigo === null || codigo === '') {
       return false;
     }
     return true;
   }
 
   const checkCod = (prod) => {
-    const producto = {
-      ...prod,
-      productoNombre: prod.productoNombre,
-      productoCodigo: prod.productoCodigo,
-    }
-    const productoEncontrado = productos.includes(producto);
-    return productoEncontrado;
+    console.log(prod);
+    let resp = false;
+    productos.forEach((producto) => {
+      if (producto.productoCodigo.toString() === prod.productoCodigo.toString()) {
+        resp = true;
+      } else {
+        if (producto.productoCodigo.toString() === prod.productoCodigo.toString() && producto.productoNombre.toString() === prod.productoNombre.toString()) {
+          resp = true;
+        }
+      }
+      if (resp) { return }
+    })
+    console.log(resp);
+    return resp;
   }
 
   const handleFormSubmit = (formData) => {

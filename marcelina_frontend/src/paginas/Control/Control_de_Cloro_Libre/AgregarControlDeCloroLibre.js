@@ -65,8 +65,8 @@ const AgregarControlDeCloroLibre = () => {
 
   const formFields = [
     { name: 'controlDeCloroLibreFecha', label: 'Fecha y Hora', type: 'datetime-local', color: 'primary' },
-    { name: 'controlDeCloroLibreGrifoPico', label: 'Número del Grifo', type: 'text', obligatorio: true, text: text, pattern: "^[0-9]{0,10}$", color: 'primary' },
-    { name: 'controlDeCloroLibreResultado', label: 'Resultado', type: 'text', obligatorio: true, text: text, pattern: "^[0-9]{0,10}$", color: 'primary' },
+    { name: 'controlDeCloroLibreGrifoPico', label: 'Número del Grifo', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", color: 'primary' },
+    { name: 'controlDeCloroLibreResultado', label: 'Resultado', type: 'text', obligatorio: true, pattern: "^[0-9]{0,4}\,?[0-9]{0,3}$", color: 'primary' },
     { name: 'controlDeCloroLibreObservaciones', label: 'Observaciones', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'secondary' },
   ];
 
@@ -125,7 +125,7 @@ const AgregarControlDeCloroLibre = () => {
   };
 
   const checkError = (fecha, grifo, resultado) => {
-    if (fecha === undefined || fecha === null) {
+    if (fecha === undefined || fecha === null || fecha === '') {
       return false;
     }
     else if (grifo === undefined || grifo === "" || grifo === null) {
@@ -138,12 +138,14 @@ const AgregarControlDeCloroLibre = () => {
   }
 
   const handleFormSubmit = (formData) => {
+    console.log(formData.controlDeCloroLibreResultado)
     const numResultado = parseFloat(formData.controlDeCloroLibreResultado);
     const controlDeCloroLibreConResponsable = {
       ...formData,
-      controlDeCloroLibreResultado: numResultado,
+      controlDeCloroLibreResultado: numResultado ? numResultado : undefined,
       controlDeCloroLibreResponsable: window.localStorage.getItem('user'),
     }
+    console.log(controlDeCloroLibreConResponsable)
 
     const fechaHora = controlDeCloroLibreConResponsable.controlDeCloroLibreFecha;
     const grifo = controlDeCloroLibreConResponsable.controlDeCloroLibreGrifoPico;

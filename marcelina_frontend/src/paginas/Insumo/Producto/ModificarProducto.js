@@ -136,7 +136,15 @@ const ModificarProducto = () => {
                 .then(response => {
                     const productosData = response.data;
                     const productoEncontrado = productosData.find((producto) => producto.productoId.toString() === id.toString());
-                    setProductos(productosData);
+                    if (!productoEncontrado) {
+                        navigate('/listar-producto')
+                    }
+                    setProductos(
+                        productosData.map((producto) => ({
+                            productoNombre: producto.productoNombre,
+                            productoCodigo: producto.productoCodigo,
+                        }))
+                    );
                     setProducto(productoEncontrado);
                 })
                 .catch(error => {
@@ -203,13 +211,20 @@ const ModificarProducto = () => {
 
 
     const checkCod = (prod) => {
-        const producto = {
-            ...prod,
-            productoNombre: prod.productoNombre,
-            productoCodigo: prod.productoCodigo,
-        }
-        const productoEncontrado = productos.includes(producto);
-        return productoEncontrado;
+        console.log(prod);
+        let resp = false;
+        productos.forEach((producto) => {
+            if (producto.productoCodigo.toString() === prod.productoCodigo.toString()) {
+                resp = true;
+            } else {
+                if (producto.productoCodigo.toString() === prod.productoCodigo.toString() && producto.productoNombre.toString() === prod.productoNombre.toString()) {
+                    resp = true;
+                }
+            }
+            if (resp) { return }
+        })
+        console.log(resp);
+        return resp;
     }
 
     const handleFormSubmit = () => {
@@ -237,7 +252,8 @@ const ModificarProducto = () => {
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
-                            }, 5000);
+                                navigate('/listar-producto');
+                            }, 3000)
                         } else {
                             updateErrorAlert('No se logro modificar el producto, revise los datos ingresados.')
                             setShowAlertError(true);

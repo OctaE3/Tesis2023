@@ -154,6 +154,9 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
                 .then(response => {
                     const controlesData = response.data;
                     const controlEncontrado = controlesData.find((control) => control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId.toString() === id.toString());
+                    if (!controlEncontrado) {
+                        navigate('/listar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias');
+                    }
                     const fechaControl = controlEncontrado.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
                     const fecha = new Date(fechaControl);
                     const fechaFormateada = fecha.toISOString().split('T')[0];
@@ -230,10 +233,12 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
 
     const handleFormSubmit = () => {
         const valorDepositos = depositos.map(deposito => deposito.value);
-        const fecha = control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
+        const fecha = control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha === '' ? undefined : control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
+        console.log(fecha);
         const fechaNueva = new Date(fecha);
+        console.log(fechaNueva.toString())
         fechaNueva.setDate(fechaNueva.getDate() + 1);
-        const fechaFormateada = fechaNueva.toISOString().split('T')[0];
+        const fechaFormateada = fechaNueva.toString() === 'Invalid Date' ? undefined : fechaNueva.toISOString().split('T')[0];
         console.log(fechaFormateada);
         const data = {
             ...control,
@@ -266,7 +271,8 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                        }, 5000);
+                            navigate('/listar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias');
+                        }, 3000);
                     } else {
                         updateErrorAlert('No se logro modificar el control de limpieza y desinfeccion de depositos de agua y canierias, revise los datos ingresados.');
                         setShowAlertError(true);
@@ -303,7 +309,7 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2}></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
-                                    <Typography component='h1' variant='h4'>Modificar Control De Cloro Libre</Typography>
+                                    <Typography component='h1' variant='h4'>Modificar Control de Limpieza y Desinfeccion de Depositos de Agua y Canierias</Typography>
                                     <div>
                                         <Button color="primary" onClick={handleClickOpen}>
                                             <IconButton className={blinking ? classes.blinkingButton : ''}>

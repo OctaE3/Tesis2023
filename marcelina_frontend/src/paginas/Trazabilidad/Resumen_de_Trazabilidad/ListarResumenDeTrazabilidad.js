@@ -120,10 +120,10 @@ function ListarResumenDeTrazabilidad() {
     { id: 'lote', label: 'Lote', type: 'select', options: lote },
     { id: 'producto', label: 'Producto', type: 'select', options: producto },
     { id: 'cantidad', label: 'Cantidad producida', type: 'text' },
-    { id: 'carne', label: 'Materia prima carnica', type: 'select', options: carne },
-    { id: 'adtivo', label: 'Materia prima no carnica',type: 'select', options: insumo },
+    { id: 'carne', label: 'Materia prima cárnica', type: 'select', options: carne },
+    { id: 'adtivo', label: 'Materia prima no cárnica',type: 'select', options: insumo },
     { id: 'cliente', label: 'Cliente', type: 'select', options: cliente },
-    { id: 'resposable', label: 'responsable', type: 'select',options: responsable },
+    { id: 'resposable', label: 'Responsable', type: 'select',options: responsable },
 
   ];
 
@@ -244,7 +244,7 @@ function ListarResumenDeTrazabilidad() {
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Diaria De Produccion</Typography>
+          <Typography component='h1' variant='h5'>Lista de Resumen De Trazabilidad</Typography>
           <Tooltip title={
             <Typography fontSize={16}>
               En esta pagina puedes comprobar todas las plantillas diarias de produccion en el sistema y puedes simplificar tu busqueda atraves de los filtros.
@@ -260,9 +260,9 @@ function ListarResumenDeTrazabilidad() {
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
-        dataKey="listarDiariaDeProduccion"
+        dataKey="listarResumenDeTrazabilidad"
         tableHeadCells={tableHeadCells}
-        title="Diaria De Produccion"
+        title="Resumen De Trazabilidad"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditCliente}

@@ -179,7 +179,7 @@ function ListarMonitoreoDeSSOPOPerativo() {
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Productos Quimicos</Typography>
+          <Typography component='h1' variant='h5'>Lista de Monitoreo de SSOP Operativo</Typography>
           <Tooltip title={
             <Typography fontSize={16}>
               En esta pagina puedes comprobar todos los productos quimicos en el sistema y puedes simplificar tu busqueda atraves de los filtros.
@@ -195,9 +195,9 @@ function ListarMonitoreoDeSSOPOPerativo() {
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
-        dataKey="listarProductoQuimicos"
+        dataKey="listarMonitoreoDeSSOPOperativo"
         tableHeadCells={tableHeadCells}
-        title="Productos Quimicos"
+        title="Monitoreo De SSOP Operativo"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditCliente}

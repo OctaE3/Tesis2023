@@ -66,8 +66,8 @@ const AgregarControlDeReposicionDeCloro = () => {
 
   const formFields = [
     { name: 'controlDeReposicionDeCloroFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeReposicionDeCloroCantidadDeAgua', label: 'Cantidad de Agua', type: 'text', text: text, obligatorio: true, pattern: "^[0-9]{0,30}$", adornment: 'si', unit: 'L', color: 'primary' },
-    { name: 'controlDeReposicionDeCloroCantidadDeCloroAdicionado', label: 'Cloro Adicionado', type: 'text', text: text, obligatorio: true, pattern: "^[0-9]{0,30}$", adornment: 'si', unit: 'L', color: 'primary' },
+    { name: 'controlDeReposicionDeCloroCantidadDeAgua', label: 'Cantidad de Agua', type: 'text', obligatorio: true, pattern: "^[0-9]{0,30}$", adornment: 'si', unit: 'L', color: 'primary' },
+    { name: 'controlDeReposicionDeCloroCantidadDeCloroAdicionado', label: 'Cloro Adicionado', type: 'text', obligatorio: true, pattern: "^[0-9]{0,30}$", adornment: 'si', unit: 'L', color: 'primary' },
     { name: 'controlDeReposicionDeCloroObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
   ];
 
@@ -126,7 +126,7 @@ const AgregarControlDeReposicionDeCloro = () => {
   };
 
   const checkError = (fecha, agua, cloro) => {
-    if (fecha === undefined || fecha === null) {
+    if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
       return false;
     }
     else if (agua === undefined || agua === null || agua === "") {
@@ -139,12 +139,17 @@ const AgregarControlDeReposicionDeCloro = () => {
   }
 
   const handleFormSubmit = (formData) => {
-    const fechaControl = new Date(formData.controlDeReposicionDeCloroFecha);
-    fechaControl.setDate(fechaControl.getDate() + 2);
-    const fechaPars = format(fechaControl, 'yyyy-MM-dd');
+    let fechaControl = new Date(formData.controlDeReposicionDeCloroFecha);
+    let fechaPars = '';
+    if (fechaControl.toString() === 'Invalid Date') { } 
+    else {
+      fechaControl.setDate(fechaControl.getDate() + 2);
+      fechaPars = format(fechaControl, 'yyyy-MM-dd');
+    }
+
     const controlDeReposicionConResponsable = {
       ...formData,
-      controlDeReposicionDeCloroFecha: fechaPars,
+      controlDeReposicionDeCloroFecha: fechaPars === fechaPars === '' ? fechaControl : fechaPars,
       controlDeReposicionDeCloroResponsable: window.localStorage.getItem('user'),
     }
 

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
-import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -37,10 +37,6 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
-    },
-    auto: {
-        marginTop: theme.spacing(2),
-        marginBottom: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -88,12 +84,12 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-const ModificarControlDeMejorasEnInstalaciones = () => {
+const ModificarUsuario = () => {
 
     const classes = useStyles();
     const { id } = useParams();
-    const [control, setControl] = useState({});
-    const [controles, setControles] = useState([]);
+    const [usuario, setUsuario] = useState({});
+    const [usuarios, setUsuarios] = useState([]);
 
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
@@ -108,11 +104,11 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
     const navigate = useNavigate();
 
     const [alertSuccess, setAlertSuccess] = useState({
-        title: 'Correcto', body: 'Se logro modificar el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description'
+        title: 'Correcto', body: 'Usuario modificada con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el control de mejoras en instalaciones, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logro modificar el usuario, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
     const [alertWarning, setAlertWarning] = useState({
@@ -135,34 +131,27 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
     };
 
     useEffect(() => {
-        const obtenerControles = () => {
-            axios.get('/listar-control-de-mejoras-en-instalaciones', {
+        const obtenerUsuarios = () => {
+            axios.get('/listar-usuarios', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             })
                 .then(response => {
-                    const controlesData = response.data;
-                    const controlEncontrado = controlesData.find((control) => control.controlDeMejorasEnInstalacionesId.toString() === id.toString());
-                    if (!controlEncontrado) {
-                        navigate('/listar-control-de-mejoras-en-instalaciones');
+                    const usuariosData = response.data;
+                    const usuarioEncontrada = usuariosData.find((user) => user.usuarioId.toString() === id.toString());
+                    if (!usuarioEncontrada) {
+                        navigate('/listar-usuarios');
                     }
-                    const fechaControl = controlEncontrado.controlDeMejorasEnInstalacionesFecha;
-                    const fecha = new Date(fechaControl);
-                    const fechaFormateada = fecha.toISOString().split('T')[0];
-                    const controlConFecha = {
-                        ...controlEncontrado,
-                        controlDeMejorasEnInstalacionesFecha: fechaFormateada,
-                    }
-                    setControl(controlConFecha);
-                    console.log(controlConFecha)
+                    setUsuarios(usuariosData);
+                    setUsuario(usuarioEncontrada);
                 })
                 .catch(error => {
                     console.error(error);
                 });
         };
 
-        obtenerControles();
+        obtenerUsuarios();
     }, []);
 
     useEffect(() => {
@@ -181,115 +170,108 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
     }, []);
 
     const handleChange = event => {
-        const { name, value, id, type } = event.target;
-        if (type === "date") {
-            setControl(prevState => ({
-                ...prevState,
-                [name]: value,
-            }));
+        const { name, value } = event.target;
+        if (name === 'usuarioNombre') {
+            const regex = new RegExp("^[A-Za-z\\s]{0,50}$");
+            if (regex.test(value)) {
+                setUsuario(prevState => ({
+                    ...prevState,
+                    [name]: value,
+                }));
+            }
         } else {
-            if (name === "controlDeMejorasEnInstalacionesSector") {
-                const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,50}$");
-                if (regex.test(value)) {
-                    setControl(prevState => ({
-                        ...prevState,
-                        [name]: value,
-                    }));
-                }
-            } else {
-                const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
-                if (regex.test(value)) {
-                    setControl(prevState => ({
-                        ...prevState,
-                        [name]: value,
-                    }));
-                }
+            const regex = new RegExp("^[A-Za-z\\s]{0,150}$");
+            if (regex.test(value)) {
+                setUsuario(prevState => ({
+                    ...prevState,
+                    [name]: value,
+                }));
             }
         }
     }
 
-    const checkError = (fecha, sector, defecto, mejora) => {
-        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
+    const checkErrorUsuario = (nombre, pass) => {
+        if (nombre === undefined || nombre === null || nombre === '') {
             return false;
         }
-        else if (sector === undefined || sector === "" || sector === null) {
-            return false;
-        }
-        else if (defecto === undefined || defecto === "" || defecto === null) {
-            return false;
-        }
-        else if (mejora === undefined || mejora === "" || mejora === null) {
+        else if (pass === undefined || pass === null || pass === '') {
             return false;
         }
         return true;
     }
 
+    const checkUsuario = (data) => {
+        let resp = true;
+        usuarios.forEach((user) => {
+            if (user.usuarioNombre.toString() === data.usuarioNombre.toString()) {
+                resp = false;
+            }
+            else if (user.usuarioNombre.toString() === data.usuarioNombre.toString() && user.usuarioContrasenia.toString() === data.usuarioContrasenia.toString()) {
+                resp = false;
+            }
+
+            if (resp === false) { return }
+        })
+        return resp;
+    }
+
     const handleFormSubmit = () => {
-        let fechaControl = new Date(control.controlDeMejorasEnInstalacionesFecha);
-        let fechaPars = '';
-        if (fechaControl.toString() === 'Invalid Date') {
-          fechaControl.setDate(null);
-        } else {
-          fechaControl.setDate(fechaControl.getDate() + 2);
-          fechaPars = format(fechaControl, 'yyyy-MM-dd')
-        }
-
-        const data = {
-            ...control,
-            controlDeMejorasEnInstalacionesFecha: fechaPars === '' ? fechaControl : fechaPars,
-        };
+        const data = usuario;
         console.log(data);
+        const checkErrorUser = checkErrorUsuario(data.usuarioNombre, data.usuarioContrasenia);
+        const checkUser = checkUsuario(data);
 
-        const fechaData = data.controlDeMejorasEnInstalacionesFecha;
-        const sector = data.controlDeMejorasEnInstalacionesSector;
-        const defecto = data.controlDeMejorasEnInstalacionesDefecto;
-        const mejora = data.controlDeMejorasEnInstalacionesMejoraRealizada;
-
-        const check = checkError(fechaData, sector, defecto, mejora);
-
-        if (check === false) {
+        if (checkErrorUser === false) {
             updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
             }, 7000);
         } else {
-            axios.put(`/modificar-control-de-mejoras-en-instalaciones/${id}`, data, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    "Content-Type": "application/json"
-                }
-            })
-                .then(response => {
-                    if (response.status === 200) {
-                        setShowAlertSuccess(true);
-                        setTimeout(() => {
-                            setShowAlertSuccess(false);
-                            navigate('/listar-control-de-mejoras-en-instalaciones');
-                        }, 3000);
-                      } else {
-                        updateErrorAlert('No se logro modificar el control de mejoras en instalaciones, revise los datos ingresados.');
-                        setShowAlertError(true);
-                        setTimeout(() => {
-                          setShowAlertError(false);
-                        }, 5000);
-                      }
+            if (checkUser === false) {
+                updateErrorAlert(`El Usuario ingresado ya existe, no se puede repetir un nombre de usuario ya ingresado.`);
+                setShowAlertError(true);
+                setTimeout(() => {
+                    setShowAlertError(false);
+                }, 7000);
+            } else {
+                axios.post(`/modificar-localidad/${data.localidadId}`, data, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        "Content-Type": "application/json"
+                    }
                 })
-                .catch(error => {
-                    if (error.request.status === 401) {
-                        setShowAlertWarning(true);
-                        setTimeout(() => {
-                          setShowAlertWarning(false);
-                        }, 5000);
-                      }
-                      else if (error.request.status === 500) {
-                        updateErrorAlert('No se logro modificar el control de mejoras en instalaciones, revise los datos ingresados.');
-                        setShowAlertError(true);
-                        setTimeout(() => {
-                          setShowAlertError(false);
-                        }, 5000);
-                      }
-                })
+                    .then(response => {
+                        if (response.status === 200) {
+                            setShowAlertSuccess(true);
+                            setTimeout(() => {
+                                setShowAlertSuccess(false);
+                                navigate('/listar-usuarios');
+                            }, 3000)
+                        } else {
+                            updateErrorAlert('No se logro modificar la localidad, revise los datos ingresados.');
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 5000);
+                        }
+                    })
+                    .catch(error => {
+                        if (error.request.status === 401) {
+                            setShowAlertWarning(true);
+                            setTimeout(() => {
+                                setShowAlertWarning(false);
+                            }, 5000);
+                        }
+                        else if (error.request.status === 500) {
+                            updateErrorAlert('No se logro modificar la localidad, revise los datos ingresados.');
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 5000);
+                        }
+                    })
+            }
         }
     };
 
@@ -303,7 +285,7 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2}></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
-                                    <Typography component='h1' variant='h4'>Modificar Control de Mejoras en Instalaciones</Typography>
+                                    <Typography component='h1' variant='h4'>Modificar Usuario</Typography>
                                     <div>
                                         <Button color="primary" onClick={handleClickOpen}>
                                             <IconButton className={blinking ? classes.blinkingButton : ''}>
@@ -322,23 +304,17 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar las mejoras que se realizan en las instalaciones, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes registrar los usuarios, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
-                                                        Este formulario cuenta con 4 campos:
+                                                        Este formulario cuenta con 2 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en que se realizó de la mejora de la instalación.
+                                                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre de usuario y no se permite ingresar una que ya esta registrado.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Sector</span>: en este campo se registrará en que sector se realizó la mejora.
-                                                            </li>
-                                                            <li>
-                                                                <span className={classes.liTitleBlue}>Defecto</span>: en este campo se registrará el defecto que se encontró.
-                                                            </li>
-                                                            <li>
-                                                                <span className={classes.liTitleBlue}>Mejora Realizada</span>: en este campo se pueden registrar la mejora que se realizó.
+                                                                <span className={classes.liTitleBlue}>Contraseña</span>: en este campo se debe ingresar la contraseña del usuario.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -386,11 +362,12 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
-                                            label="Fecha"
-                                            defaultValue={new Date()}
-                                            type="date"
-                                            name="controlDeMejorasEnInstalacionesFecha"
-                                            value={control.controlDeMejorasEnInstalacionesFecha}
+                                            required={true}
+                                            label="Nombre"
+                                            defaultValue="Nombre"
+                                            type="text"
+                                            name="usuarioNombre"
+                                            value={usuario.usuarioNombre}
                                             onChange={handleChange}
                                         />
                                     </Grid>
@@ -403,52 +380,12 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
-                                            label="Sector"
-                                            id="^[A-Za-z0-9\\s,.]{0,50}$"
-                                            defaultValue="Sector"
+                                            required={true}
+                                            label="Contraseña"
+                                            defaultValue="Contraseña"
                                             type="text"
-                                            name="controlDeMejorasEnInstalacionesSector"
-                                            value={control.controlDeMejorasEnInstalacionesSector}
-                                            onChange={handleChange}
-                                        />
-                                    </Grid>
-                                    <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            minRows={3}
-                                            multiline
-                                            autoFocus
-                                            className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
-                                            color="primary"
-                                            margin="normal"
-                                            variant="outlined"
-                                            defaultValue="Defecto"
-                                            label="Defecto"
-                                            id="^[A-Za-z0-9\\s,.]{0,250}$"
-                                            type="text"
-                                            name="controlDeMejorasEnInstalacionesDefecto"
-                                            value={control.controlDeMejorasEnInstalacionesDefecto}
-                                            onChange={handleChange}
-                                        />
-                                    </Grid>
-                                    <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            minRows={3}
-                                            multiline
-                                            autoFocus
-                                            className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
-                                            id="^[A-Za-z0-9\\s,.]{0,250}$"
-                                            color="primary"
-                                            margin="normal"
-                                            variant="outlined"
-                                            label="Mejora Realizada"
-                                            defaultValue="Mejora Realizada"
-                                            type="text"
-                                            name="controlDeMejorasEnInstalacionesMejoraRealizada"
-                                            value={control.controlDeMejorasEnInstalacionesMejoraRealizada}
+                                            name="usuarioContrasenia"
+                                            value={usuario.usuarioContrasenia}
                                             onChange={handleChange}
                                         />
                                     </Grid>
@@ -470,4 +407,4 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
     );
 };
 
-export default ModificarControlDeMejorasEnInstalaciones;
+export default ModificarUsuario;

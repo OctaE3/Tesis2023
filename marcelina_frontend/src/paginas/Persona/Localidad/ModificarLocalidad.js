@@ -140,6 +140,9 @@ const ModificarLocalidad = () => {
                 .then(response => {
                     const localidadesData = response.data;
                     const localidadEncontrada = localidadesData.find((localidad) => localidad.localidadId.toString() === id.toString());
+                    if (!localidadEncontrada) {
+                        navigate('/listar-localidad');
+                    }
                     setLocalidades(localidadesData);
                     setLocalidad(localidadEncontrada);
                 })
@@ -179,10 +182,10 @@ const ModificarLocalidad = () => {
     }
 
     const checkErrorLocalidad = (ciudad, departamento) => {
-        if (ciudad === undefined || ciudad === null || ciudad.trim() === '') {
+        if (ciudad === undefined || ciudad === null || ciudad === '') {
             return false;
         }
-        else if (departamento === undefined || departamento === null || departamento.trim() === '') {
+        else if (departamento === undefined || departamento === null || departamento === '') {
             return false;
         }
         return true;
@@ -204,7 +207,7 @@ const ModificarLocalidad = () => {
             }, 7000);
         } else {
             if (localidadesExisten === false) {
-                axios.post(`/modificar-localidad/${data.localidadId}`, data, {
+                axios.put(`/modificar-localidad/${data.localidadId}`, data, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
                         "Content-Type": "application/json"
@@ -215,7 +218,8 @@ const ModificarLocalidad = () => {
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
-                            }, 5000);
+                                navigate('/listar-localidad');
+                            }, 3000)
                         } else {
                             updateErrorAlert('No se logro modificar la localidad, revise los datos ingresados.');
                             setShowAlertError(true);
@@ -337,7 +341,6 @@ const ModificarLocalidad = () => {
                                             margin="normal"
                                             variant="outlined"
                                             required={true}
-                                            helperText="Este campo es Obligatorio"
                                             label="Ciudad"
                                             defaultValue="Ciudad"
                                             type="text"
@@ -356,7 +359,6 @@ const ModificarLocalidad = () => {
                                             margin="normal"
                                             variant="outlined"
                                             required={true}
-                                            helperText="Este campo es Obligatorio"
                                             label="Departamento"
                                             defaultValue="Departamento"
                                             type="text"

@@ -151,7 +151,7 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
       setTimeout(() => {
         setShowAlertError(false);
       }, 7000);
-    } else if (fechaHora === undefined || fechaHora === null) {
+    } else if (fechaHora === undefined || fechaHora === null || fechaHora === '') {
       updateErrorAlert(`Seleccione una fecha y hora, no deje el campo vacío.`);
       setShowAlertError(true);
       setTimeout(() => {

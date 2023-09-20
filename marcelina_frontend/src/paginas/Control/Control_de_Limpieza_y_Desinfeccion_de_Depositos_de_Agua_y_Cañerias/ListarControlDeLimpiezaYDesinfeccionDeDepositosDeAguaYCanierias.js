@@ -3,6 +3,7 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +31,24 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
+  const [deleteItem, setDeleteItem] = useState(false);
   const navigate = useNavigate();
+
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se elimino el control de limpieza y desinfección con éxito!', severity: 'success', type: 'description'
+  });
+
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logró eliminar el control de limpieza y desinfección, recargue la pagina.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,8 +65,8 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
         });
 
         const data = response.data.map((controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias) => ({
-            ...controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias,
-            Id: controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId,
+          ...controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias,
+          Id: controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId,
         }));
         const ResponsableData = ResponsableResponse.data;
 
@@ -60,22 +78,22 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
     };
 
     fetchData();
-  }, []);
+  }, [deleteItem]);
 
   const tableHeadCells = [
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha', numeric: false, disablePadding: false, label: 'Fecha' },
-    { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', numeric: false, disablePadding: false, label: 'Deposito'},
+    { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', numeric: false, disablePadding: false, label: 'Deposito' },
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias', numeric: false, disablePadding: false, label: 'Canieria' },
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable', numeric: false, disablePadding: false, label: 'Resposnsable' }
   ];
- 
+
   const filters = [
-    { id: 'fecha', label: 'Fecha', type: 'datetime', options: ['desde', 'hasta']},
-    { id: 'deposito', label: 'Deposito', type: 'select', options: ['Deposito de Agua 1', 'Deposito de Agua 2', 'Deposito de Agua 3']},
+    { id: 'fecha', label: 'Fecha', type: 'datetime', options: ['desde', 'hasta'] },
+    { id: 'deposito', label: 'Deposito', type: 'select', options: ['Deposito de Agua 1', 'Deposito de Agua 2', 'Deposito de Agua 3'] },
     { id: 'canieria', label: 'Canieria', type: 'text' },
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select',options: responsable },
+    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -98,44 +116,44 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
     if (key === 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha') {
       if (item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha) {
         const fechaArray = item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
-        const fecha = new Date(fechaArray[0], fechaArray[1] - 1, fechaArray[2], fechaArray[3], fechaArray[4]);
-        return format(fecha, 'yyyy-MM-dd HH:mm');
+        const fecha = new Date(fechaArray);
+        return format(fecha, 'dd-MM-yyyy');
       } else {
         return '';
       }
     }
-    else if(key === 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre') {
+    else if (key === 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre') {
       if (item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable && item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre) {
         return item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre;
       } else {
         return '';
       }
-    }else {
+    } else {
       return item[key];
     }
   };
 
   const filteredData = data.filter((item) => {
     const fechaArray = item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
-    const fecha = new Date(fechaArray[0], fechaArray[1] - 1, fechaArray[2], fechaArray[3], fechaArray[4]);
-    const fechaFromat = format(fecha, 'yyyy-MM-dd HH:mm');
+    const fecha = new Date(fechaArray);
+    const fechaFromat = format(fecha, 'dd/MM/yyyy');
 
     const lowerCaseItem = {
-        controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha: fechaFromat,
-        controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito : item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.toLowerCase() : '',
-        controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias : item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias,
-        controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones.toLowerCase() : '',
-        controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre.toLowerCase() : '',
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha: fechaFromat,
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito : '',
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias,
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones.toLowerCase() : '',
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre.toLowerCase() : '',
     };
 
     if (
       (!filtros['fecha-desde'] || fechaFromat >= filtros['fecha-desde']) &&
-      (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) && 
-      (!filtros.deposito || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.startsWith(filtros.deposito)) && 
-      (!filtros.canieria || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias.toString().startsWith(filtros.canieria)) && 
-      (!filtros.observaciones || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones.startsWith(filtros.observaciones)) && 
-      (!filtros.responsable || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.startsWith(filtros.responsable))     
-      ) {
+      (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) &&
+      (!filtros.deposito || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.startsWith(filtros.deposito)) &&
+      (!filtros.canieria || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias.toString().startsWith(filtros.canieria)) &&
+      (!filtros.observaciones || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.responsable || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.startsWith(filtros.responsable))
+    ) {
       return true;
     }
     return false;
@@ -145,10 +163,48 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
     controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable: (responsable) => responsable.usuarioNombre
   };
 
-  const handleEditCliente = (rowData) => {
+  const handleEditControl = (rowData) => {
     const id = rowData.Id;
     navigate(`/modificar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-canierias/${id}`);
   };
+
+  const handleDeleteControl = (rowData) => {
+    const id = rowData.Id;
+    axios.delete(`/borrar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-canierias/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 204) {
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 5000);
+          setDeleteItem(true);
+        } else {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setShowAlertWarning(true);
+          setTimeout(() => {
+            setShowAlertWarning(false);
+          }, 5000);
+        }
+        else if (error.request.status === 500) {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+  }
 
   return (
     <div>
@@ -169,6 +225,15 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
+      <Grid container spacing={0}>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}>
+          <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+          <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+          <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+        </Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+      </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
@@ -177,7 +242,8 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
         title="Control De Limpieza Y Desinfeccion De Depositos De Agua Y Canierias"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
-        onEditButton={handleEditCliente}
+        onEditButton={handleEditControl}
+        onDeleteButton={handleDeleteControl}
       />    </div>
   );
 }

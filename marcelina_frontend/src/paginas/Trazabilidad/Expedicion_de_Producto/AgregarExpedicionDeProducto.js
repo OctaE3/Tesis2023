@@ -88,6 +88,7 @@ const AgregarExpedicionDeProducto = () => {
 
   const classes = useStyles();
   const [expedicionDeProducto, setExpedicionDeProducto] = useState({});
+  const [expediciones, setExpediciones] = useState([]);
   const [lotes, setLotes] = useState('');
   const [loteSelect, setLoteSelect] = useState('');
   const [clientes, setClientes] = useState('');
@@ -111,6 +112,25 @@ const AgregarExpedicionDeProducto = () => {
   };
 
   useEffect(() => {
+    const obtenerExpedicion = () => {
+      axios.get('/listar-expedicion-de-productos', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+        .then(response => {
+          setExpediciones(
+            response.data.map((exp) => ({
+              documento: exp.expedicionDeProductoDocumento,
+            }))
+          );
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    };
+
+
     const obtenerLotes = () => {
       axios.get('/listar-lotes', {
         headers: {
@@ -151,6 +171,7 @@ const AgregarExpedicionDeProducto = () => {
         });
     };
 
+    obtenerExpedicion();
     obtenerLotes();
     obtenerClientes();
 
@@ -183,7 +204,7 @@ const AgregarExpedicionDeProducto = () => {
   }
 
   const checkError = (fecha, cliente, documento) => {
-    if (fecha === undefined || fecha === null) {
+    if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
       return false;
     }
     else if (cliente === undefined || cliente === null || cliente === "Seleccionar") {
@@ -200,13 +221,26 @@ const AgregarExpedicionDeProducto = () => {
     if (lotes) {
       const resul = lotes.forEach((lote) => {
         console.log(lote);
-        if (lote.selectValue === '' || lote.textFieldValue === '') {
+        if (lote.selectValue === '' || lote.textFieldValue === '' || lote.selectValue.value === "Seleccionar" || lote.textFieldValue === 0) {
           return false;
         } else { }
       })
       console.log(resul);
       return resul ? resul : true;
     } else { return false }
+  }
+
+  const checkDoc = (documento) => {
+    let resp = true;
+    console.log(expediciones);
+    expediciones.forEach((exp) => {
+      if (exp.documento.toString() === documento.toString()) {
+        resp = false;
+      }
+
+      if (resp === false) { return }
+    })
+    return resp;
   }
 
   const handleFormSubmit = (formData) => {
@@ -313,41 +347,50 @@ const AgregarExpedicionDeProducto = () => {
               setShowAlertError(false);
             }, 7000);
           } else {
-            axios.post('/agregar-expedicion-de-producto', data, {
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                "Content-Type": "application/json"
-              }
-            })
-              .then(response => {
-                if (response.status === 201) {
-                  setShowAlertSuccess(true);
-                  setTimeout(() => {
-                    setShowAlertSuccess(false);
-                  }, 5000);
-                } else {
-                  updateErrorAlert('No se logro agregar la expedición de producto, revise los datos ingresados.')
-                  setShowAlertError(true);
-                  setTimeout(() => {
-                    setShowAlertError(false);
-                  }, 5000);
+            const checkD = checkDoc(updateFormData.expedicionDeProductoDocumento);
+            if (checkD === false) {
+              updateErrorAlert(`El documento ingresado ya le pertenece a otra expedición de producto.`);
+              setShowAlertError(true);
+              setTimeout(() => {
+                setShowAlertError(false);
+              }, 7000);
+            } else {
+              axios.post('/agregar-expedicion-de-producto', data, {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                  "Content-Type": "application/json"
                 }
               })
-              .catch(error => {
-                if (error.request.status === 401) {
-                  setShowAlertWarning(true);
-                  setTimeout(() => {
-                    setShowAlertWarning(false);
-                  }, 5000);
-                }
-                else if (error.request.status === 500) {
-                  updateErrorAlert('No se logro agregar la expedición de producto, revise los datos ingresados.');
-                  setShowAlertError(true);
-                  setTimeout(() => {
-                    setShowAlertError(false);
-                  }, 5000);
-                }
-              })
+                .then(response => {
+                  if (response.status === 201) {
+                    setShowAlertSuccess(true);
+                    setTimeout(() => {
+                      setShowAlertSuccess(false);
+                    }, 5000);
+                  } else {
+                    updateErrorAlert('No se logro agregar la expedición de producto, revise los datos ingresados.')
+                    setShowAlertError(true);
+                    setTimeout(() => {
+                      setShowAlertError(false);
+                    }, 5000);
+                  }
+                })
+                .catch(error => {
+                  if (error.request.status === 401) {
+                    setShowAlertWarning(true);
+                    setTimeout(() => {
+                      setShowAlertWarning(false);
+                    }, 5000);
+                  }
+                  else if (error.request.status === 500) {
+                    updateErrorAlert('No se logro agregar la expedición de producto, revise los datos ingresados.');
+                    setShowAlertError(true);
+                    setTimeout(() => {
+                      setShowAlertError(false);
+                    }, 5000);
+                  }
+                })
+            }
           }
         } else {
           updateErrorAlert(`La cantidad ingresada para vender del/los lote/lotes: ${resultado} es mayor a la disponible.`);

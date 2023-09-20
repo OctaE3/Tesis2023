@@ -3,6 +3,7 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { format } from 'date-fns';
@@ -31,7 +32,24 @@ function ListarControlDeProductosQuimicos() {
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
   const [proveedor, setProveedor] = useState([]);
+  const [deleteItem, setDeleteItem] = useState(false);
   const navigate = useNavigate();
+
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se elimino el control de productos químicos con éxito!', severity: 'success', type: 'description'
+  });
+
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logró eliminar el control de productos químicos, recargue la pagina.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,8 +72,8 @@ function ListarControlDeProductosQuimicos() {
 
 
         const data = response.data.map((controlDeProductosQuimicos) => ({
-            ...controlDeProductosQuimicos,
-            Id: controlDeProductosQuimicos.controlDeProductosQuimicosId,
+          ...controlDeProductosQuimicos,
+          Id: controlDeProductosQuimicos.controlDeProductosQuimicosId,
         }));
         const ResponsableData = ResponsableResponse.data;
         const ProveedorData = ProveedorResponse.data;
@@ -69,7 +87,7 @@ function ListarControlDeProductosQuimicos() {
     };
 
     fetchData();
-  }, []);
+  }, [deleteItem]);
 
   const tableHeadCells = [
     { id: 'controlDeProductosQuimicosFecha', numeric: false, disablePadding: false, label: 'Fecha' },
@@ -79,14 +97,14 @@ function ListarControlDeProductosQuimicos() {
     { id: 'controlDeProductosQuimicosMotivoDeRechazo', numeric: false, disablePadding: false, label: 'Motivo de rechazo' },
     { id: 'controlDeProductosQuimicosResponsable', numeric: false, disablePadding: false, label: 'Responsable' },
   ];
- 
+
   const filters = [
-    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta']},
+    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
     { id: 'nombre', label: 'Nombre', type: 'text' },
     { id: 'proveedor', label: 'Proveedor', type: 'select', options: proveedor },
     { id: 'nroLote', label: 'NroLote', type: 'text' },
     { id: 'motivoDeRechazo', label: 'MotivoDeRechazo', type: 'text' },
-    { id: 'resposable', label: 'responsable', type: 'select',options: responsable },
+    { id: 'resposable', label: 'responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -113,14 +131,14 @@ function ListarControlDeProductosQuimicos() {
       } else {
         return '';
       }
-    } 
-    else if(key === 'controlDeProductosQuimicosResponsable.usuarioNombre') {
+    }
+    else if (key === 'controlDeProductosQuimicosResponsable.usuarioNombre') {
       if (item.controlDeProductosQuimicosResponsable && item.controlDeProductosQuimicosResponsable.usuarioNombre) {
         return item.controlDeProductosQuimicosResponsable.usuarioNombre;
       } else {
         return '';
       }
-    }else if(key === 'controlDeProductosQuimicosProveedor.proveedorNombre') {
+    } else if (key === 'controlDeProductosQuimicosProveedor.proveedorNombre') {
       if (item.controlDeProductosQuimicosProveedor && item.controlDeProductosQuimicosProveedor.proveedorNombre) {
         return item.controlDeProductosQuimicosProveedor.proveedorNombre;
       } else {
@@ -137,19 +155,19 @@ function ListarControlDeProductosQuimicos() {
       controlDeProductosQuimicosFecha: new Date(item.controlDeProductosQuimicosFecha),
       controlDeProductosQuimicosProveedor: item.controlDeProductosQuimicosProveedor.proveedorNombre ? item.controlDeProductosQuimicosProveedor.proveedorNombre.toLowerCase() : '',
       controlDeProductosQuimicosLote: item.controlDeProductosQuimicosLote.toLowerCase(),
-      controlDeProductosQuimicosMotivoDeRechazo: item.controlDeProductosQuimicosMotivoDeRechazo.toLowerCase(),
+      controlDeProductosQuimicosMotivoDeRechazo: item.controlDeProductosQuimicosMotivoDeRechazo ? item.controlDeProductosQuimicosMotivoDeRechazo.toLowerCase() : '',
       controlDeProductosQuimicosResponsable: item.controlDeProductosQuimicosResponsable.usuarioNombre ? item.controlDeProductosQuimicosResponsable.usuarioNombre.toLowerCase() : '',
     };
 
     if (
       (!filtros.nombre || lowerCaseItem.controlDeProductosQuimicosProductoQuimico.startsWith(filtros.nombre)) &&
       (!filtros['fecha-desde'] || lowerCaseItem.controlDeProductosQuimicosFecha >= new Date(filtros['fecha-desde'])) &&
-      (!filtros['fecha-hasta'] || lowerCaseItem.controlDeProductosQuimicosFecha <= new Date(filtros['fecha-hasta'])) && 
-      (!filtros.proveedor || lowerCaseItem.controlDeProductosQuimicosProveedor.startsWith(filtros.proveedor)) && 
+      (!filtros['fecha-hasta'] || lowerCaseItem.controlDeProductosQuimicosFecha <= new Date(filtros['fecha-hasta'])) &&
+      (!filtros.proveedor || lowerCaseItem.controlDeProductosQuimicosProveedor.startsWith(filtros.proveedor)) &&
       (!filtros.nroLote || lowerCaseItem.controlDeProductosQuimicosLote.startsWith(filtros.nroLote)) &&
-      (!filtros.motivoDeRechazo|| lowerCaseItem.controlDeProductosQuimicosMotivoDeRechazo.startsWith(filtros.motivoDeRechazo)) &&
-      (!filtros.responsable || lowerCaseItem.controlDeProductosQuimicosResponsable.startsWith(filtros.responsable)) 
-      ) {
+      (!filtros.motivoDeRechazo || lowerCaseItem.controlDeProductosQuimicosMotivoDeRechazo.startsWith(filtros.motivoDeRechazo)) &&
+      (!filtros.responsable || lowerCaseItem.controlDeProductosQuimicosResponsable.startsWith(filtros.responsable))
+    ) {
       return true;
     }
     return false;
@@ -160,10 +178,48 @@ function ListarControlDeProductosQuimicos() {
     controlDeProductosQuimicosResponsable: (responsable) => responsable.usuarioNombre
   };
 
-  const handleEditCliente = (rowData) => {
+  const handleEditControl = (rowData) => {
     const id = rowData.Id;
     navigate(`/modificar-control-de-productos-quimicos/${id}`);
   };
+
+  const handleDeleteControl = (rowData) => {
+    const id = rowData.Id;
+    axios.delete(`/borrar-control-de-productos-quimicos/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 204) {
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 5000);
+          setDeleteItem(true);
+        } else {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setShowAlertWarning(true);
+          setTimeout(() => {
+            setShowAlertWarning(false);
+          }, 5000);
+        }
+        else if (error.request.status === 500) {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+  }
 
   return (
     <div>
@@ -184,6 +240,15 @@ function ListarControlDeProductosQuimicos() {
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
+      <Grid container spacing={0}>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}>
+          <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+          <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+          <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+        </Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+      </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
@@ -192,7 +257,8 @@ function ListarControlDeProductosQuimicos() {
         title="Productos Quimicos"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
-        onEditButton={handleEditCliente}
+        onEditButton={handleEditControl}
+        onDeleteButton={handleDeleteControl}
       />    </div>
   );
 }

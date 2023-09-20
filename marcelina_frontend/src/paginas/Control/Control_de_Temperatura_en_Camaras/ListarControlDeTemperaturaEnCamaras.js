@@ -3,6 +3,7 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { format } from 'date-fns';
@@ -30,7 +31,24 @@ function ListarControlDeTemperaturaEnCamaras() {
   const [responsable, setResponsable] = useState([]);
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
+  const [deleteItem, setDeleteItem] = useState(false);
   const navigate = useNavigate();
+
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se elimino el control de temperaturas en cámaras con éxito!', severity: 'success', type: 'description'
+  });
+
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logró eliminar el control de temperaturas en cámaras, recargue la pagina.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,8 +65,8 @@ function ListarControlDeTemperaturaEnCamaras() {
         });
 
         const data = response.data.map((controlDeTemperaturaEnCamaras) => ({
-            ...controlDeTemperaturaEnCamaras,
-            Id: controlDeTemperaturaEnCamaras.controlDeTemperaturaEnCamarasId,
+          ...controlDeTemperaturaEnCamaras,
+          Id: controlDeTemperaturaEnCamaras.controlDeTemperaturaEnCamarasId,
         }));
         const ResponsableData = ResponsableResponse.data;
 
@@ -60,7 +78,7 @@ function ListarControlDeTemperaturaEnCamaras() {
     };
 
     fetchData();
-  }, []);
+  }, [deleteItem]);
 
   const tableHeadCells = [
     { id: 'controlDeTemperaturaEnCamarasNroCamara', numeric: false, disablePadding: false, label: 'Número de Cámara' },
@@ -72,11 +90,11 @@ function ListarControlDeTemperaturaEnCamaras() {
 
   const filters = [
     { id: 'numero', label: 'Número de Cámara', type: 'select', options: ['Camara 1', 'Camara 2', 'Camara 3', 'Camara 4', 'Camara 5', 'Camara 6'] },
-    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta']},
+    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
     { id: 'hora', label: 'Hora', type: 'text' },
     { id: 'interna', label: 'Temperatura Interna', type: 'text' },
-    { id: 'externa', label: 'Temperatura Externa', type: 'text'},
-    
+    { id: 'externa', label: 'Temperatura Externa', type: 'text' },
+
   ];
 
   const handleFilter = (filter) => {
@@ -111,17 +129,17 @@ function ListarControlDeTemperaturaEnCamaras() {
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-        controlDeTemperaturaEnCamarasNroCamara: item.controlDeTemperaturaEnCamarasNroCamara.toLowerCase(),
-        controlDeTemperaturaEnCamarasFecha: new Date(item.controlDeTemperaturaEnCamarasFecha),
-        controlDeTemperaturaEnCamarasHora: item.controlDeTemperaturaEnCamarasHora,
-        controlDeTemperaturaEnCamarasTempInterna: item.controlDeTemperaturaEnCamarasTempInterna,
-        controlDeTemperaturaEnCamaraTempExterna: item.controlDeTemperaturaEnCamaraTempExterna,
+      controlDeTemperaturaEnCamarasNroCamara: item.controlDeTemperaturaEnCamarasNroCamara.toLowerCase(),
+      controlDeTemperaturaEnCamarasFecha: new Date(item.controlDeTemperaturaEnCamarasFecha),
+      controlDeTemperaturaEnCamarasHora: item.controlDeTemperaturaEnCamarasHora,
+      controlDeTemperaturaEnCamarasTempInterna: item.controlDeTemperaturaEnCamarasTempInterna,
+      controlDeTemperaturaEnCamaraTempExterna: item.controlDeTemperaturaEnCamaraTempExterna,
     };
-  
+
     if (
       (!filtros.numero || lowerCaseItem.controlDeTemperaturaEnCamarasNroCamara.startsWith(filtros.numero)) &&
       (!filtros['fecha-desde'] || lowerCaseItem.controlDeTemperaturaEnCamarasFecha >= new Date(filtros['fecha-desde'])) &&
-      (!filtros['fecha-hasta'] || lowerCaseItem.controlDeTemperaturaEnCamarasFecha <= new Date(filtros['fecha-hasta'])) && 
+      (!filtros['fecha-hasta'] || lowerCaseItem.controlDeTemperaturaEnCamarasFecha <= new Date(filtros['fecha-hasta'])) &&
       (!filtros.hora || lowerCaseItem.controlDeTemperaturaEnCamarasHora.toString().startsWith(filtros.hora)) &&
       (!filtros.interna || lowerCaseItem.controlDeTemperaturaEnCamarasTempInterna.toString().startsWith(filtros.interna)) &&
       (!filtros.externa || lowerCaseItem.controlDeTemperaturaEnCamaraTempExterna.toString().startsWith(filtros.externa))
@@ -132,10 +150,48 @@ function ListarControlDeTemperaturaEnCamaras() {
   });
 
 
-  const handleEditCliente = (rowData) => {
+  const handleEditControl = (rowData) => {
     const id = rowData.Id;
     navigate(`/modificar-control-de-temperatura-en-camaras/${id}`);
   };
+
+  const handleDeleteControl = (rowData) => {
+    const id = rowData.Id;
+    axios.delete(`/borrar-control-de-temperatura-en-camaras/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 204) {
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 5000);
+          setDeleteItem(true);
+        } else {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setShowAlertWarning(true);
+          setTimeout(() => {
+            setShowAlertWarning(false);
+          }, 5000);
+        }
+        else if (error.request.status === 500) {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+  }
 
   return (
     <div>
@@ -156,6 +212,15 @@ function ListarControlDeTemperaturaEnCamaras() {
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
+      <Grid container spacing={0}>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}>
+          <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+          <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+          <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+        </Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+      </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
@@ -164,7 +229,8 @@ function ListarControlDeTemperaturaEnCamaras() {
         title="Control De Temperatura En Camaras"
         dataMapper={mapData}
         columnRenderers={""}
-        onEditButton={handleEditCliente}
+        onEditButton={handleEditControl}
+        onDeleteButton={handleDeleteControl}
       />    </div>
   );
 }

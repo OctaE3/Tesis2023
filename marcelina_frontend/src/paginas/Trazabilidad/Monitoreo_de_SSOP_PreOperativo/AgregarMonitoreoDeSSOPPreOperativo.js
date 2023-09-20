@@ -157,10 +157,10 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
         else if (area === undefined || area === null || area === "Seleccionar") {
             return false;
         }
-        else if (fecha === undefined || fecha === null) {
+        else if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
-        else if (dias === undefined || dias === null) {
+        else if (dias === undefined || dias === null || dias.length === 0) {
             return false;
         }
         else if (correc === undefined || correc === null || correc === '') {
@@ -174,7 +174,7 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
 
     const handleFormSubmit = (formData) => {
 
-        const dias = formData.monitoreoDeSSOPPreOperativoDias;
+        const dias = formData.monitoreoDeSSOPPreOperativoDias ? formData.monitoreoDeSSOPPreOperativoDias : [];
 
         const valoresDias = dias.map(dia => dia.value);
 

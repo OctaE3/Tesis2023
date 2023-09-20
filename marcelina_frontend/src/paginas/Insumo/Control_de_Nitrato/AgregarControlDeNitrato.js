@@ -147,13 +147,13 @@ const AgregarControlDeNitrato = () => {
   };
 
   const checkError = (fecha, lote, cantidad, stock) => {
-    if (fecha === undefined || fecha === null) {
+    if (fecha === undefined || fecha === null || fecha === '') {
       return false;
     }
-    else if (lote === undefined || lote === null) {
+    else if (lote === undefined || lote === null || lote === '') {
       return false;
     }
-    else if (cantidad === undefined || cantidad === null) {
+    else if (cantidad === undefined || cantidad === null || cantidad === '') {
       return false;
     }
     else if (stock === undefined || stock === null) {
@@ -163,11 +163,18 @@ const AgregarControlDeNitrato = () => {
   }
 
   const handleFormSubmit = (formData) => {
-    const { stock, ...formDataWithoutStock } = formData;
+    console.log(formData)
+    const { stockForm, ...formDataWithoutStock } = formData;
 
-    console.log(stock);
+    console.log(stockForm);
     console.log(formDataWithoutStock.controlDeNitratoCantidadUtilizada);
 
+    let stock = stockForm;
+    if (stock === undefined) {
+      stock = nitratoStock;
+    }
+
+    console.log(stock)
     if (formDataWithoutStock.controlDeNitratoCantidadUtilizada > stock) {
       updateErrorAlert(`La cantidad utilizada no puede ser mayor al stock`);
       setShowAlertError(true);

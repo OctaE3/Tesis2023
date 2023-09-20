@@ -158,7 +158,9 @@ const ModificarResumenDeTrazabilidad = () => {
                     const controlesData = response.data;
                     console.log(response.data);
                     const controlEncontrado = controlesData.find((control) => control.resumenDeTrazabilidadId.toString() === id.toString());
-
+                    if (!controlEncontrado) {
+                        navigate('/listar-resumen-de-trazabilidad')
+                    }
                     setControles(controlesData);
                     console.log(controlEncontrado)
 
@@ -266,20 +268,20 @@ const ModificarResumenDeTrazabilidad = () => {
     };
 
     const checkError = (fecha, lote, destino) => {
-        if (fecha === undefined || fecha === null) {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (lote === undefined || lote === null || lote === "Seleccionar") {
             return false;
         }
-        else if (destino === undefined || destino === null) {
+        else if (destino === undefined || destino === null || destino.length === 0) {
             return false;
         }
         return true;
     }
 
     const handleFormSubmit = () => {
-        const destinosSeleccionados = destinoControl;
+        const destinosSeleccionados = destinoControl ? destinoControl : [];
 
         const valoresDestinos = destinosSeleccionados.map(dia => dia.value.toString());
 
@@ -326,35 +328,36 @@ const ModificarResumenDeTrazabilidad = () => {
                                 "Content-Type": "application/json"
                             }
                         })
-                        .then(response => {
-                            if (response.status === 200) {
-                                setShowAlertSuccess(true);
-                                setTimeout(() => {
-                                    setShowAlertSuccess(false);
-                                }, 5000);
-                            } else {
-                                updateErrorAlert('No se logro modificar el resumen de trazabilidad, revise los datos ingresados.')
-                                setShowAlertError(true);
-                                setTimeout(() => {
-                                    setShowAlertError(false);
-                                }, 5000);
-                            }
-                        })
-                        .catch(error => {
-                            if (error.request.status === 401) {
-                                setShowAlertWarning(true);
-                                setTimeout(() => {
-                                    setShowAlertWarning(false);
-                                }, 5000);
-                            }
-                            else if (error.request.status === 500) {
-                                updateErrorAlert('No se logro modificar el resumen de trazabilidad, revise los datos ingresados.');
-                                setShowAlertError(true);
-                                setTimeout(() => {
-                                    setShowAlertError(false);
-                                }, 5000);
-                            }
-                        })
+                            .then(response => {
+                                if (response.status === 200) {
+                                    setShowAlertSuccess(true);
+                                    setTimeout(() => {
+                                        setShowAlertSuccess(false);
+                                        navigate('/listar-resumen-de-trazabilidad');
+                                    }, 3000)
+                                } else {
+                                    updateErrorAlert('No se logro modificar el resumen de trazabilidad, revise los datos ingresados.')
+                                    setShowAlertError(true);
+                                    setTimeout(() => {
+                                        setShowAlertError(false);
+                                    }, 5000);
+                                }
+                            })
+                            .catch(error => {
+                                if (error.request.status === 401) {
+                                    setShowAlertWarning(true);
+                                    setTimeout(() => {
+                                        setShowAlertWarning(false);
+                                    }, 5000);
+                                }
+                                else if (error.request.status === 500) {
+                                    updateErrorAlert('No se logro modificar el resumen de trazabilidad, revise los datos ingresados.');
+                                    setShowAlertError(true);
+                                    setTimeout(() => {
+                                        setShowAlertError(false);
+                                    }, 5000);
+                                }
+                            })
                     }
                 } else {
                     updateErrorAlert(`Ingrese un lote válido.`);
