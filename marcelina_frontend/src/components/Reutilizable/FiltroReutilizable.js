@@ -105,7 +105,7 @@ function FiltroReutilizable({ filters, handleFilter }) {
                     variant="outlined"
                     label={`Desde ${filter.label}`}
                     type="datetime-local"
-                    value={filterValues[`${filter.id}-desde`] || ''}
+                    value={filterValues[`${filter.id}-desde`] || new Date()}
                     onChange={(event) => handleFilterChange(event, `${filter.id}-desde`)}
                   />
                 </Grid>
@@ -116,7 +116,7 @@ function FiltroReutilizable({ filters, handleFilter }) {
                     variant="outlined"
                     label={`Hasta ${filter.label}`}
                     type="datetime-local"
-                    value={filterValues[`${filter.id}-hasta`] || ''}
+                    value={filterValues[`${filter.id}-hasta`] || new Date()}
                     onChange={(event) => handleFilterChange(event, `${filter.id}-hasta`)}
                   />
                 </Grid>
@@ -129,7 +129,7 @@ function FiltroReutilizable({ filters, handleFilter }) {
                   variant="outlined"
                   label={`Desde ${filter.label}`}
                   type="date"
-                  value={filterValues[`${filter.id}-desde`] || ''}
+                  value={filterValues[`${filter.id}-desde`] || new Date()}
                   onChange={(event) => handleFilterChange(event, `${filter.id}-desde`)}
                 />
               </Grid>
@@ -139,7 +139,7 @@ function FiltroReutilizable({ filters, handleFilter }) {
                   variant="outlined"
                   label={`Hasta ${filter.label}`}
                   type="date"
-                  value={filterValues[`${filter.id}-hasta`] || ''}
+                  value={filterValues[`${filter.id}-hasta`] || new Date()}
                   onChange={(event) => handleFilterChange(event, `${filter.id}-hasta`)}
                 />
               </Grid>
