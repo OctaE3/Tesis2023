@@ -303,7 +303,9 @@ function ListarControlDeCloroLibre() {
                     <ul>
                       <li>
                         <span className={classes.liTitleBlue}>Desde Fecha y Hasta Fecha</span>: Estos campos son utilizados para filtrar los registros entre un rango de fechas,
-                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros y se mostraran en la lista, mientras que las demás no.
+                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros, se mostraran en la lista, mientras que las demás no.
+                        También es posible dejar uno de los 2 campos vacío y rellenar el otro, por ejemplo si ingresas una fecha en el campo de Desde Fecha y el Hasta Fecha se deja vacío,
+                        se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Pico/Grifo</span>: En este campo se puede ingresar el número del grifo, para listar todos los controles de cloro libre que se le hicieron a ese grifo.
@@ -325,7 +327,7 @@ function ListarControlDeCloroLibre() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registro el control de cloro.
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró el control de cloro.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Pico/Grifo</span>: En esta columna se muestra el número por el cual se identifica el grifo.
@@ -334,10 +336,10 @@ function ListarControlDeCloroLibre() {
                         <span className={classes.liTitleRed}>Resultado</span>: En esta columna se muestra el resultado que se obtuvo en la medición del grifo.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones que se encontraron cuando se registro el control de cloro libre.
+                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones que se encontraron cuando se registró el control de cloro libre.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registro el control de cloro libre.
+                        <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el control de cloro libre.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,

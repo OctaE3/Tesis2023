@@ -303,13 +303,15 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
                     <ul>
                       <li>
                         <span className={classes.liTitleBlue}>Desde Fecha y Hasta Fecha</span>: Estos campos son utilizados para filtrar los registros entre un rango de fechas,
-                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros y se mostraran en la lista, mientras que las demás no.
+                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros, se mostraran en la lista, mientras que las demás no.
+                        También es posible dejar uno de los 2 campos vacío y rellenar el otro, por ejemplo si ingresas una fecha en el campo de Desde Fecha y el Hasta Fecha se deja vacío,
+                        se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Deposito</span>: Anashe.
+                        <span className={classes.liTitleBlue}>Deposito</span>: En este campo se puede seleccionar los depositos por los cuales se quiere filtrar la lista.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Cañeria</span>: Este campo se puede filtrar por las cañerias ingresando su identificación o en caso de que se limpiaron todas, la palabra todas.
+                        <span className={classes.liTitleBlue}>Cañeria</span>: En este campo se puede filtrar por las cañerias ingresando su identificación o en caso de que se limpiaron todas, la palabra todas.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra y se listarán las observaciones que tienen esa palabra.
@@ -325,7 +327,7 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registro el control de limpieza y desinfección.
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró o se realizó el control de limpieza y desinfección.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Depostio</span>: En esta columna se muestran los depositos que se limpiaron.
@@ -334,10 +336,10 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
                         <span className={classes.liTitleRed}>Cañeria</span>: En esta columna se muestra las cañerias que se limpiaron.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones que se encontraron cuando se registro el control de limpieza y desinfección.
+                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones que se encontraron cuando se registró el control de limpieza y desinfección.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registro el control de limpieza y desinfección.
+                        <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el control de limpieza y desinfección.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,

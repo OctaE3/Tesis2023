@@ -4,8 +4,9 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -23,7 +24,38 @@ const useStyles = makeStyles(theme => ({
   },
   container: {
     marginTop: theme.spacing(2),
-  }
+  },
+  info: {
+    marginTop: theme.spacing(1)
+  },
+  text: {
+    color: '#2D2D2D',
+  },
+  liTitleBlue: {
+    color: 'blue',
+    fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+  },
 }));
 
 function ListarLocalidad() {
@@ -36,6 +68,12 @@ function ListarLocalidad() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [open, setOpen] = React.useState(false);
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
 
   const [alertSuccess, setAlertSuccess] = useState({
     title: 'Correcto', body: 'Se elimino la localidad con éxito!', severity: 'success', type: 'description'
@@ -153,6 +191,29 @@ function ListarLocalidad() {
       })
   }
 
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   return (
     <div>
       <Navbar />
@@ -160,15 +221,68 @@ function ListarLocalidad() {
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
           <Typography component='h1' variant='h5'>Lista de Localidades</Typography>
-          <Tooltip title={
-            <Typography fontSize={16}>
-              En esta pagina puedes comprobar todas las localidades registradas en el sistema y puedes simplificar tu busqueda atraves de los filtros.
-            </Typography>
-          }>
-            <IconButton>
-              <HelpOutlineIcon fontSize="large" color="primary" />
-            </IconButton>
-          </Tooltip>
+          <div className={classes.info}>
+            <Button color="primary" onClick={handleClickOpen}>
+              <IconButton className={blinking ? classes.blinkingButton : ''}>
+                <HelpOutlineIcon fontSize="large" color="primary" />
+              </IconButton>
+            </Button>
+            <Dialog
+              fullScreen={fullScreen}
+              fullWidth='md'
+              maxWidth='md'
+              open={open}
+              onClose={handleClose}
+              aria-labelledby="responsive-dialog-title"
+            >
+              <DialogTitle id="responsive-dialog-title">Explicación de la página.</DialogTitle>
+              <DialogContent>
+                <DialogContentText className={classes.text}>
+                  <span>
+                    En esta página se encarga de listar las localidades que fueron registrados.
+                  </span>
+                  <br />
+                  <br />
+                  <span style={{ fontWeight: 'bold' }}>
+                    Filtros:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleBlue}>Ciudad</span>: En este campo se puede ingresar una ciudad para filtrar los registros con esa ciudad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Departamento</span>: En este campo se puede ingresar un departamento para filtrar los registros con ese departamento.
+                      </li>
+                    </ul>
+                  </span>
+                  <span style={{ fontWeight: 'bold' }}>
+                    Lista:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Ciudad</span>: En esta columna se muestra la ciudad de la localidad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Departamento</span>: En esta columna se muestra el departamento de la localidad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
+                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
+                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                      </li>
+                    </ul>
+                  </span>
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose} color="primary" autoFocus>
+                  Cerrar
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </div>
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>

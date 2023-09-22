@@ -4,8 +4,9 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
@@ -24,7 +25,38 @@ const useStyles = makeStyles(theme => ({
   },
   container: {
     marginTop: theme.spacing(2),
-  }
+  },
+  info: {
+    marginTop: theme.spacing(1)
+  },
+  text: {
+    color: '#2D2D2D',
+  },
+  liTitleBlue: {
+    color: 'blue',
+    fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+  },
 }));
 
 function ListarDiariaDeProduccion() {
@@ -41,6 +73,12 @@ function ListarDiariaDeProduccion() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [open, setOpen] = React.useState(false);
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
 
   const [alertSuccess, setAlertSuccess] = useState({
     title: 'Correcto', body: 'Se elimino la diaria de producción con éxito!', severity: 'success', type: 'description'
@@ -108,29 +146,28 @@ function ListarDiariaDeProduccion() {
 
   const tableHeadCells = [
     { id: 'diariaDeProduccionProducto', numeric: false, disablePadding: false, label: 'Producto' },
-    { id: 'diariaDeProduccionInsumosCarnicos', numeric: false, disablePadding: false, label: 'Insumo carnico - Cantidad utilizada' },
+    { id: 'diariaDeProduccionInsumosCarnicos', numeric: false, disablePadding: false, label: 'Insumo cárnico - Cantidad utilizada' },
     { id: 'diariaDeProduccionAditivos', numeric: false, disablePadding: false, label: 'Aditivos - Cantidad utilizada' },
     { id: 'diariaDeProduccionCantidadProducida', numeric: false, disablePadding: false, label: 'Cantidad producida (Kg)' },
     { id: 'diariaDeProduccionFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'diariaDeProduccionLote', numeric: false, disablePadding: false, label: 'Lote' },
     { id: 'diariaDeProduccionResponsable', numeric: false, disablePadding: false, label: 'Responsable' },
     { id: 'diariaDeProduccionEnvasado', numeric: false, disablePadding: false, label: 'Envasado' },
-    { id: 'diariaDeProduccionFechaVencimiento', numeric: false, disablePadding: false, label: 'Fecha Vencimiento' },
+    { id: 'diariaDeProduccionFechaVencimiento', numeric: false, disablePadding: false, label: 'Fecha vencimiento' },
   ];
 
   const filters = [
     { id: 'producto', label: 'Producto', type: 'select', options: producto },
     { id: 'carne', label: 'Carne', type: 'select', options: carne },
-    { id: 'cantidadCarne', label: 'Cantidad Carne', type: 'text' },
-    { id: 'insumo', label: 'Insumo', type: 'select', options: insumo },
-    { id: 'cantidadInsumo', label: 'Cantidad Insumo', type: 'text' },
-    { id: 'cantidadProducida', label: 'Cantidad Producida', type: 'text' },
+    { id: 'cantidadCarne', label: 'Cantidad carne', type: 'text' },
+    { id: 'insumo', label: 'Aditivo', type: 'select', options: insumo },
+    { id: 'cantidadInsumo', label: 'Cantidad aditivo', type: 'text' },
+    { id: 'cantidadProducida', label: 'Cantidad producida', type: 'text' },
     { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
-    { id: 'producto', label: 'Producto', type: 'select', options: carne },
     { id: 'lote', label: 'Lote', type: 'text' },
-    { id: 'resposable', label: 'responsable', type: 'select', options: responsable },
+    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
     { id: 'envasado', label: 'Envasado', type: 'select', options: ['Si', 'No'] },
-    { id: 'fechaVencimiento', label: 'FechaVencimiento', type: 'date', options: ['desde', 'hasta'] },
+    { id: 'fechaVencimiento', label: 'Fecha vencimiento', type: 'date', options: ['desde', 'hasta'] },
   ];
 
   const handleFilter = (filter) => {
@@ -277,22 +314,144 @@ function ListarDiariaDeProduccion() {
       })
   }
 
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Diaria De Produccion</Typography>
-          <Tooltip title={
-            <Typography fontSize={16}>
-              En esta pagina puedes comprobar todas las plantillas diarias de produccion en el sistema y puedes simplificar tu busqueda atraves de los filtros.
-            </Typography>
-          }>
-            <IconButton>
-              <HelpOutlineIcon fontSize="large" color="primary" />
-            </IconButton>
-          </Tooltip>
+          <Typography component='h1' variant='h5'>Lista de Diaria De Producción</Typography>
+          <div className={classes.info}>
+            <Button color="primary" onClick={handleClickOpen}>
+              <IconButton className={blinking ? classes.blinkingButton : ''}>
+                <HelpOutlineIcon fontSize="large" color="primary" />
+              </IconButton>
+            </Button>
+            <Dialog
+              fullScreen={fullScreen}
+              fullWidth='md'
+              maxWidth='md'
+              open={open}
+              onClose={handleClose}
+              aria-labelledby="responsive-dialog-title"
+            >
+              <DialogTitle id="responsive-dialog-title">Explicación de la página.</DialogTitle>
+              <DialogContent>
+                <DialogContentText className={classes.text}>
+                  <span>
+                    En esta página se encarga de listar las diarias de producción que fueron registrados.
+                  </span>
+                  <br />
+                  <br />
+                  <span style={{ fontWeight: 'bold' }}>
+                    Filtros:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleBlue}>Producto</span>: En este campo se puede seleccionar el producto por el cual quiere filtrar la lista.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Carne y Cantidad carne</span>: En filtro esta compuesto por 2 campos ANAHSEEEEEEE.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Aditivo y Cantidad aditivo</span>: En filtro esta compuesto por 2 campos ANAHSEEEEEEE.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Cantidad producida</span>: En este campo se puede ingresar la cantidad que se produjo de un producto y filtrar la lista.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Desde Fecha y Hasta Fecha</span>: Estos campos son utilizados para filtrar los registros entre un rango de fechas,
+                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros, se mostraran en la lista, mientras que las demás no.
+                        También es posible dejar uno de los 2 campos vacío y rellenar el otro, por ejemplo si ingresas una fecha en el campo de Desde Fecha y el Hasta Fecha se deja vacío,
+                        se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Lote</span>: Anasheeeeeeeeeeeeee.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y mostrar todos los registros asociados a ese responsable.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Envasado</span>: En este campo se puede seleccionar si el producto esta envasado o no y filtar la lista por el envasado.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Desde Fecha vencimeinto y Hasta Fecha vencimeinto</span>: Estos campos funcionan de la misma manera que Desde Fecha y Hasta Fecha, 
+                        nada más que se tiene en cuenta la fecha de vencimiento.
+                      </li>
+                    </ul>
+                  </span>
+                  <span style={{ fontWeight: 'bold' }}>
+                    Lista:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Producto</span>: En esta columna se muestra el producto que se produjo.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Insumo cárnico - Cantidad utilizada</span>: En esta columna se muestra las carnes que se utilizaron para realizar el producto y cuanto se utilizó de cada una.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Aditivos - Cantidad utilizada</span>: En esta columna se muestra los aditivos que se utilizaron para realizar el producto y cuanto se utilizó de cada uno.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Cantidad producida(kg)</span>: En esta columna se muestra la cantidad que se produjo del producto.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha en el que se registró o realizó el producto.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Lote</span>: En esta columna se muestra el lote al que pertenece el producto producido.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el usuario que registró la diaria de producción.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Envasado</span>: En esta columna se muestra si el producto que se produjo esta envasado.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Fecha vencimeinto</span>: En esta columna se muestra la fecha de vencimiento del producto.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
+                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
+                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                      </li>
+                    </ul>
+                  </span>
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose} color="primary" autoFocus>
+                  Cerrar
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </div>
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
@@ -310,7 +469,7 @@ function ListarDiariaDeProduccion() {
         data={filteredData}
         dataKey="listarDiariaDeProduccion"
         tableHeadCells={tableHeadCells}
-        title="Diaria De Produccion"
+        title="Diaria De Producción"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditControl}

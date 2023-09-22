@@ -15,7 +15,7 @@ import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
   toolbar: {
@@ -35,8 +35,9 @@ const useStyles = makeStyles((theme) => ({
   paper: {
     width: '95%',
     marginBottom: theme.spacing(2),
-    border: '2px solid black', // Borde negro de 2px
-    margin: '5% auto', // Margen del 5% y centrado horizontal
+    border: '2px solid black', 
+    margin: '5% auto', 
+    overflowX: 'auto'
   },
   table: {
     minWidth: 750,

@@ -308,7 +308,9 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
                     <ul>
                       <li>
                         <span className={classes.liTitleBlue}>Desde Fecha y Hasta Fecha</span>: Estos campos son utilizados para filtrar los registros entre un rango de fechas,
-                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros y se mostraran en la lista, mientras que las demás no.
+                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros, se mostraran en la lista, mientras que las demás no.
+                        También es posible dejar uno de los 2 campos vacío y rellenar el otro, por ejemplo si ingresas una fecha en el campo de Desde Fecha y el Hasta Fecha se deja vacío,
+                        se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Alarma Lumínica</span>: En este campo se puede seleccionar el estado de la alarma por el cual quiere listar. Hay 2 tipos: "Funcionando" y "No Funcionando".
@@ -324,13 +326,13 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
                       </li>
                     </ul>
                   </span>
-                  <span  style={{ fontWeight: 'bold' }}>
+                  <span style={{ fontWeight: 'bold' }}>
                     Lista:
                   </span>
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registro el estado de las alarmas.
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró el estado de las alarmas.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Alarma Lumínca</span>: En esta columna se muestra el estado de la alarma lumínica.
@@ -339,13 +341,13 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
                         <span className={classes.liTitleRed}>Alarma Sonora</span>: En esta columna se muestra el estado de la alarma sonora.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones que se encontraron cuando se registro el estado de las alarmas.
+                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones que se encontraron cuando se registró el estado de las alarmas.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registro el estado de las alarmas.
+                        <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el estado de las alarmas.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro, 
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
                         en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
                         si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
                       </li>
