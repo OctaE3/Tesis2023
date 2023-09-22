@@ -4,8 +4,9 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,7 +24,38 @@ const useStyles = makeStyles(theme => ({
   },
   container: {
     marginTop: theme.spacing(2),
-  }
+  },
+  info: {
+    marginTop: theme.spacing(1)
+  },
+  text: {
+    color: '#2D2D2D',
+  },
+  liTitleBlue: {
+    color: 'blue',
+    fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+  },
 }));
 
 function ListarControlDeMejorasEnInstalaciones() {
@@ -37,6 +69,12 @@ function ListarControlDeMejorasEnInstalaciones() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [open, setOpen] = React.useState(false);
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
 
   const [alertSuccess, setAlertSuccess] = useState({
     title: 'Correcto', body: 'Se elimino el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description'
@@ -195,6 +233,29 @@ function ListarControlDeMejorasEnInstalaciones() {
       })
   }
 
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   return (
     <div>
       <Navbar />
@@ -202,15 +263,89 @@ function ListarControlDeMejorasEnInstalaciones() {
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
           <Typography component='h1' variant='h5'>Lista de Control De Mejoras En Instalaciones</Typography>
-          <Tooltip title={
-            <Typography fontSize={16}>
-              En esta pagina puedes comprobar todas las Mejoras En Instalaciones almacenadas en el sistema y puedes simplificar tu busqueda atraves de los filtros.
-            </Typography>
-          }>
-            <IconButton>
-              <HelpOutlineIcon fontSize="large" color="primary" />
-            </IconButton>
-          </Tooltip>
+          <div className={classes.info}>
+            <Button color="primary" onClick={handleClickOpen}>
+              <IconButton className={blinking ? classes.blinkingButton : ''}>
+                <HelpOutlineIcon fontSize="large" color="primary" />
+              </IconButton>
+            </Button>
+            <Dialog
+              fullScreen={fullScreen}
+              fullWidth='md'
+              maxWidth='md'
+              open={open}
+              onClose={handleClose}
+              aria-labelledby="responsive-dialog-title"
+            >
+              <DialogTitle id="responsive-dialog-title">Explicación de la página.</DialogTitle>
+              <DialogContent>
+                <DialogContentText className={classes.text}>
+                  <span>
+                    En esta página se encarga de listar los controles de mejoras en instalaciones que fueron registrados.
+                  </span>
+                  <br />
+                  <br />
+                  <span style={{ fontWeight: 'bold' }}>
+                    Filtros:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleBlue}>Desde Fecha y Hasta Fecha</span>: Estos campos son utilizados para filtrar los registros entre un rango de fechas,
+                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros, se mostraran en la lista, mientras que las demás no.
+                        También es posible dejar uno de los 2 campos vacío y rellenar el otro, por ejemplo si ingresas una fecha en el campo de Desde Fecha y el Hasta Fecha se deja vacío,
+                        se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Sector</span>: En este campo se puede ingresar un sector por el cual se quiere filtrar la lista.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Defecto</span>: En este campo se puede ingresar el defecto por el cual se quiere filtrar la lista.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Mejora Realizada</span>: En este campo se puede ingresar la mejora realizada por la cual se quiere filtrar la lista.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se listará los registros asociados a ese responsable.
+                      </li>
+                    </ul>
+                  </span>
+                  <span style={{ fontWeight: 'bold' }}>
+                    Lista:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró o realizó la mejora.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Sector</span>: En esta columna se muestran el sector en la que se aplicó la mejora.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Defecto</span>: En esta columna se muestran el defecto por el que se aplicó la mejora.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Mejora Realizada</span>: En esta columna se muestran la mejora que se realizo en el sector.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el control de mejoras en instalaciones.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
+                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
+                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                      </li>
+                    </ul>
+                  </span>
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose} color="primary" autoFocus>
+                  Cerrar
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </div>
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>

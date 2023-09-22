@@ -98,6 +98,7 @@ const AgregarDiariaDeProduccion = () => {
     const [carneSelect, setCarneSelect] = useState('');
     const [insumos, setInsumos] = useState('');
     const [insumoSelect, setInsumoSelect] = useState('');
+    const [lotesCod, setLotesCod] = useState([]);
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
@@ -181,6 +182,23 @@ const AgregarDiariaDeProduccion = () => {
                 });
         };
 
+        const obtenerLotes = () => {
+            axios.get('/listar-lotes', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(response => {
+                    setLotesCod(
+                        response.data.map((lote) => lote.loteCodigo)
+                    );
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        };
+
+        obtenerLotes();
         obtenerProductos();
         obtenerCarnes();
         obtenerAditivos();
@@ -251,8 +269,32 @@ const AgregarDiariaDeProduccion = () => {
         }
     }
 
+    const generarNumRandom = () => {
+        const array = new Uint8Array(1);
+        console.log(array)
+        window.crypto.getRandomValues(array);
+        console.log(window.crypto.getRandomValues(array));
+        return array[0];
+    }
+
+    const generarLote = () => {
+        const timeStamp = Date.now();
+        const aleatorio = generarNumRandom();
+        const prefijo = "MAR";
+
+        console.log(timeStamp)
+        console.log(aleatorio)
+        console.log(prefijo)
+
+        const numeroLote = `${prefijo}${timeStamp}${aleatorio}`;
+
+        console.log(numeroLote)
+
+        return numeroLote;
+    }
+
     const handleFormSubmit = (formData) => {
-        console.log(formData);
+        console.log(lotesCod);
         const { cantidadCarne, cantidadInsumo, ...formDataWithoutCantidad } = formData;
 
         const cantidadValueCarne = formData.cantidadCarne;
@@ -345,20 +387,22 @@ const AgregarDiariaDeProduccion = () => {
                 const productoCompleto = productos.filter((producto) => producto.productoId.toString() === formDataWithoutCantidad.diariaDeProduccionProducto)[0];
                 console.log(productoCompleto);
 
-                const fechaDiariaProduccion = new Date(formData.diariaDeProduccionFecha);
-                const anio = fechaDiariaProduccion.getFullYear();
-                const mes = fechaDiariaProduccion.getMonth() + 1;
-                const dia = fechaDiariaProduccion.getDate();
-                const horas = fechaDiariaProduccion.getHours();
-                const minutos = fechaDiariaProduccion.getMinutes();
 
-                const horasFormateadas = horas.toString().padStart(2, '0');
-                const minutosFormateados = minutos.toString().padStart(2, '0');
+                let loteNum = '';
+                let retorno = false;
+                while (retorno === false) {
+                    const lote = generarLote();
 
-                const fechaNumero = parseInt(`${anio}${mes}${dia}${horasFormateadas}${minutosFormateados}${productoCompleto.productoCodigo}`);
+                    const loteExiste = lotesCod.includes(lote);
+
+                    if (loteExiste === false) {
+                        loteNum = lote;
+                        retorno = true;
+                    }
+                }
 
                 const loteCompleto = {
-                    loteCodigo: fechaNumero,
+                    loteCodigo: loteNum,
                     loteProducto: productoCompleto,
                     loteCantidad: formDataWithoutCantidad.diariaDeProduccionCantidadProducida,
                 };

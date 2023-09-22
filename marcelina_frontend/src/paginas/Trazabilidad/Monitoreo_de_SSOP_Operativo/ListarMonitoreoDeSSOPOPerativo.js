@@ -3,8 +3,9 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
-import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
@@ -23,7 +24,38 @@ const useStyles = makeStyles(theme => ({
   },
   container: {
     marginTop: theme.spacing(2),
-  }
+  },
+  info: {
+    marginTop: theme.spacing(1)
+  },
+  text: {
+    color: '#2D2D2D',
+  },
+  liTitleBlue: {
+    color: 'blue',
+    fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+  },
 }));
 
 function ListarMonitoreoDeSSOPOPerativo() {
@@ -31,7 +63,30 @@ function ListarMonitoreoDeSSOPOPerativo() {
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
+  const [deleteItem, setDeleteItem] = useState(false);
   const navigate = useNavigate();
+
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [open, setOpen] = React.useState(false);
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
+
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Monitoreo de ssop operativo eliminado con éxito!', severity: 'success', type: 'description'
+  });
+
+  const [alertError, setAlertError] = useState({
+    title: 'Error', body: 'No se logro eliminar el monitoreo de ssop operativo, revise los datos ingresados.', severity: 'error', type: 'description'
+  });
+
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,8 +103,8 @@ function ListarMonitoreoDeSSOPOPerativo() {
         });
 
         const data = response.data.map((monitoreoDeSSOPOperativo) => ({
-            ...monitoreoDeSSOPOperativo,
-            Id: monitoreoDeSSOPOperativo.monitoreoDeSSOPOperativoId,
+          ...monitoreoDeSSOPOperativo,
+          Id: monitoreoDeSSOPOperativo.monitoreoDeSSOPOperativoId,
         }));
         const ResponsableData = ResponsableResponse.data;
 
@@ -61,29 +116,29 @@ function ListarMonitoreoDeSSOPOPerativo() {
     };
 
     fetchData();
-  }, []);
+    setDeleteItem(false);
+  }, [deleteItem]);
 
   const tableHeadCells = [
     { id: 'monitoreoDeSSOPOperativoFechaInicio', numeric: false, disablePadding: false, label: 'Fecha inicio' },
     { id: 'monitoreoDeSSOPOperativoFechaFinal', numeric: false, disablePadding: false, label: 'Fecha final' },
-    { id: 'monitoreoDeSSOPOperativoDias', numeric: false, disablePadding: false, label: 'Dias' },
-    { id: 'monitoreoDeSSOPOperativoArea', numeric: false, disablePadding: false, label: 'Area' },
+    { id: 'monitoreoDeSSOPOperativoDias', numeric: false, disablePadding: false, label: 'Días' },
+    { id: 'monitoreoDeSSOPOperativoArea', numeric: false, disablePadding: false, label: 'Área' },
     { id: 'monitoreoDeSSOPOperativoObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
     { id: 'monitoreoDeSSOPOperativoAccCorrectivas', numeric: false, disablePadding: false, label: 'Acciones correctivas' },
     { id: 'monitoreoDeSSOPOperativoAccPreventivas', numeric: false, disablePadding: false, label: 'Acciones preventivas' },
     { id: 'monitoreoDeSSOPOperativoResponsable', numeric: false, disablePadding: false, label: 'Responsable' },
   ];
- 
+
   const filters = [
-    { id: 'fechaInicio', label: 'Fecha Inicio', type: 'date', options: ['desde', 'hasta']},
-    { id: 'fechaFinal', label: 'Fecha Final', type: 'date', options: ['desde', 'hasta']},
-    { id: 'dias', label: 'Dias', type: 'text' },
-    { id: 'area', label: 'Area', type: 'text' },
+    { id: 'fechaInicio', label: 'Fecha Inicio', type: 'date', options: ['desde', 'hasta'] },
+    { id: 'fechaFinal', label: 'Fecha Final', type: 'date', options: ['desde', 'hasta'] },
+    { id: 'dias', label: 'Días', type: 'text' },
+    { id: 'area', label: 'Área', type: 'text' },
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
-    { id: 'motivoDeRechazo', label: 'MotivoDeRechazo', type: 'text' },
     { id: 'accCorrectivas', label: 'Acciones Correctivas', type: 'text' },
     { id: 'accPreventivas', label: 'Acciones Preventivas', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select',options: responsable },
+    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -94,10 +149,10 @@ function ListarMonitoreoDeSSOPOPerativo() {
           acc['fechaInicio-desde'] = desde;
           acc['fechaInicio-hasta'] = hasta;
         } else if (key === 'fechaFinal') {
-            const [desde, hasta] = filter[key].split(' hasta ');
-            acc['fechaFinal-desde'] = desde;
-            acc['fechaFinal-hasta'] = hasta;
-          } else {
+          const [desde, hasta] = filter[key].split(' hasta ');
+          acc['fechaFinal-desde'] = desde;
+          acc['fechaFinal-hasta'] = hasta;
+        } else {
           acc[key] = filter[key].toLowerCase();
         }
       }
@@ -114,16 +169,16 @@ function ListarMonitoreoDeSSOPOPerativo() {
       } else {
         return '';
       }
-    } 
+    }
     else if (key === 'monitoreoDeSSOPOperativoFechaFinal') {
-        if (item.monitoreoDeSSOPOperativoFechaFinal) {
-          const fecha = new Date(item.monitoreoDeSSOPOperativoFechaFinal); // Convertir fecha a objeto Date
-          return format(fecha, 'dd/MM/yyyy');
-        } else {
-          return '';
-        }
-      } 
-    else if(key === 'monitoreoDeSSOPOperativoResponsable.usuarioNombre') {
+      if (item.monitoreoDeSSOPOperativoFechaFinal) {
+        const fecha = new Date(item.monitoreoDeSSOPOperativoFechaFinal); // Convertir fecha a objeto Date
+        return format(fecha, 'dd/MM/yyyy');
+      } else {
+        return '';
+      }
+    }
+    else if (key === 'monitoreoDeSSOPOperativoResponsable.usuarioNombre') {
       if (item.monitoreoDeSSOPOperativoResponsable && item.monitoreoDeSSOPOperativoResponsable.usuarioNombre) {
         return item.monitoreoDeSSOPOperativoResponsable.usuarioNombre;
       } else {
@@ -148,16 +203,16 @@ function ListarMonitoreoDeSSOPOPerativo() {
 
     if (
       (!filtros['fechaInicio-desde'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaInicio >= new Date(filtros['fechaInicio-desde'])) &&
-      (!filtros['fechaInicio-hasta'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaInicio <= new Date(filtros['fechaInicio-hasta'])) && 
+      (!filtros['fechaInicio-hasta'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaInicio <= new Date(filtros['fechaInicio-hasta'])) &&
       (!filtros['fechaFinal-desde'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaFinal >= new Date(filtros['fechaFinal-desde'])) &&
-      (!filtros['fechaFinal-hasta'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaFinal <= new Date(filtros['fechaFinal-hasta'])) && 
-      (!filtros.dias || lowerCaseItem.monitoreoDeSSOPOperativoDias.startsWith(filtros.dias)) && 
+      (!filtros['fechaFinal-hasta'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaFinal <= new Date(filtros['fechaFinal-hasta'])) &&
+      (!filtros.dias || lowerCaseItem.monitoreoDeSSOPOperativoDias.startsWith(filtros.dias)) &&
       (!filtros.area || lowerCaseItem.monitoreoDeSSOPOperativoArea.startsWith(filtros.area)) &&
-      (!filtros.observaciones|| lowerCaseItem.monitoreoDeSSOPOperativoObservaciones.startsWith(filtros.observaciones)) &&
-      (!filtros.accCorrectivas|| lowerCaseItem.monitoreoDeSSOPOperativoAccCorrectivas.startsWith(filtros.accCorrectivas)) &&
-      (!filtros.accPreventivas|| lowerCaseItem.monitoreoDeSSOPOperativoAccPreventivas.startsWith(filtros.accPreventivas)) &&
-      (!filtros.responsable || lowerCaseItem.monitoreoDeSSOPOperativoAccResponsable.startsWith(filtros.responsable)) 
-      ) {
+      (!filtros.observaciones || lowerCaseItem.monitoreoDeSSOPOperativoObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.accCorrectivas || lowerCaseItem.monitoreoDeSSOPOperativoAccCorrectivas.startsWith(filtros.accCorrectivas)) &&
+      (!filtros.accPreventivas || lowerCaseItem.monitoreoDeSSOPOperativoAccPreventivas.startsWith(filtros.accPreventivas)) &&
+      (!filtros.responsable || lowerCaseItem.monitoreoDeSSOPOperativoAccResponsable.startsWith(filtros.responsable))
+    ) {
       return true;
     }
     return false;
@@ -168,9 +223,70 @@ function ListarMonitoreoDeSSOPOPerativo() {
     monitoreoDeSSOPOperativoDias: (dias) => <ColumnaReutilizable contacts={dias} />,
   };
 
-  const handleEditCliente = (rowData) => {
+  const handleEditMont = (rowData) => {
     const id = rowData.Id;
-    navigate(`/buscar-monitoreo-de-ssop-operativo/${id}`);
+    navigate(`/modificar-monitoreo-de-ssop-operativo/${id}`);
+  };
+
+  const handleDeleteMont = (rowData) => {
+    const id = rowData.Id;
+    axios.delete(`/borrar-monitoreo-de-ssop-operativo/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 204) {
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 5000);
+          setDeleteItem(true);
+        } else {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setShowAlertWarning(true);
+          setTimeout(() => {
+            setShowAlertWarning(false);
+          }, 5000);
+        }
+        else if (error.request.status === 500) {
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 5000);
+        }
+      })
+  }
+
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
   };
 
   return (
@@ -180,15 +296,108 @@ function ListarMonitoreoDeSSOPOPerativo() {
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
           <Typography component='h1' variant='h5'>Lista de Monitoreo de SSOP Operativo</Typography>
-          <Tooltip title={
-            <Typography fontSize={16}>
-              En esta pagina puedes comprobar todos los productos quimicos en el sistema y puedes simplificar tu busqueda atraves de los filtros.
-            </Typography>
-          }>
-            <IconButton>
-              <HelpOutlineIcon fontSize="large" color="primary" />
-            </IconButton>
-          </Tooltip>
+          <div className={classes.info}>
+            <Button color="primary" onClick={handleClickOpen}>
+              <IconButton className={blinking ? classes.blinkingButton : ''}>
+                <HelpOutlineIcon fontSize="large" color="primary" />
+              </IconButton>
+            </Button>
+            <Dialog
+              fullScreen={fullScreen}
+              fullWidth='md'
+              maxWidth='md'
+              open={open}
+              onClose={handleClose}
+              aria-labelledby="responsive-dialog-title"
+            >
+              <DialogTitle id="responsive-dialog-title">Explicación de la página.</DialogTitle>
+              <DialogContent>
+                <DialogContentText className={classes.text}>
+                  <span>
+                    En esta página se encarga de listar los monitoreos de ssop operativos que fueron registradas.
+                  </span>
+                  <br />
+                  <br />
+                  <span style={{ fontWeight: 'bold' }}>
+                    Filtros:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleBlue}>Desde Fecha Inicio y Hasta Fecha Inicio</span>: Estos campos son utilizados para filtrar los registros entre un rango de fechas,
+                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros, se mostraran en la lista, mientras que las demás no.
+                        También es posible dejar uno de los 2 campos vacío y rellenar el otro, por ejemplo si ingresas una fecha en el campo de Desde Fecha y el Hasta Fecha se deja vacío,
+                        se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Desde Fecha Final y Hasta Fecha Final</span>: Estos campos funcionan de la misma manera que Desde Fecha Inicio y Hasta Fecha Inicio,
+                        nada más que se tiene en cuenta la fecha final.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Días</span>: En este campo se puede seleccionar un día de la semana y filtrar los registros por ese día.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Área</span>: En este campo se puede seleccionar un área y filtrar la lista por el área seleccionado.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra y los registros que incluyan esa palabra se listarán.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Acciones Correctivas</span>: En este campo se puede ingresar una palabra y los registros que incluyan esa palabra se listarán.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Acciones Preventivas</span>: En este campo se puede ingresar una palabra y los registros que incluyan esa palabra se listarán.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y ver que registros están asociados a ese usuario.
+                      </li>
+                    </ul>
+                  </span>
+                  <span style={{ fontWeight: 'bold' }}>
+                    Lista:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Fecha Inicio</span>: En esta columna se muestra la fecha en la que inicio el monitoreo.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Fecha Final</span>: En esta columna se muestra la fecha en la que finaliza el monitoreo.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Días</span>: En esta columna se muestra los días en lo que se realizó el monitoreo.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Área</span>: En este campo se muestra en que área se hizo el monitoreo.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra la observaciones o detalles que se encontraron al hacer el monitoreo.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Acciones Correctivas</span>: En esta columna se muestra las acciones tomadas para corregir el problema.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Acciones Preventivas</span>: En esta columna se muestra las acciones que se pueden o pudieron tomar para prevenir el problema.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registro el monitoreo de ssop operativo.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
+                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
+                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                      </li>
+                    </ul>
+                  </span>
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose} color="primary" autoFocus>
+                  Cerrar
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </div>
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
@@ -200,7 +409,8 @@ function ListarMonitoreoDeSSOPOPerativo() {
         title="Monitoreo De SSOP Operativo"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
-        onEditButton={handleEditCliente}
+        onEditButton={handleEditMont}
+        onDeleteButton={handleDeleteMont}
       />    </div>
   );
 }

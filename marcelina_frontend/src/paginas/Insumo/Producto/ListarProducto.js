@@ -4,8 +4,9 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -23,7 +24,38 @@ const useStyles = makeStyles(theme => ({
   },
   container: {
     marginTop: theme.spacing(2),
-  }
+  },
+  info: {
+    marginTop: theme.spacing(1)
+  },
+  text: {
+    color: '#2D2D2D',
+  },
+  liTitleBlue: {
+    color: 'blue',
+    fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+  },
 }));
 
 function ListarProducto() {
@@ -36,6 +68,12 @@ function ListarProducto() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [open, setOpen] = React.useState(false);
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
 
   const [alertSuccess, setAlertSuccess] = useState({
     title: 'Correcto', body: 'Se elimino el producto con éxito!', severity: 'success', type: 'description'
@@ -75,12 +113,12 @@ function ListarProducto() {
   };
 
   const tableHeadCells = [
-    { id: 'productoCodigo', numeric: false, disablePadding: false, label: 'Codigo' },
+    { id: 'productoCodigo', numeric: false, disablePadding: false, label: 'Código' },
     { id: 'productoNombre', numeric: false, disablePadding: true, label: 'Nombre' },
   ];
 
   const filters = [
-    { id: 'codigo', label: 'Codigo', type: 'text' },
+    { id: 'codigo', label: 'Código', type: 'text' },
     { id: 'nombre', label: 'Nombre', type: 'text' },
   ];
 
@@ -150,6 +188,29 @@ function ListarProducto() {
       })
   }
 
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   return (
     <div>
       <Navbar />
@@ -157,15 +218,68 @@ function ListarProducto() {
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
           <Typography component='h1' variant='h5'>Lista de Productos</Typography>
-          <Tooltip title={
-            <Typography fontSize={16}>
-              En esta pagina puedes comprobar todos los productos registrados en el sistema y puedes simplificar tu busqueda atraves de los filtros.
-            </Typography>
-          }>
-            <IconButton>
-              <HelpOutlineIcon fontSize="large" color="primary" />
-            </IconButton>
-          </Tooltip>
+          <div className={classes.info}>
+            <Button color="primary" onClick={handleClickOpen}>
+              <IconButton className={blinking ? classes.blinkingButton : ''}>
+                <HelpOutlineIcon fontSize="large" color="primary" />
+              </IconButton>
+            </Button>
+            <Dialog
+              fullScreen={fullScreen}
+              fullWidth='md'
+              maxWidth='md'
+              open={open}
+              onClose={handleClose}
+              aria-labelledby="responsive-dialog-title"
+            >
+              <DialogTitle id="responsive-dialog-title">Explicación de la página.</DialogTitle>
+              <DialogContent>
+                <DialogContentText className={classes.text}>
+                  <span>
+                    En esta página se encarga de listar los productos que fueron registrados.
+                  </span>
+                  <br />
+                  <br />
+                  <span style={{ fontWeight: 'bold' }}>
+                    Filtros:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleBlue}>Código</span>: En este campo se puede ingresar el código por el cual se identifica el producto y filtrar la lista por ese código.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Nombre</span>: En este campo se puede ingresar el nombre del producto y filtrar la lista por el nombre.
+                      </li>
+                    </ul>
+                  </span>
+                  <span style={{ fontWeight: 'bold' }}>
+                    Lista:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Código</span>: En esta columna se muestra el código por el cual se identifica el producto.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Nombre</span>: En esta columna se muestra el nombre del producto.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
+                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
+                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                      </li>
+                    </ul>
+                  </span>
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose} color="primary" autoFocus>
+                  Cerrar
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </div>
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>

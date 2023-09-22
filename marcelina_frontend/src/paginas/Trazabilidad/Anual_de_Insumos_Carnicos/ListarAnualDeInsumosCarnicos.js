@@ -4,8 +4,9 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Tooltip, IconButton, createStyles, makeStyles, createTheme } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -23,7 +24,38 @@ const useStyles = makeStyles(theme => ({
   },
   container: {
     marginTop: theme.spacing(2),
-  }
+  },
+  info: {
+    marginTop: theme.spacing(1)
+  },
+  text: {
+    color: '#2D2D2D',
+  },
+  liTitleBlue: {
+    color: 'blue',
+    fontWeight: 'bold',
+  },
+  liTitleRed: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  blinkingButton: {
+    animation: '$blink 1s infinite',
+  },
+  '@keyframes blink': {
+    '0%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+    '50%': {
+      backgroundColor: theme.palette.common.white,
+      color: theme.palette.primary.main,
+    },
+    '100%': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+    },
+  },
 }));
 
 function ListarAnualDeInsumosCarnicos() {
@@ -36,6 +68,12 @@ function ListarAnualDeInsumosCarnicos() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+
+  const [open, setOpen] = React.useState(false);
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const [blinking, setBlinking] = useState(true);
 
   const [alertSuccess, setAlertSuccess] = useState({
     title: 'Correcto', body: 'Se elimino el anual de insumos cárnicos con éxito!', severity: 'success', type: 'description'
@@ -67,6 +105,7 @@ function ListarAnualDeInsumosCarnicos() {
     };
 
     fetchData();
+    setDeleteItem(false)
   }, [deleteItem]);
 
 
@@ -82,8 +121,8 @@ function ListarAnualDeInsumosCarnicos() {
     { id: 'anualDeInsumosCarnicosHigado', numeric: false, disablePadding: true, label: 'Higado' },
     { id: 'anualDeInsumosCarnicosCarnePorcinaSH', numeric: false, disablePadding: true, label: 'Porcina SH' },
     { id: 'anualDeInsumosCarnicosCarnePorcinaCH', numeric: false, disablePadding: true, label: 'Porcina CH' },
-    { id: 'anualDeInsumosCarnicosCarnePorcinaGrasa', numeric: false, disablePadding: true, label: 'Porcina Grasa' },
-    { id: 'anualDeInsumosCarnicosTripasMadejas', numeric: false, disablePadding: true, label: 'Tripas Madejas' },
+    { id: 'anualDeInsumosCarnicosCarnePorcinaGrasa', numeric: false, disablePadding: true, label: 'Porcina grasa' },
+    { id: 'anualDeInsumosCarnicosTripasMadejas', numeric: false, disablePadding: true, label: 'Tripas madejas' },
     { id: 'anualDeInsumosCarnicosLitrosSangre', numeric: false, disablePadding: true, label: 'Sangre' },
   ];
 
@@ -96,7 +135,7 @@ function ListarAnualDeInsumosCarnicos() {
     { id: 'porcinaSH', label: 'Porcina SH', type: 'text' },
     { id: 'porcinaCH', label: 'Porcina CH', type: 'text' },
     { id: 'grasa', label: 'Porcinsa grasa', type: 'text' },
-    { id: 'tripas', label: 'Tripas madeja', type: 'text' },
+    { id: 'tripas', label: 'Tripas madejas', type: 'text' },
     { id: 'sangre', label: 'Sangre', type: 'text' },
   ];
 
@@ -182,22 +221,146 @@ function ListarAnualDeInsumosCarnicos() {
       })
   }
 
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinking((prevBlinking) => !prevBlinking);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(blinkInterval);
+      setBlinking(false);
+    }, 5000);
+
+    return () => {
+      clearInterval(blinkInterval);
+    };
+  }, []);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Localidades</Typography>
-          <Tooltip title={
-            <Typography fontSize={16}>
-              En esta pagina puedes comprobar todas las localidades registradas en el sistema y puedes simplificar tu busqueda atraves de los filtros.
-            </Typography>
-          }>
-            <IconButton>
-              <HelpOutlineIcon fontSize="large" color="primary" />
-            </IconButton>
-          </Tooltip>
+          <Typography component='h1' variant='h5'>Lista de Anual de Insumos Cárnicos</Typography>
+          <div className={classes.info}>
+            <Button color="primary" onClick={handleClickOpen}>
+              <IconButton className={blinking ? classes.blinkingButton : ''}>
+                <HelpOutlineIcon fontSize="large" color="primary" />
+              </IconButton>
+            </Button>
+            <Dialog
+              fullScreen={fullScreen}
+              fullWidth='md'
+              maxWidth='md'
+              open={open}
+              onClose={handleClose}
+              aria-labelledby="responsive-dialog-title"
+            >
+              <DialogTitle id="responsive-dialog-title">Explicación de la página.</DialogTitle>
+              <DialogContent>
+                <DialogContentText className={classes.text}>
+                  <span>
+                    En esta página se encarga de listar los anuales de insumos cárnicos que fueron registrados.
+                  </span>
+                  <br />
+                  <br />
+                  <span style={{ fontWeight: 'bold' }}>
+                    Filtros:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>
+                        <span className={classes.liTitleBlue}>Mes</span>: En este campo se puede ingresar el nombre de un mes y se listará los registros con el nombre de ese mes.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Año</span>: En este campo se puede ingresar un año y se listará los registros con ese año.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Bovina SH</span>: En este campo se puede ingresar la cantidad(kg) de carne bovina sin hueso y se listará los registros con esa cantidad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Bovina CH</span>: En este campo se puede ingresar la cantidad(kg) de carne bovina con hueso y se listará los registros con esa cantidad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Higado</span>: En este campo se puede ingresar la cantidad(kg) de higado y se listará los registros con esa cantidad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Porcina SH</span>: En este campo se puede ingresar la cantidad(kg) de carne porcina sin hueso y se listará los registros con esa cantidad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Porcina CH</span>: En este campo se puede ingresar la cantidad(kg) de carne porcina con hueso y se listará los registros con esa cantidad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Porcina grasa</span>: En este campo se puede ingresar la cantidad(kg) de grasa porcina y se listará los registros con esa cantidad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Tripas madejas</span>: En este campo se puede ingresar la cantidad(kg) de tripas y se listará los registros con esa cantidad.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleBlue}>Sangre</span>: En este campo se puede ingresar la cantidad(litros) de sangrew y se listará los registros con esa cantidad..
+                      </li>
+                    </ul>
+                  </span>
+                  <span style={{ fontWeight: 'bold' }}>
+                    Lista:
+                  </span>
+                  <span>
+                    <ul>
+                    <li>
+                        <span className={classes.liTitleRed}>Mes</span>: En este campo se muestra el mes en el que se registró el anual de insumos cárnicos.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Año</span>: En este campo se muestra el año en el que se registró el anual de insumos cárnicos.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Bovina SH</span>: En este campo se muestra la cantidad(kg) de carne bovina sin hueso que se recibió en un mes.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Bovina CH</span>: En este campo se muestra la cantidad(kg) de carne bovina con hueso que se recibió en un mes.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Higado</span>: En este campo se muestra la cantidad(kg) de higado que se recibió en un mes.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Porcina SH</span>: En este campo se muestra la cantidad(kg) de carne porcina sin hueso que se recibió en un mes.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Porcina CH</span>: En este campo se muestra la cantidad(kg) de carne porcina con hueso que se recibió en un mes.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Porcina grasa</span>: En este campo se muestra la cantidad(kg) de grasa porcina sin hueso que se recibió en un mes.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Tripas madejas</span>: En este campo se muestra la cantidad(kg) de tripas que se recibió en un mes.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Sangre</span>: En este campo se muestra la cantidad(litros) de sangre que se recibió en un mes.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
+                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
+                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                      </li>
+                    </ul>
+                  </span>
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose} color="primary" autoFocus>
+                  Cerrar
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </div>
         </Grid>
         <Grid item lg={2} md={2}></Grid>
       </Grid>
