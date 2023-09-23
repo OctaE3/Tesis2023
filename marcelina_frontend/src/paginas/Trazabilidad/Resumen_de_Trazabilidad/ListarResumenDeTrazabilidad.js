@@ -3,6 +3,7 @@ import axios from 'axios';
 import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizable';
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
+import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
@@ -92,6 +93,42 @@ function ListarResumenDeTrazabilidad() {
   const [alertWarning, setAlertWarning] = useState({
     title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
+
+  const updateErrorAlert = (newBody) => {
+    setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -310,6 +347,7 @@ function ListarResumenDeTrazabilidad() {
           }, 5000);
           setDeleteItem(true);
         } else {
+          updateErrorAlert('No se logro eliminar el resumen de trazabilidad, revise los datos ingresados.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -324,6 +362,7 @@ function ListarResumenDeTrazabilidad() {
           }, 5000);
         }
         else if (error.request.status === 500) {
+          updateErrorAlert('No se logro eliminar el resumen de trazabilidad, revise los datos ingresados.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -465,6 +504,15 @@ function ListarResumenDeTrazabilidad() {
           </div>
         </Grid>
         <Grid item lg={2} md={2}></Grid>
+      </Grid>
+      <Grid container spacing={0}>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}>
+          <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+          <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
+          <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+        </Grid>
+        <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
       </Grid>
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable

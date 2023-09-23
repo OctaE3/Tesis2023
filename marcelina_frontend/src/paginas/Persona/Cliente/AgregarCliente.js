@@ -5,6 +5,7 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -61,8 +62,6 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AgregarCliente = () => {
-  const text = "Este campo es Obligatorio";
-
   const formFieldsModal = [
     { name: 'localidadDepartamento', label: 'Departamento', obligatorio: true, pattern: "^[A-Za-z\\s]{0,40}$", type: 'text', color: 'primary' },
     { name: 'localidadCiudad', label: 'Ciudad', type: 'text', obligatorio: true, pattern: "^[A-Za-z\\s]{0,50}$", color: 'primary' },
@@ -89,9 +88,8 @@ const AgregarCliente = () => {
   });
 
   const classes = useStyles();
-  const [cliente, setCliente] = useState({});
+  const navigate = useNavigate();
   const [clientes, setClientes] = useState({});
-  const [localidad, setLocalidad] = useState({});
   const [localidades, setLocalidades] = useState([]);
   const [localidadesSelect, setLocalidadesSelect] = useState([]);
   const [reloadLocalidades, setReloadLocalidades] = useState(false);
@@ -112,6 +110,35 @@ const AgregarCliente = () => {
   const handleClose = () => {
     setOpen(false);
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const obtenerClientes = () => {

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
 import { Container, Grid, makeStyles, Box, createTheme } from '@material-ui/core';
 import axios from 'axios';
@@ -9,6 +9,8 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { Link, useLocation } from 'react-router-dom';
 import Logo from '../../assets/images/LogoOp.png'
+import { useNavigate } from 'react-router-dom';
+import AlertasReutilizable from '../../components/Reutilizable/AlertasReutilizable';
 
 const theme = createTheme({
   palette: {
@@ -21,6 +23,9 @@ const theme = createTheme({
 const useStyles = makeStyles(theme => ({
   title: {
     textAlign: 'center',
+  },
+  content: {
+    color: 'black',
   },
   root: {
     flexGrow: 1,
@@ -39,12 +44,19 @@ const useStyles = makeStyles(theme => ({
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     border: '1px solid black',
+    display: 'flex',
+    flexDirection: 'column',
   },
   box: {
     marginTop: theme.spacing(2),
   },
   cardCont: {
-
+    flex: 1,
+  },
+  cardActions: {
+    display: 'flex',
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
   },
   backgroundImage: {
     backgroundImage: `url(${Logo})`, // Reemplaza 'Logo' con la ruta correcta de tu imagen de fondo
@@ -62,6 +74,12 @@ const useStyles = makeStyles(theme => ({
 
 const Home = () => {
   const classes = useStyles();
+
+  const navigate = useNavigate();
+  const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
 
   useEffect(() => {
     const fecha = new Date();
@@ -85,145 +103,185 @@ const Home = () => {
     } else { }
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('Token no existe, puto')
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
+  }, []);
+
   return (
     <div>
       <Navbar />
       <Container className={classes.root}>
         <Box className={classes.box}>
+          <Grid container spacing={0}>
+            <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+            <Grid item lg={8} md={8} sm={8} xs={8}>
+              <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                Programa de gestión, Chacinería La Marcelina
+              </Typography>
+            </Grid>
+            <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
+          </Grid>
+          <Grid container spacing={0}>
+            <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+            <Grid item lg={4} md={4} sm={4} xs={4}>
+              <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
+            </Grid>
+            <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
+          </Grid>
           <Grid container justifyContent='center' alignContent='center'>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Diaria de producción
+                    Diaria de producción
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de produccion diaria
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/diaria-de-produccion">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-diaria-de-produccion">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-              <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Expedicion de productos
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Expedicion de productos
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de expedicion de productos
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/expedicion-de-producto">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-expedicion-de-producto">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Resumen de trazabilidad
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Resumen de trazabilidad
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de resumen de trazabilidad
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/resumen-de-trazabilidad">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-resumen-de-trazabilidad">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Recepcion de materaias primas carnicas
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Recepcion de materaias primas carnicas
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de recepcion de materias primas carnicas
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/recepcion-de-materias-primas-carnicas">Añadir</Button>
-                  <Button size="small"component={Link} to="/listar-recepcion-de-materias-primas-carnicas"> Ver</Button>
+                  <Button size="small" component={Link} to="/listar-recepcion-de-materias-primas-carnicas"> Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
           </Grid>
           <Grid container justifyContent='center' alignContent='center'>
-          <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Monitoreo de SSOP operativo
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Monitoreo de SSOP operativo
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de monitoreo de SSOP operativo
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/monitoreo-de-ssop-operativo">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-monitoreo-de-ssop-operativo">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Monitoreo de SSOP pre-operativo
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Monitoreo de SSOP pre-operativo
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de monitoreo de SSOP pre-operativo
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/monitoreo-de-ssop-pre-operativo">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-monitoreo-de-ssop-pre-operativo">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de nitritos
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de nitritos
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de control de nitritos
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-nitritos">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-nitritos">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de nitratos
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de nitratos
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de control de nitratos
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-nitratos">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-nitratos">Ver</Button>
                 </CardActions>
@@ -231,69 +289,69 @@ const Home = () => {
             </Grid>
           </Grid>
           <Grid container justifyContent='center' alignContent='center'>
-          <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de alarma luminica y sonora de cloro
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de alarma luminica y sonora de cloro
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de control de alarma luminica y sonora de cloro
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-alarma-luminica-y-sonora-de-cloro">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-alarma-luminica-y-sonora-de-cloro">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de cloro libre
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de cloro libre
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de control de cloro libre
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-cloro-libre">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-cloro-libre">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de limpieza y desinfeccion de depositos de agua y cañerias
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de limpieza y desinfeccion de depositos de agua y cañerias
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de control de limpieza y desinfeccion de depositos de agua y cañerias
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de reposicion de cloro
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de reposicion de cloro
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de control de reposicion de cloro
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-reposicion-de-cloro">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-reposicion-de-cloro">Ver</Button>
                 </CardActions>
@@ -301,69 +359,69 @@ const Home = () => {
             </Grid>
           </Grid>
           <Grid container justifyContent='center' alignContent='center'>
-          <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de temperatura de esterilizadores
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de temperatura de esterilizadores
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de control de temperatura de esterilizadores
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-temperatura-de-esterilizadores">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-temperatura-de-esterilizadores">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de temperatura en camaras
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de temperatura en camaras
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de control de temperatura en camaras
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-temperatura-en-camaras">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-temperatura-en-camaras">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de mejoras en instalaciones
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de mejoras en instalaciones
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de mejoras en instalaciones
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-mejoras-en-instalaciones">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-mejoras-en-instalaciones">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Control de productos quimicos
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Control de productos quimicos
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de control de productos quimicos
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/control-de-productos-quimicos">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-control-de-productos-quimicos">Ver</Button>
                 </CardActions>
@@ -371,69 +429,69 @@ const Home = () => {
             </Grid>
           </Grid>
           <Grid container justifyContent='center' alignContent='center'>
-          <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Proveedores
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Proveedores
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de proveedores
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/proveedor">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-proveedor">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Clientes
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Clientes
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de clientes
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/cliente">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-cliente">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Productos
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Productos
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de productos
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/producto">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-producto">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Carnes
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Carnes
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de carnes
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/carne">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-carne">Ver</Button>
                 </CardActions>
@@ -441,52 +499,52 @@ const Home = () => {
             </Grid>
           </Grid>
           <Grid container justifyContent='center' alignContent='center'>
-          <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Localidades
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Localidades
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de localidades
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/localidad">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-localidad">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Usuarios
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Usuarios
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla de usuarios
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-usuarios">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={4} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
-                <CardContent>
-                  <Typography variant="h5" component="h2" align='center'>
-                  Anual de insumos carnicos
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Anual de insumos carnicos
                   </Typography>
-                  <Typography variant="body2" component="p">
-                    <br/>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
                     Planilla anual de insumos carnicos
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions className={classes.cardActions}>
                   <Button size="small" component={Link} to="/listar-anual-de-insumos-carnicos">Ver</Button>
                 </CardActions>
               </Card>

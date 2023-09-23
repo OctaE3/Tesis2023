@@ -5,7 +5,6 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -96,7 +95,6 @@ const ModificarCarne = () => {
     const [control, setControl] = useState({});
     const [carneDesactivado, setCarneDesactivado] = useState(false);
     const [opciones, setOpciones] = useState([]);
-    const [categoriaValue, setCategoriaValue] = useState('');
     const carneTipoSelect = [
         { value: 'Porcino', label: 'Porcino' },
         { value: 'Bovino', label: 'Bovino' },
@@ -174,6 +172,35 @@ const ModificarCarne = () => {
             body: newBody,
         }));
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+                navigate('/')
+            }, 5000);
+        } else {
+            const tokenParts = token.split('.');
+            const payload = JSON.parse(atob(tokenParts[1]));
+            console.log(payload)
+
+            const tokenExpiration = payload.exp * 1000;
+            console.log(tokenExpiration)
+            const currentTime = Date.now();
+            console.log(currentTime)
+
+            if (tokenExpiration < currentTime) {
+                setShowAlertWarning(true);
+                setTimeout(() => {
+                    setShowAlertWarning(false);
+                    navigate('/')
+                }, 3000);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -329,16 +356,16 @@ const ModificarCarne = () => {
                     if (error.request.status === 401) {
                         setShowAlertWarning(true);
                         setTimeout(() => {
-                          setShowAlertWarning(false);
+                            setShowAlertWarning(false);
                         }, 5000);
-                      }
-                      else if (error.request.status === 500) {
+                    }
+                    else if (error.request.status === 500) {
                         updateErrorAlert('No se logro modificar la carne, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
-                          setShowAlertError(false);
+                            setShowAlertError(false);
                         }, 5000);
-                      }
+                    }
                 })
         }
     };

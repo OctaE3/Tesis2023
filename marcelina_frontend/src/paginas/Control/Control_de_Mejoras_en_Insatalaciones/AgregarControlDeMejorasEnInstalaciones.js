@@ -6,6 +6,7 @@ import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -84,7 +85,6 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
   });
 
   const classes = useStyles();
-  const [controlDeMejoras, setControlDeMejoras] = useState({});
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
@@ -94,6 +94,8 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
 
   const [blinking, setBlinking] = useState(true);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -108,6 +110,35 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
     return () => {
       clearInterval(blinkInterval);
     };
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
   }, []);
 
   const handleClickOpen = () => {

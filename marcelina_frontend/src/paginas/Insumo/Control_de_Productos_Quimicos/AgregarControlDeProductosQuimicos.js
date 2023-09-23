@@ -5,6 +5,7 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -85,7 +86,6 @@ const AgregarControlDeProductosQuimicos = () => {
         title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
-    const [proveedor, setProveedor] = useState({});
     const [proveedores, setProveedores] = useState([]);
     const [proveedoresSelect, setProveedoresSelect] = useState('');
     const [reloadProveedores, setReloadProveedores] = useState(false);
@@ -94,6 +94,7 @@ const AgregarControlDeProductosQuimicos = () => {
     const [showAlertWarning, setShowAlertWarning] = useState(false);
 
     const classes = useStyles();
+    const navigate = useNavigate();
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -108,6 +109,35 @@ const AgregarControlDeProductosQuimicos = () => {
     const handleClose = () => {
         setOpen(false);
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+                navigate('/')
+            }, 5000);
+        } else {
+            const tokenParts = token.split('.');
+            const payload = JSON.parse(atob(tokenParts[1]));
+            console.log(payload)
+
+            const tokenExpiration = payload.exp * 1000;
+            console.log(tokenExpiration)
+            const currentTime = Date.now();
+            console.log(currentTime)
+
+            if (tokenExpiration < currentTime) {
+                setShowAlertWarning(true);
+                setTimeout(() => {
+                    setShowAlertWarning(false);
+                    navigate('/')
+                }, 3000);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         const obtenerProveedores = () => {

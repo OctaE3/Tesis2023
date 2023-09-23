@@ -89,6 +89,42 @@ function ListarInsumo() {
     title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
+  const updateErrorAlert = (newBody) => {
+    setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -266,6 +302,7 @@ function ListarInsumo() {
           }, 5000);
           setDeleteItem(true);
         } else {
+          updateErrorAlert('No se logró eliminar el insumo, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -280,6 +317,7 @@ function ListarInsumo() {
           }, 5000);
         }
         else if (error.request.status === 500) {
+          updateErrorAlert('No se logró eliminar el insumo, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);

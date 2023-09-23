@@ -99,8 +99,6 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
     const classes = useStyles();
     const { id } = useParams();
     const [control, setControl] = useState({});
-    const [controlOpcion, setControlOpcion] = ('');
-    const [controles, setControles] = useState([]);
     const selectNroCamara = [
         { value: 'Camara 1', label: 'Camara 1' },
         { value: 'Camara 2', label: 'Camara 2' },
@@ -148,6 +146,35 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
             body: newBody,
         }));
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+                navigate('/')
+            }, 5000);
+        } else {
+            const tokenParts = token.split('.');
+            const payload = JSON.parse(atob(tokenParts[1]));
+            console.log(payload)
+
+            const tokenExpiration = payload.exp * 1000;
+            console.log(tokenExpiration)
+            const currentTime = Date.now();
+            console.log(currentTime)
+
+            if (tokenExpiration < currentTime) {
+                setShowAlertWarning(true);
+                setTimeout(() => {
+                    setShowAlertWarning(false);
+                    navigate('/')
+                }, 3000);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         const obtenerControles = () => {

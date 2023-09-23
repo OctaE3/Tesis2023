@@ -92,6 +92,42 @@ function ListarDiariaDeProduccion() {
     title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
+  const updateErrorAlert = (newBody) => {
+    setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -292,6 +328,7 @@ function ListarDiariaDeProduccion() {
           }, 5000);
           setDeleteItem(true);
         } else {
+          updateErrorAlert('No se logró eliminar la diaria de producción, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -306,6 +343,7 @@ function ListarDiariaDeProduccion() {
           }, 5000);
         }
         else if (error.request.status === 500) {
+          updateErrorAlert('No se logró eliminar la diaria de producción, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -399,7 +437,7 @@ function ListarDiariaDeProduccion() {
                         <span className={classes.liTitleBlue}>Envasado</span>: En este campo se puede seleccionar si el producto esta envasado o no y filtar la lista por el envasado.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Desde Fecha vencimeinto y Hasta Fecha vencimeinto</span>: Estos campos funcionan de la misma manera que Desde Fecha y Hasta Fecha, 
+                        <span className={classes.liTitleBlue}>Desde Fecha vencimeinto y Hasta Fecha vencimeinto</span>: Estos campos funcionan de la misma manera que Desde Fecha y Hasta Fecha,
                         nada más que se tiene en cuenta la fecha de vencimiento.
                       </li>
                     </ul>

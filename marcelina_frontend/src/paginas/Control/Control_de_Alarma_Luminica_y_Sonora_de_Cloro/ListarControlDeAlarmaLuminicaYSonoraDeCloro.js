@@ -119,6 +119,42 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
     setDeleteItem(false);
   }, [deleteItem]);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
+  }, []);
+
+  const updateErrorAlert = (newBody) => {
+    setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
   const tableHeadCells = [
     { id: 'controlDeAlarmaLuminicaYSonoraDeCloroFechaHora', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica', numeric: false, disablePadding: false, label: 'Alarma Lumínca' },
@@ -227,6 +263,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
           }, 5000);
           setDeleteItem(true);
         } else {
+          updateErrorAlert('No se logró eliminar el estado de las alarmas, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -241,6 +278,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
           }, 5000);
         }
         else if (error.request.status === 500) {
+          updateErrorAlert('No se logró eliminar el estado de las alarmas, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);

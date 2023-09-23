@@ -87,6 +87,42 @@ function ListarAnualDeInsumosCarnicos() {
     title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
+  const updateErrorAlert = (newBody) => {
+    setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('No se logró eliminar el anual de insumos cárnicos, recargue la pagina.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -199,6 +235,7 @@ function ListarAnualDeInsumosCarnicos() {
           }, 5000);
           setDeleteItem(true);
         } else {
+          updateErrorAlert('No se logró eliminar el anual de insumos cárnicos, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -213,6 +250,7 @@ function ListarAnualDeInsumosCarnicos() {
           }, 5000);
         }
         else if (error.request.status === 500) {
+          updateErrorAlert('No se logró eliminar el anual de insumos cárnicos, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -315,7 +353,7 @@ function ListarAnualDeInsumosCarnicos() {
                   </span>
                   <span>
                     <ul>
-                    <li>
+                      <li>
                         <span className={classes.liTitleRed}>Mes</span>: En este campo se muestra el mes en el que se registró el anual de insumos cárnicos.
                       </li>
                       <li>

@@ -28,6 +28,9 @@ const useStyles = makeStyles((theme) => ({
     flex: '1',
     textAlign: 'center',
   },
+  text: {
+    color: 'black',
+  },
   root: {
     width: '100%',
     marginTop: theme.spacing(2),
@@ -173,7 +176,7 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
         >
           <DialogTitle id="responsive-dialog-title">Confirmación</DialogTitle>
           <DialogContent>
-            <DialogContentText id="alert-dialog-description">
+            <DialogContentText id="alert-dialog-description" className={classes.text}>
               ¿Estás seguro de que deseas eliminar este elemento?
             </DialogContentText>
           </DialogContent>
