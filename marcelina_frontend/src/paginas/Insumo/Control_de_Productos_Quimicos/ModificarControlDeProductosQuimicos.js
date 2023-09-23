@@ -5,7 +5,6 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -135,6 +134,35 @@ const ModificarControlDeProductosQuimicos = () => {
             body: newBody,
         }));
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+                navigate('/')
+            }, 5000);
+        } else {
+            const tokenParts = token.split('.');
+            const payload = JSON.parse(atob(tokenParts[1]));
+            console.log(payload)
+
+            const tokenExpiration = payload.exp * 1000;
+            console.log(tokenExpiration)
+            const currentTime = Date.now();
+            console.log(currentTime)
+
+            if (tokenExpiration < currentTime) {
+                setShowAlertWarning(true);
+                setTimeout(() => {
+                    setShowAlertWarning(false);
+                    navigate('/')
+                }, 3000);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -273,7 +301,7 @@ const ModificarControlDeProductosQuimicos = () => {
         if (quimicoProveedor.value) {
             proveedorCompleto = proveedores.find((proveedor) => proveedor.proveedorId.toString() === quimicoProveedor.value.toString());
         } else {
-            proveedorCompleto =proveedores.find((proveedor) => proveedor.proveedorId.toString() === quimicoProveedor.toString());
+            proveedorCompleto = proveedores.find((proveedor) => proveedor.proveedorId.toString() === quimicoProveedor.toString());
         }
 
         const fecha = control.controlDeProductosQuimicosFecha;
@@ -281,7 +309,7 @@ const ModificarControlDeProductosQuimicos = () => {
         let fechaFormateada = '';
         fechaNueva.setDate(fechaNueva.getDate() + 1);
         console.log(fechaNueva)
-        if (fechaNueva.toString() === 'Invalid Date') { 
+        if (fechaNueva.toString() === 'Invalid Date') {
             fechaFormateada = undefined;
         }
         else {

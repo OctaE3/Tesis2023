@@ -5,6 +5,7 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -83,6 +84,7 @@ const AgregarControlDeCloroLibre = () => {
   });
 
   const classes = useStyles();
+  const navigate = useNavigate();
   const [controlDeCloroLibre, setControlDeCloroLibre] = useState({});
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
@@ -107,6 +109,35 @@ const AgregarControlDeCloroLibre = () => {
     return () => {
       clearInterval(blinkInterval);
     };
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
   }, []);
 
   const handleClickOpen = () => {
@@ -174,6 +205,7 @@ const AgregarControlDeCloroLibre = () => {
             setTimeout(() => {
               setShowAlertSuccess(false);
             }, 5000);
+            formData = {};
           } else {
             updateErrorAlert('No se logro regristrar el control de cloro libre, revise los datos ingresados');
             setShowAlertError(true);

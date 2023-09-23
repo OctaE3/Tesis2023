@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -79,6 +80,7 @@ const AgregarProducto = () => {
   });
 
   const classes = useStyles();
+  const navigate = useNavigate();
   const [productos, setProductos] = useState({});
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
@@ -97,6 +99,35 @@ const AgregarProducto = () => {
   const handleClose = () => {
     setOpen(false);
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const obtenerProductos = () => {

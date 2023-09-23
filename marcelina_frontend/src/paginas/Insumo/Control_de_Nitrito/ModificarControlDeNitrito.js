@@ -5,7 +5,6 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -132,6 +131,35 @@ const ModificarControlDeNitrito = () => {
     };
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+                navigate('/')
+            }, 5000);
+        } else {
+            const tokenParts = token.split('.');
+            const payload = JSON.parse(atob(tokenParts[1]));
+            console.log(payload)
+
+            const tokenExpiration = payload.exp * 1000;
+            console.log(tokenExpiration)
+            const currentTime = Date.now();
+            console.log(currentTime)
+
+            if (tokenExpiration < currentTime) {
+                setShowAlertWarning(true);
+                setTimeout(() => {
+                    setShowAlertWarning(false);
+                    navigate('/')
+                }, 3000);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
         const obtenerControles = () => {
             axios.get('/listar-control-de-nitrito', {
                 headers: {
@@ -234,7 +262,7 @@ const ModificarControlDeNitrito = () => {
     }
 
     const checkError = (fecha, lote, cantidad, stock) => {
-        if (fecha === undefined || fecha === null || fecha === '') {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (lote === undefined || lote === null || lote === '') {

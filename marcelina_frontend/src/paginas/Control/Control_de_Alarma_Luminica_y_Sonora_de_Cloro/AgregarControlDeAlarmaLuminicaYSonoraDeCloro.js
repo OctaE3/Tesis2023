@@ -5,6 +5,7 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -82,6 +83,7 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
 
   const classes = useStyles();
   const [controlDeAlarmas, setControlDeAlarmas] = useState({});
+  const navigate = useNavigate();
   const [selectAlarmas, setSelectAlarmas] = useState([
     { value: true, label: 'Funciona' },
     { value: false, label: 'No Funciona' }
@@ -111,6 +113,35 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+      setShowAlertError(true);
+      setTimeout(() => {
+        setShowAlertError(false);
+        navigate('/')
+      }, 5000);
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log(payload)
+
+      const tokenExpiration = payload.exp * 1000;
+      console.log(tokenExpiration)
+      const currentTime = Date.now();
+      console.log(currentTime)
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 3000);
+      }
+    }
+  }, []);
+
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -121,13 +152,6 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
 
   const updateErrorAlert = (newBody) => {
     setAlertError((prevAlert) => ({
-      ...prevAlert,
-      body: newBody,
-    }));
-  };
-
-  const updateSuccessAlert = (newBody) => {
-    setAlertSuccess((prevAlert) => ({
       ...prevAlert,
       body: newBody,
     }));
@@ -170,6 +194,7 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
             setTimeout(() => {
               setShowAlertSuccess(false);
             }, 5000);
+            formData = {};
           } else {
             updateErrorAlert('No se logró registrar el estado de las alarmas, revise los datos');
             setShowAlertError(true);

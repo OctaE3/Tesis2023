@@ -5,8 +5,8 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { tr } from 'date-fns/locale';
 
 const theme = createTheme({
     palette: {
@@ -111,6 +111,8 @@ const AgregarInsumo = () => {
 
     const [blinking, setBlinking] = useState(true);
 
+    const navigate = useNavigate();
+
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -125,6 +127,35 @@ const AgregarInsumo = () => {
             body: newBody,
         }));
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+                navigate('/')
+            }, 5000);
+        } else {
+            const tokenParts = token.split('.');
+            const payload = JSON.parse(atob(tokenParts[1]));
+            console.log(payload)
+
+            const tokenExpiration = payload.exp * 1000;
+            console.log(tokenExpiration)
+            const currentTime = Date.now();
+            console.log(currentTime)
+
+            if (tokenExpiration < currentTime) {
+                setShowAlertWarning(true);
+                setTimeout(() => {
+                    setShowAlertWarning(false);
+                    navigate('/')
+                }, 3000);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         const obtenerProveedores = () => {
@@ -169,7 +200,7 @@ const AgregarInsumo = () => {
         if (nombre === undefined || nombre === null || nombre === '') {
             return false;
         }
-        else if (fecha === undefined || fecha === null || fecha === '') {
+        else if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (cantidad === undefined || cantidad === null || cantidad === '') {
@@ -178,7 +209,7 @@ const AgregarInsumo = () => {
         else if (lote === undefined || lote === null || lote === '') {
             return false;
         }
-        else if (fechaV === undefined || fechaV === null || fechaV === '') {
+        else if (fechaV === undefined || fechaV === null || fechaV === '' || fechaV.toString() === 'Invalid Date') {
             return false;
         }
         return true;

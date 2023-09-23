@@ -6,7 +6,8 @@ import InputBase from '@material-ui/core/InputBase';
 import { alpha, makeStyles } from '@material-ui/core/styles';
 import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
-import { createTheme, Typography, ThemeProvider, Avatar, Grid } from '@material-ui/core';
+import AccountCircle from '@material-ui/icons/AccountCircle';
+import { createTheme, ThemeProvider, Avatar, Grid } from '@material-ui/core';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -14,7 +15,8 @@ import ListItemText from '@material-ui/core/ListItemText';
 import { Link, useLocation } from 'react-router-dom';
 import '../Estilos/Estilos.css';
 import Logo from "../../assets/images/LogoAzul.png";
-
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@material-ui/core';
+import { useNavigate } from 'react-router-dom';
 
 const theme = createTheme({
   palette: {
@@ -39,6 +41,9 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.up('sm')]: {
       display: 'block',
     },
+  },
+  text: {
+    color: 'black',
   },
   search: {
     position: 'relative',
@@ -96,6 +101,8 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const isHomeRoute = location.pathname === '/';
+  const [openDialog, setOpenDialog] = useState(false);
+  const navigate = useNavigate();
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -105,9 +112,45 @@ const Navbar = () => {
     setOpen(false);
   };
 
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseSesion = () => {
+    window.localStorage.clear();
+    navigate('/')
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <div className={classes.root}>
+        <div>
+          <Dialog
+            open={openDialog}
+            onClose={handleCloseDialog}
+            aria-labelledby="responsive-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="responsive-dialog-title">Confirmación</DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description" className={classes.text}>
+                ¿Estás seguro de que deseas cerrar sesión?
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseDialog} color="primary" autoFocus>
+                No
+              </Button>
+              <Button onClick={handleCloseSesion} color="primary" autoFocus>
+                Sí
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </div>
         <AppBar position="static" color="primary">
           <Toolbar>
             <IconButton
@@ -125,6 +168,17 @@ const Navbar = () => {
               </Grid>
               <Grid item lg={11} md={11} sm={11} xs={11}></Grid>
             </Grid>
+            <div>
+              <IconButton
+                edge="end"
+                aria-label="account"
+                aria-haspopup="true"
+                color="inherit"
+                onClick={handleOpenDialog}
+              >
+                <AccountCircle />
+              </IconButton>
+            </div>
             {isHomeRoute && (
               <div className={classes.search}>
                 <div className={classes.searchIcon}>

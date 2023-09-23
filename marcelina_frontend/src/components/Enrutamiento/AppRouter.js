@@ -4,7 +4,6 @@ import Home from '../../paginas/Home/Home';
 import AgregarLocalidad from '../../paginas/Persona/Localidad/AgregarLocalidad';
 import Login from '../../paginas/Persona/Login/Login';
 import AgregarCliente from '../../paginas/Persona/Cliente/AgregarCliente';
-import AgregarCarne from "../../paginas/Insumo/Carne/AgregarCarne";
 import AgregarInsumo from '../../paginas/Insumo/Control_de_Insumo/AgregarInsumo';
 import AgregarProveedor from "../../paginas/Persona/Proveedor/AgregarProveedor";
 import ListarCarne from "../../paginas/Insumo/Carne/ListarCarne";
@@ -88,7 +87,6 @@ const AppRouter = () => {
           <Route path="/listarcliente" element={<ListarCliente />} />
           <Route path="/modificar-cliente/:id" element={<ModificarCliente />} />
           <Route path="/listar-cliente" element={<ListarCliente />} />
-          <Route path="/carne" element={<AgregarCarne />} />
           <Route path="/modificar-carne/:id" element={<ModificarCarne />} />
           <Route path="/listar-carne" element={<ListarCarne />} />
           <Route path="/insumo" element={<AgregarInsumo />} />

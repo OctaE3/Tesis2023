@@ -145,6 +145,35 @@ const ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () =>
     };
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+                navigate('/')
+            }, 5000);
+        } else {
+            const tokenParts = token.split('.');
+            const payload = JSON.parse(atob(tokenParts[1]));
+            console.log(payload)
+
+            const tokenExpiration = payload.exp * 1000;
+            console.log(tokenExpiration)
+            const currentTime = Date.now();
+            console.log(currentTime)
+
+            if (tokenExpiration < currentTime) {
+                setShowAlertWarning(true);
+                setTimeout(() => {
+                    setShowAlertWarning(false);
+                    navigate('/')
+                }, 3000);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
         const obtenerControles = () => {
             axios.get('/listar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-canierias', {
                 headers: {
