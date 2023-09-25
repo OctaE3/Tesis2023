@@ -132,7 +132,10 @@ function ListarProducto() {
           }
         });
 
-        const localidadData = localidadResponse.data;
+        const localidadData = localidadResponse.data.map((prod) => ({
+          ...prod,
+          Id: prod.productoId,  
+        }));
 
         setData(localidadData);
       } catch (error) {
@@ -195,7 +198,7 @@ function ListarProducto() {
       }
     })
       .then(response => {
-        if (response.status === 204) {
+        if (response.status === 200) {
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);

@@ -7,7 +7,7 @@ import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutili
 import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
 
@@ -84,6 +84,10 @@ function ListarDiariaDeProduccion() {
     title: 'Correcto', body: 'Se elimino la diaria de producción con éxito!', severity: 'success', type: 'description'
   });
 
+  const [alertSuccess2, setAlertSuccess2] = useState({
+    title: 'Correcto', body: 'Prueba picada.', severity: 'success', type: 'actions'
+  });
+
   const [alertError, setAlertError] = useState({
     title: 'Error', body: 'No se logró eliminar la diaria de producción, recargue la pagina.', severity: 'error', type: 'description'
   });
@@ -157,15 +161,30 @@ function ListarDiariaDeProduccion() {
           }
         });
 
-
-        const data = response.data.map((diaria) => ({
-          ...diaria,
-          Id: diaria.diariaDeProduccionId,
-        }));
+        const data = response.data.map((diaria) => {
+          const fechaVencimiento = new Date(diaria.diariaDeProduccionFechaVencimiento);
+          const fechaActual = new Date();
+          const diferenciaDias = differenceInDays(fechaVencimiento, fechaActual);
+          console.log(diferenciaDias);
+          if (diferenciaDias <= 3 && diferenciaDias >= 0) {
+            return {
+              ...diaria,
+              Id: diaria.diariaDeProduccionId,
+              isExpired: 'Yes',
+            };
+          } else {
+            return {
+              ...diaria,
+              Id: diaria.diariaDeProduccionId,
+            };
+          }
+        });
         const ResponsableData = ResponsableResponse.data;
         const InsumoData = InsumoResponse.data;
         const ProductoData = ProductoResponse.data;
         const CarneData = carneResponse.data;
+
+        console.log(data);
 
         setData(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
@@ -225,7 +244,7 @@ function ListarDiariaDeProduccion() {
   const mapData = (item, key) => {
     if (key === 'recepcionDeMateriasPrimasCarnicasFecha') {
       if (item.recepcionDeMateriasPrimasCarnicasFecha) {
-        const fecha = new Date(item.recepcionDeMateriasPrimasCarnicasFecha); // Convertir fecha a objeto Date
+        const fecha = new Date(item.recepcionDeMateriasPrimasCarnicasFecha);
         return format(fecha, 'dd/MM/yyyy');
       } else {
         return '';
@@ -245,9 +264,16 @@ function ListarDiariaDeProduccion() {
       }
     } else if (key === 'diariaDeProduccionInsumosCarnicos') {
       if (item.diariaDeProduccionInsumosCarnicos && item.diariaDeProduccionInsumosCarnicos.length > 0) {
-        const nombresProductos = item.diariaDeProduccionInsumosCarnicos.map(producto => `${producto.carneNombre} - ${producto.carneCorte}`);
-        const cantidadProductos = item.diariaDeProduccionCantidadUtilizadaCarnes.map(cantidadproducto => cantidadproducto.detalleCantidadCarneCantidad);
-        const cantidadCarne = [[`${nombresProductos} - ${cantidadProductos} Kg`]]
+        const cantidadCarne = [];
+
+        for (let i = 0; i < item.diariaDeProduccionInsumosCarnicos.length; i++) {
+          const productoCarnico = item.diariaDeProduccionInsumosCarnicos[i];
+          const cantidad = item.diariaDeProduccionCantidadUtilizadaCarnes[i].detalleCantidadCarneCantidad;
+
+          const texto = `${productoCarnico.carneNombre} - ${productoCarnico.carneCorte} - ${cantidad} Kg`;
+
+          cantidadCarne.push(texto);
+        }
         return cantidadCarne;
       } else {
         return [];
@@ -446,6 +472,9 @@ function ListarDiariaDeProduccion() {
                     Lista:
                   </span>
                   <span>
+                    Detalles:
+                    Los registros que contengan una fecha de vencimiento con 3 días o menos de diferencia con la fecha actual, aparecerán de color rojo,
+                    esto es para señalizar que el producto está por caducar.
                     <ul>
                       <li>
                         <span className={classes.liTitleRed}>Producto</span>: En esta columna se muestra el producto que se produjo.

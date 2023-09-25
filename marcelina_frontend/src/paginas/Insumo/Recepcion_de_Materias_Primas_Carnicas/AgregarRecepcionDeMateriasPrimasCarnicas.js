@@ -276,7 +276,20 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
         console.log(formData);
         const { carnesAgregadas, ...formDataWithoutCarnesAgregadas } = formData;
 
-        const checkMul = checkMultiple(carnesAgregadas);
+        const listaCarne = formData.carnesAgregadas;
+
+        const carnes = listaCarne.map(carne => ({
+            ...carne,
+            carneCategoria:
+                carne.carneTipo === "Sangre" ? "Sangre" :
+                    carne.carneTipo === "Higado" ? "Higado" :
+                        carne.carneTipo === "Tripas" ? "Tripas" :
+                            carne.carneCategoria,
+            carnePaseSanitario: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasPaseSanitario,
+            carneFecha: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasFecha,
+        }));
+
+        const checkMul = checkMultiple(carnes);
 
         if (checkMul === false) {
             updateErrorAlert(`Revise los productos ingresados, no se permite dejar campos vacíos y seleccionar la opción "Seleccionar", elimine el producto e ingreselo nuevamente.`);
@@ -285,19 +298,6 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                 setShowAlertError(false);
             }, 7000);
         } else {
-            const listaCarne = formData.carnesAgregadas;
-
-            const carnes = listaCarne.map(carne => ({
-                ...carne,
-                carneCategoria:
-                    carne.carneTipo === "Sangre" ? "Sangre" :
-                        carne.carneTipo === "Higado" ? "Higado" :
-                            carne.carneTipo === "Tripas" ? "Tripas" :
-                                carne.carneCategoria,
-                carnePaseSanitario: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasPaseSanitario,
-                carneFecha: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasFecha,
-            }));
-
             console.log(carnes);
 
             const proveedorSeleccionadaObj = proveedores.filter((proveedor) => proveedor.proveedorId.toString() === formData.recepcionDeMateriasPrimasCarnicasProveedor)[0];

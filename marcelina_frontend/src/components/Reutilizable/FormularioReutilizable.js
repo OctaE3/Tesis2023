@@ -413,7 +413,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   };
 
   const handleChangeModalStock = event => {
-    const { id, value, name } = event.target;
+    const { value, name } = event.target;
     const regex = new RegExp("^[0-9]{0,9}$");
     console.log(name);
     if (regex.test(value)) {
@@ -473,15 +473,13 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const handleSubmit = async event => {
     event.preventDefault();
     const tel = telefonos[0];
+    console.log(telefonos)
     console.log(tel);
     if (tel.telefono === "") {
       onSubmit(formData);
-      setFormData({});
     } else {
       console.log(telefonos)
       onSubmit(formData, telefonos);
-      setFormData({});
-      setTelefonos({});
     }
   };
 
@@ -489,7 +487,6 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
     event.preventDefault();
     onSubmitModal(formDataModal);
     setOpen(false);
-    setFormDataModal({});
   };
 
   const handleOpenModal = () => {
@@ -515,7 +512,7 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
     const stockSumado = parseInt(stock) + parseInt(stockAgregado);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      'stock': stockSumado,
+      'stockForm': stockSumado,
     }));
     setOpen(false);
     setStockAgregado(0);

@@ -238,10 +238,10 @@ const ModificarControlDeCloroLibre = () => {
 
     const handleFormSubmit = () => {
         console.log(control);
-        const numResultado = parseFloat(control.controlDeCloroLibreResultado);
+        const numResultado = control.controlDeCloroLibreResultado;
         const data = {
             ...control,
-            controlDeCloroLibreResultado: numResultado ? numResultado : undefined,
+            controlDeCloroLibreResultado: numResultado,
         };
         console.log(data);
 

@@ -220,7 +220,16 @@ const ModificarControlDeReposicionDeCloro = () => {
                 ...prevState,
                 [name]: value,
             }));
-        } else {
+        } else if (name === 'controlDeReposicionDeCloroObservaciones') {
+            const regObs = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+            if (regObs.test(value)) {
+                setControl(prevState => ({
+                    ...prevState,
+                    [name]: value,
+                }));
+            }
+        }
+        else {
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -455,7 +464,6 @@ const ModificarControlDeReposicionDeCloro = () => {
                                             autoFocus
                                             className={classes.customOutlinedRed}
                                             InputLabelProps={{ className: classes.customLabelRed }}
-                                            id="^[A-Za-z0-9\\s,.]{0,250}$"
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"

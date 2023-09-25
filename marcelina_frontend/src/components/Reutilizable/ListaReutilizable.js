@@ -38,8 +38,8 @@ const useStyles = makeStyles((theme) => ({
   paper: {
     width: '95%',
     marginBottom: theme.spacing(2),
-    border: '2px solid black', 
-    margin: '5% auto', 
+    border: '2px solid black',
+    margin: '5% auto',
     overflowX: 'auto'
   },
   table: {
@@ -59,7 +59,10 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
     marginBottom: theme.spacing(1)
-  }
+  },
+  colorExpired: {
+    color: 'red',
+  },
 }));
 
 function EnhancedTableHead(props) {
@@ -121,6 +124,9 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
       tableHeadCells.forEach((column) => {
         row[column.id] = dataMapper(item, column.id);
       });
+      if (item.isExpired) {
+        row.isExpired = item.isExpired;
+      }
       return row;
     });
     setRows(mappedRows);
@@ -211,7 +217,7 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
                   .map((row, index) => (
                     <TableRow key={index}>
                       {tableHeadCells.map((column) => (
-                        <TableCell key={column.id} align={column.numeric ? 'right' : 'left'}>
+                        <TableCell key={column.id} align={column.numeric ? 'right' : 'left'} className={row.isExpired ? classes.colorExpired : ''}>
                           {columnRenderers[column.id] ? (
                             columnRenderers[column.id](row[column.id])
                           ) : (
