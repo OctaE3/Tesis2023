@@ -9,6 +9,7 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
 
 const theme = createTheme({
   palette: {
@@ -159,15 +160,15 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', numeric: false, disablePadding: false, label: 'Deposito' },
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias', numeric: false, disablePadding: false, label: 'Cañeria' },
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
-    { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable', numeric: false, disablePadding: false, label: 'Resposnsable' }
+    { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable', numeric: false, disablePadding: false, label: 'Responsable' }
   ];
 
   const filters = [
-    { id: 'fecha', label: 'Fecha', type: 'datetime', options: ['desde', 'hasta'] },
-    { id: 'deposito', label: 'Deposito', type: 'select', options: ['Deposito de Agua 1', 'Deposito de Agua 2', 'Deposito de Agua 3'] },
+    { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
+    { id: 'deposito', label: 'Deposito', type: 'select', options: ['1', '2', '3'] },
     { id: 'canieria', label: 'Cañeria', type: 'text' },
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -189,9 +190,8 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
   const mapData = (item, key) => {
     if (key === 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha') {
       if (item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha) {
-        const fechaArray = item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
-        const fecha = new Date(fechaArray);
-        return format(fecha, 'dd-MM-yyyy');
+        const fecha = new Date(item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha); // Convertir fecha a objeto Date
+        return format(fecha, 'dd/MM/yyyy');
       } else {
         return '';
       }
@@ -208,24 +208,20 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
   };
 
   const filteredData = data.filter((item) => {
-    const fechaArray = item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha;
-    const fecha = new Date(fechaArray);
-    const fechaFromat = format(fecha, 'dd/MM/yyyy');
-
     const lowerCaseItem = {
-      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha: fechaFromat,
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha: new Date(item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha),
       controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito : '',
-      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias,
+      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias.toLowerCase() : '',
       controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones.toLowerCase() : '',
       controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre.toLowerCase() : '',
     };
 
     if (
-      (!filtros['fecha-desde'] || fechaFromat >= filtros['fecha-desde']) &&
-      (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) &&
-      (!filtros.deposito || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.startsWith(filtros.deposito)) &&
+      (!filtros['fecha-desde'] || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha >= new Date(filtros['fecha-desde'])) &&
+      (!filtros['fecha-hasta'] || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha <= new Date(filtros['fecha-hasta'])) &&
+      (!filtros.deposito || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.includes(filtros.deposito)) &&
       (!filtros.canieria || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias.toString().startsWith(filtros.canieria)) &&
-      (!filtros.observaciones || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.observaciones || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones.includes(filtros.observaciones)) &&
       (!filtros.responsable || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.startsWith(filtros.responsable))
     ) {
       return true;
@@ -234,7 +230,8 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
   });
 
   const columnRenderers = {
-    controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable: (responsable) => responsable.usuarioNombre
+    controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable: (responsable) => responsable.usuarioNombre,
+    controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: (deposito) => <ColumnaReutilizable contacts={deposito} />,
   };
 
   const handleEditControl = (rowData) => {

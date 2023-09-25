@@ -184,7 +184,7 @@ function ListarResumenDeTrazabilidad() {
         setData(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
         setProducto(ProductoData.map((producto) => producto.productoNombre));
-        setCarne(CarneData.map((carne) => `${carne.carneNombre} - ${carne.carneCorte}`));
+        setCarne(CarneData.map((carne) => carne.carneNombre));
         setInsumo(InsumoData.map((insumo) => insumo.insumoNombre));
         setLotes(LoteData.map((lote) => lote.loteCodigo));
         setClientes(ClienteData.map((cliente) => cliente.clienteNombre));
@@ -214,9 +214,9 @@ function ListarResumenDeTrazabilidad() {
     { id: 'producto', label: 'Producto', type: 'select', options: producto },
     { id: 'cantidad', label: 'Cantidad producida', type: 'text' },
     { id: 'carne', label: 'Materia prima cárnica', type: 'select', options: carne },
-    { id: 'adtivo', label: 'Materia prima no cárnica', type: 'select', options: insumo },
+    { id: 'aditivo', label: 'Materia prima no cárnica', type: 'select', options: insumo },
     { id: 'cliente', label: 'Cliente', type: 'select', options: cliente },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
 
   ];
 
@@ -292,13 +292,13 @@ function ListarResumenDeTrazabilidad() {
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
       resumenDeTrazabilidadFecha: new Date(item.resumenDeTrazabilidadFecha),
-      resumenDeTrazabilidadLote: item.resumenDeTrazabilidadLote ? item.resumenDeTrazabilidadLote : '',
-      resumenDeTrazabilidadProducto: item.resumenDeTrazabilidadProducto ? item.resumenDeTrazabilidadProducto : '',
+      resumenDeTrazabilidadLote: item.resumenDeTrazabilidadLote ? item.resumenDeTrazabilidadLote.loteCodigo.toLowerCase() : '',
+      resumenDeTrazabilidadProducto: item.resumenDeTrazabilidadProducto ? item.resumenDeTrazabilidadProducto.productoNombre.toLowerCase() : '',
       resumenDeTrazabilidadCantidadProducida: item.resumenDeTrazabilidadCantidadProducida ? item.resumenDeTrazabilidadCantidadProducida : '',
       resumenDeTrazabilidadMatPrimaCarnica: item.resumenDeTrazabilidadMatPrimaCarnica.map(resumenDeTrazabilidadMatPrimaCarnica => resumenDeTrazabilidadMatPrimaCarnica),
       resumenDeTrazabilidadMatPrimaNoCarnica: item.resumenDeTrazabilidadMatPrimaNoCarnica.map(resumenDeTrazabilidadMatPrimaNoCarnica => resumenDeTrazabilidadMatPrimaNoCarnica),
       resumenDeTrazabilidadDestino: item.resumenDeTrazabilidadDestino.map(resumenDeTrazabilidadDestino => resumenDeTrazabilidadDestino),
-      resumenDeTrazabilidadResponsable: item.resumenDeTrazabilidadResponsable ? item.resumenDeTrazabilidadResponsable : '',
+      resumenDeTrazabilidadResponsable: item.resumenDeTrazabilidadResponsable ? item.resumenDeTrazabilidadResponsable.usuarioNombre.toLowerCase() : '',
     };
 
     if (

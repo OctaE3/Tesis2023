@@ -158,15 +158,15 @@ function ListarLocalidad() {
 
   const filters = [
     { id: 'ciudad', label: 'Ciudad', type: 'text' },
-    { id: 'departamento', label: 'Departamento', type: 'text' },
+    { id: 'departamento', label: 'Departamento', type: 'text'},
   ];
 
   const handleFilter = (filter) => {
     const lowerCaseFilter = Object.keys(filter).reduce((acc, key) => {
-      acc[key] = filter[key] ? filter[key].toLowerCase() : '';
-      return acc;
-    }, {});
-    setFiltros(lowerCaseFilter);
+        acc[key] = filter[key] ? filter[key].toLowerCase() : '';
+        return acc;
+      }, {});
+      setFiltros(lowerCaseFilter);
   };
 
   const filteredData = data.filter((item) => {

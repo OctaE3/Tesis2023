@@ -160,7 +160,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
     { id: 'controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica', numeric: false, disablePadding: false, label: 'Alarma Lumínca' },
     { id: 'controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora', numeric: false, disablePadding: false, label: 'Alarma Sonora' },
     { id: 'controlDeAlarmaLuminicaYSonoraDeCloroObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
-    { id: 'controlDeAlarmaLuminicaYSonoraDeCloroResponsable', numeric: false, disablePadding: false, label: 'Resposnsable' }
+    { id: 'controlDeAlarmaLuminicaYSonoraDeCloroResponsable', numeric: false, disablePadding: false, label: 'Responsable' }
   ];
 
   const filters = [
@@ -168,7 +168,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
     { id: 'luminica', label: 'Alarma Lumínica', type: 'select', options: ['Funciona', 'No Funciona'] },
     { id: 'sonora', label: 'Alarma Sonora', type: 'select', options: ['Funciona', 'No Funciona'] },
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -220,9 +220,11 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
     const lowerCaseItem = {
       controlDeAlarmaLuminicaYSonoraDeCloroFechaHora: fechaFromat,
       controlDeAlarmaLuminicaYSonoraDeCloroObservaciones: item.controlDeAlarmaLuminicaYSonoraDeCloroObservaciones ? item.controlDeAlarmaLuminicaYSonoraDeCloroObservaciones.toLowerCase() : '',
-      controlDeAlarmaLuminicaYSonoraDeCloroResponsable: item.controlDeAlarmaLuminicaYSonoraDeCloroResponsable.usuarioNombre ? item.controlDeAlarmaLuminicaYSonoraDeCloroResponsable.usuarioNombre.toLowerCase() : '',
+      controlDeAlarmaLuminicaYSonoraDeCloroResponsable: item.controlDeAlarmaLuminicaYSonoraDeCloroResponsable ? item.controlDeAlarmaLuminicaYSonoraDeCloroResponsable.usuarioNombre.toLowerCase() : '',
     };
 
+    console.log(lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroResponsable);
+    console.log("bbb" + filtros.responsable);
     console.log(lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora);
     console.log("aaaaa " + filtros['fecha-desde']);
     if (
@@ -230,7 +232,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
       (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) &&
       (!filtros.luminica || (filtros.luminica === 'funciona' && item.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica) || (filtros.luminica === 'no funciona' && !item.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica)) &&
       (!filtros.sonora || (filtros.sonora === 'funciona' && item.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora) || (filtros.sonora === 'no funciona' && !item.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora)) &&
-      (!filtros.observaciones || lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.observaciones || lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroObservaciones.includes(filtros.observaciones)) &&
       (!filtros.responsable || lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroResponsable.startsWith(filtros.responsable))
     ) {
       return true;

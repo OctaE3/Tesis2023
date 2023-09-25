@@ -168,15 +168,16 @@ function ListarMonitoreoDeSSOPPreOPerativo() {
   ];
 
   const filters = [
-    { id: 'fechaInicio', label: 'Fecha', type: 'datetime', options: ['desde', 'hasta'] },
-    { id: 'dias', label: 'Días', type: 'text' },
-    { id: 'sector', label: 'Sector', type: 'text' },
-    { id: 'area', label: 'Área', type: 'text' },
+    { id: 'fecha', label: 'Fecha', type: 'datetime', options: ['desde', 'hasta'] },
+    { id: 'dias', label: 'Días', type: 'select', options: ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'] },
+    { id: 'area', label: 'Área', type: 'select', options: ['Pisos', 'Paredes', 'Techos', 'Mesadas', 'Utensilios', 'Equipos', 'Lavamanos', 'Personal', 'Puertas', 'Sanitarios']},   
+    { id: 'sector', label: 'Sector', type: 'select', options: ['Sala Elaboración', 'Desosado', 'Cámaras', 'Sector Despacho', 'Sector Aditivos', 'Instalaciones del Personal']},
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
     { id: 'accCorrectivas', label: 'Acciones Correctivas', type: 'text' },
     { id: 'accPreventivas', label: 'Acciones Preventivas', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
+
 
   const handleFilter = (filter) => {
     const lowerCaseFilter = Object.keys(filter).reduce((acc, key) => {
@@ -222,7 +223,7 @@ function ListarMonitoreoDeSSOPPreOPerativo() {
 
     const lowerCaseItem = {
       monitoreoDeSSOPPreOperativoFecha: fechaFromat,
-      monitoreoDeSSOPPreOperativoDias: item.monitoreoDeSSOPPreOperativoDias ? item.monitoreoDeSSOPPreOperativoDias : '',
+      monitoreoDeSSOPPreOperativoDias: item.monitoreoDeSSOPPreOperativoDias ? item.monitoreoDeSSOPPreOperativoDias.map(monitoreoDeSSOPPreOperativoDias => monitoreoDeSSOPPreOperativoDias.toLowerCase()) : '',
       monitoreoDeSSOPPreOperativoSector: item.monitoreoDeSSOPPreOperativoSector ? item.monitoreoDeSSOPPreOperativoSector.toLowerCase() : '',
       monitoreoDeSSOPPreOperativoArea: item.monitoreoDeSSOPPreOperativoArea ? item.monitoreoDeSSOPPreOperativoArea.toLowerCase() : '',
       monitoreoDeSSOPPreOperativoObservaciones: item.monitoreoDeSSOPPreOperativoObservaciones ? item.monitoreoDeSSOPPreOperativoObservaciones.toLowerCase() : '',
@@ -231,15 +232,18 @@ function ListarMonitoreoDeSSOPPreOPerativo() {
       monitoreoDeSSOPPreOperativoResponsable: item.monitoreoDeSSOPPreOperativoResponsable.usuarioNombre ? item.monitoreoDeSSOPPreOperativoResponsable.usuarioNombre.toLowerCase() : '',
     };
 
+    console.log(filtros['fecha-desde'])
+    console.log(fechaFromat)
+
     if (
       (!filtros['fecha-desde'] || fechaFromat >= filtros['fecha-desde']) &&
       (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) &&
-      (!filtros.dias || lowerCaseItem.monitoreoDeSSOPPreOperativoDias.startsWith(filtros.dias)) &&
+      (!filtros.dias || lowerCaseItem.monitoreoDeSSOPPreOperativoDias.some(dias => dias.includes(filtros.dias))) &&
       (!filtros.sector || lowerCaseItem.monitoreoDeSSOPPreOperativoSector.startsWith(filtros.sector)) &&
       (!filtros.area || lowerCaseItem.monitoreoDeSSOPPreOperativoArea.startsWith(filtros.area)) &&
-      (!filtros.observaciones || lowerCaseItem.monitoreoDeSSOPPreOperativoObservaciones.startsWith(filtros.observaciones)) &&
-      (!filtros.accCorrectivas || lowerCaseItem.monitoreoDeSSOPPreOperativoAccCorrectivas.startsWith(filtros.accCorrectivas)) &&
-      (!filtros.accPreventivas || lowerCaseItem.monitoreoDeSSOPPreOperativoAccPreventivas.startsWith(filtros.accPreventivas)) &&
+      (!filtros.observaciones || lowerCaseItem.monitoreoDeSSOPPreOperativoObservaciones.includes(filtros.observaciones)) &&
+      (!filtros.accCorrectivas || lowerCaseItem.monitoreoDeSSOPPreOperativoAccCorrectivas.includes(filtros.accCorrectivas)) &&
+      (!filtros.accPreventivas || lowerCaseItem.monitoreoDeSSOPPreOperativoAccPreventivas.includes(filtros.accPreventivas)) &&
       (!filtros.responsable || lowerCaseItem.monitoreoDeSSOPPreOperativoResponsable.startsWith(filtros.responsable))
     ) {
       return true;

@@ -4,7 +4,7 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, Tooltip, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
@@ -158,9 +158,9 @@ function ListarCarne() {
 
   const filters = [
     { id: 'nombre', label: 'Nombre', type: 'text' },
-    { id: 'tipo', label: 'Tipo', type: 'select', options: ['Porcino', 'Bovino'] },
-    { id: 'corte', label: 'Corte', type: 'text' },
-    { id: 'categoria', label: 'Categoría', type: 'text' },
+    { id: 'tipo', label: 'Tipo', type: 'select', options: ['Porcino', 'Bovino', 'Sangre', 'Tripas', 'Higado'] },
+    { id: 'corte', label: 'Corte', type: 'select', options: ['Carcasa', 'Media res', 'Cortes c/h', 'Cortes s/h', 'Menudencias', 'Subproductos', 'Delantero', 'Trasero', 'Sangre', 'Tripas', 'Higado'] },
+    { id: 'categoria', label: 'Categoria', type: 'select', options:['CarneSH', 'CarneCH', 'Grasa', 'Sangre', 'Tripas', 'Higado'] },
     { id: 'cantidad', label: 'Cantidad', type: 'text' },
     { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
     { id: 'paseSanitario', label: 'Pase sanitario', type: 'text' },
@@ -198,13 +198,13 @@ function ListarCarne() {
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-      carneNombre: item.carneNombre.toLowerCase(),
-      carneTipo: item.carneTipo.toLowerCase(),
-      carneCorte: item.carneCorte.toLowerCase(),
-      carneCategoria: item.carneCategoria.toLowerCase(),
-      carneCantidad: item.carneCantidad,
+      carneNombre: item.carneNombre ? item.carneNombre.toLowerCase() : '',
+      carneTipo: item.carneTipo ? item.carneTipo.toLowerCase() : '',
+      carneCorte: item.carneCorte ? item.carneCorte.toLowerCase() : '',
+      carneCategoria: item.carneCategoria ? item.carneCategoria.toLowerCase() : '',
+      carneCantidad: item.carneCantidad ? item.carneCantidad : '',
       carneFecha: new Date(item.carneFecha),
-      carnePaseSanitario: item.carnePaseSanitario.toLowerCase(),
+      carnePaseSanitario: item.carnePaseSanitario ? item.carnePaseSanitario.toLowerCase() : '',
     };
 
     if (
@@ -212,7 +212,7 @@ function ListarCarne() {
       (!filtros.tipo || lowerCaseItem.carneTipo.startsWith(filtros.tipo)) &&
       (!filtros.corte || lowerCaseItem.carneCorte.startsWith(filtros.corte)) &&
       (!filtros.cantidad || lowerCaseItem.carneCantidad.toString().startsWith(filtros.cantidad)) &&
-      (!filtros.categoria || lowerCaseItem.carneCategoria.startsWith(filtros.cantidad)) &&
+      (!filtros.categoria || lowerCaseItem.carneCategoria.startsWith(filtros.categoria)) &&
       (!filtros['fecha-desde'] || lowerCaseItem.carneFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.carneFecha <= new Date(filtros['fecha-hasta'])) &&
       (!filtros.paseSanitario || lowerCaseItem.carnePaseSanitario.startsWith(filtros.paseSanitario))
@@ -300,8 +300,8 @@ function ListarCarne() {
           <div className={classes.info}>
             <Button color="primary" onClick={handleClickOpen}>
               <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             </Button>
             <Dialog
               fullScreen={fullScreen}

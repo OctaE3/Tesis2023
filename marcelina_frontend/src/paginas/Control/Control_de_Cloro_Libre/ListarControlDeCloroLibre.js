@@ -123,7 +123,7 @@ function ListarControlDeCloroLibre() {
     { id: 'controlDeCloroLibreGrifoPico', numeric: false, disablePadding: false, label: 'Pico/Grifo' },
     { id: 'controlDeCloroLibreResultado', numeric: false, disablePadding: false, label: 'Resultado' },
     { id: 'controlDeCloroLibreObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
-    { id: 'controlDeCloroLibreResponsable', numeric: false, disablePadding: false, label: 'Resposnsable' }
+    { id: 'controlDeCloroLibreResponsable', numeric: false, disablePadding: false, label: 'Responsable' }
   ];
 
   const filters = [
@@ -131,7 +131,7 @@ function ListarControlDeCloroLibre() {
     { id: 'pico', label: 'Pico/Grifo', type: 'text' },
     { id: 'resultado', label: 'Resultado', type: 'text' },
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -178,8 +178,8 @@ function ListarControlDeCloroLibre() {
 
     const lowerCaseItem = {
       controlDeCloroLibreFecha: fechaFromat,
-      controlDeCloroLibreGrifoPico: item.controlDeCloroLibreGrifoPico,
-      controlDeCloroLibreResultado: item.controlDeCloroLibreResultado,
+      controlDeCloroLibreGrifoPico: item.controlDeCloroLibreGrifoPico ? item.controlDeCloroLibreGrifoPico : '',
+      controlDeCloroLibreResultado: item.controlDeCloroLibreResultado ? item.controlDeCloroLibreResultado : '',
       controlDeCloroLibreObservaciones: item.controlDeCloroLibreObservaciones ? item.controlDeCloroLibreObservaciones.toLowerCase() : '',
       controlDeCloroLibreResponsable: item.controlDeCloroLibreResponsable.usuarioNombre ? item.controlDeCloroLibreResponsable.usuarioNombre.toLowerCase() : '',
     };
@@ -189,7 +189,7 @@ function ListarControlDeCloroLibre() {
       (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) &&
       (!filtros.pico || lowerCaseItem.controlDeCloroLibreGrifoPico.toString().startsWith(filtros.pico)) &&
       (!filtros.resultado || lowerCaseItem.controlDeCloroLibreResultado.toString().startsWith(filtros.resultado)) &&
-      (!filtros.observaciones || lowerCaseItem.controlDeCloroLibreObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.observaciones || lowerCaseItem.controlDeCloroLibreObservaciones.includes(filtros.observaciones)) &&
       (!filtros.responsable || lowerCaseItem.controlDeCloroLibreResponsable.startsWith(filtros.responsable))
     ) {
       return true;

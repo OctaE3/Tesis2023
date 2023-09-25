@@ -170,12 +170,12 @@ function ListarMonitoreoDeSSOPOPerativo() {
   const filters = [
     { id: 'fechaInicio', label: 'Fecha Inicio', type: 'date', options: ['desde', 'hasta'] },
     { id: 'fechaFinal', label: 'Fecha Final', type: 'date', options: ['desde', 'hasta'] },
-    { id: 'dias', label: 'Días', type: 'text' },
-    { id: 'area', label: 'Área', type: 'text' },
+    { id: 'dias', label: 'Días', type: 'select', options: ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'] },
+    { id: 'area', label: 'Área', type: 'select', options: [ 'Mesadas', 'Pisos', 'Utensilios', 'Equipos', 'Lavamanos', 'Bandejas Plasticas', 'Personal', 'Otras' ] },
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
     { id: 'accCorrectivas', label: 'Acciones Correctivas', type: 'text' },
     { id: 'accPreventivas', label: 'Acciones Preventivas', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -230,25 +230,28 @@ function ListarMonitoreoDeSSOPOPerativo() {
     const lowerCaseItem = {
       monitoreoDeSSOPOperativoFechaInicio: new Date(item.monitoreoDeSSOPOperativoFechaInicio),
       monitoreoDeSSOPOperativoFechaFinal: new Date(item.monitoreoDeSSOPOperativoFechaFinal),
-      monitoreoDeSSOPOperativoDias: item.monitoreoDeSSOPOperativoDias ? item.monitoreoDeSSOPOperativoDias : '',
+      monitoreoDeSSOPOperativoDias: item.monitoreoDeSSOPOperativoDias ? item.monitoreoDeSSOPOperativoDias.map(monitoreoDeSSOPOperativoDias => monitoreoDeSSOPOperativoDias.toLowerCase()) : '',
       monitoreoDeSSOPOperativoArea: item.monitoreoDeSSOPOperativoArea ? item.monitoreoDeSSOPOperativoArea.toLowerCase() : '',
       monitoreoDeSSOPOperativoObservaciones: item.monitoreoDeSSOPOperativoObservaciones ? item.monitoreoDeSSOPOperativoObservaciones.toLowerCase() : '',
       monitoreoDeSSOPOperativoAccCorrectivas: item.monitoreoDeSSOPOperativoAccCorrectivas ? item.monitoreoDeSSOPOperativoAccCorrectivas.toLowerCase() : '',
       monitoreoDeSSOPOperativoAccPreventivas: item.monitoreoDeSSOPOperativoAccPreventivas ? item.monitoreoDeSSOPOperativoAccPreventivas.toLowerCase() : '',
-      monitoreoDeSSOPOperativoResponsable: item.monitoreoDeSSOPOperativoResponsable.usuarioNombre ? item.monitoreoDeSSOPOperativoResponsable.usuarioNombre.toLowerCase() : '',
+      monitoreoDeSSOPOperativoResponsable: item.monitoreoDeSSOPOperativoResponsable ? item.monitoreoDeSSOPOperativoResponsable.usuarioNombre.toLowerCase() : '',
     };
+
+    console.log(filtros.dias)
+    console.log(lowerCaseItem.monitoreoDeSSOPOperativoDias)
 
     if (
       (!filtros['fechaInicio-desde'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaInicio >= new Date(filtros['fechaInicio-desde'])) &&
       (!filtros['fechaInicio-hasta'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaInicio <= new Date(filtros['fechaInicio-hasta'])) &&
       (!filtros['fechaFinal-desde'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaFinal >= new Date(filtros['fechaFinal-desde'])) &&
       (!filtros['fechaFinal-hasta'] || lowerCaseItem.monitoreoDeSSOPOperativoFechaFinal <= new Date(filtros['fechaFinal-hasta'])) &&
-      (!filtros.dias || lowerCaseItem.monitoreoDeSSOPOperativoDias.startsWith(filtros.dias)) &&
+      (!filtros.dias || lowerCaseItem.monitoreoDeSSOPOperativoDias.some(dias => dias.includes(filtros.dias))) &&
       (!filtros.area || lowerCaseItem.monitoreoDeSSOPOperativoArea.startsWith(filtros.area)) &&
-      (!filtros.observaciones || lowerCaseItem.monitoreoDeSSOPOperativoObservaciones.startsWith(filtros.observaciones)) &&
-      (!filtros.accCorrectivas || lowerCaseItem.monitoreoDeSSOPOperativoAccCorrectivas.startsWith(filtros.accCorrectivas)) &&
-      (!filtros.accPreventivas || lowerCaseItem.monitoreoDeSSOPOperativoAccPreventivas.startsWith(filtros.accPreventivas)) &&
-      (!filtros.responsable || lowerCaseItem.monitoreoDeSSOPOperativoAccResponsable.startsWith(filtros.responsable))
+      (!filtros.observaciones || lowerCaseItem.monitoreoDeSSOPOperativoObservaciones.includes(filtros.observaciones)) &&
+      (!filtros.accCorrectivas || lowerCaseItem.monitoreoDeSSOPOperativoAccCorrectivas.includes(filtros.accCorrectivas)) &&
+      (!filtros.accPreventivas || lowerCaseItem.monitoreoDeSSOPOperativoAccPreventivas.includes(filtros.accPreventivas)) &&
+      (!filtros.responsable || lowerCaseItem.monitoreoDeSSOPOperativoResponsable.startsWith(filtros.responsable))
     ) {
       return true;
     }

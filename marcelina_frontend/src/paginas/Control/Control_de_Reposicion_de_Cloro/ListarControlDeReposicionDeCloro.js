@@ -203,8 +203,8 @@ function ListarControlDeReposicionDeCloro() {
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
       controlDeReposicionDeCloroFecha: new Date(item.controlDeReposicionDeCloroFecha),
-      controlDeReposicionDeCloroCantidadDeAgua: item.controlDeReposicionDeCloroCantidadDeAgua.toLowerCase(),
-      controlDeReposicionDeCloroCantidadDeCloroAdicionado: item.controlDeReposicionDeCloroCantidadDeCloroAdicionado.toLowerCase(),
+      controlDeReposicionDeCloroCantidadDeAgua: item.controlDeReposicionDeCloroCantidadDeAgua ? item.controlDeReposicionDeCloroCantidadDeAgua : '',
+      controlDeReposicionDeCloroCantidadDeCloroAdicionado: item.controlDeReposicionDeCloroCantidadDeCloroAdicionado ? item.controlDeReposicionDeCloroCantidadDeCloroAdicionado : '',
       controlDeReposicionDeCloroObservaciones: item.controlDeReposicionDeCloroObservaciones ? item.controlDeReposicionDeCloroObservaciones.toLowerCase() : '',
       controlDeReposicionDeCloroResponsable: item.controlDeReposicionDeCloroResponsable ? item.controlDeReposicionDeCloroResponsable.usuarioNombre.toLowerCase() : '',
     };
@@ -214,7 +214,7 @@ function ListarControlDeReposicionDeCloro() {
       (!filtros['fecha-hasta'] || lowerCaseItem.controlDeReposicionDeCloroFecha <= new Date(filtros['fecha-hasta'])) &&
       (!filtros.cantidad || lowerCaseItem.controlDeReposicionDeCloroCantidadDeAgua.startsWith(filtros.cantidad)) &&
       (!filtros.adicionado || lowerCaseItem.controlDeReposicionDeCloroCantidadDeCloroAdicionado.startsWith(filtros.adicionado)) &&
-      (!filtros.observaciones || lowerCaseItem.controlDeReposicionDeCloroObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.observaciones || lowerCaseItem.controlDeReposicionDeCloroObservaciones.includes(filtros.observaciones)) &&
       (!filtros.responsable || lowerCaseItem.controlDeReposicionDeCloroResponsable.startsWith(filtros.responsable))
     ) {
       return true;

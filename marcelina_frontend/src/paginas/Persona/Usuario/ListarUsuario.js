@@ -158,15 +158,15 @@ function ListarUsuario() {
 
   const handleFilter = (filter) => {
     const lowerCaseFilter = Object.keys(filter).reduce((acc, key) => {
-      acc[key] = filter[key] ? filter[key].toLowerCase() : '';
-      return acc;
-    }, {});
-    setFiltros(lowerCaseFilter);
+        acc[key] = filter[key] ? filter[key].toLowerCase() : '';
+        return acc;
+      }, {});
+      setFiltros(lowerCaseFilter);
   };
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-      usuarioNombre: item.usuarioNombre ? item.usuarioNombre.toLowerCase() : '',
+        usuarioNombre: item.usuarioNombre ? item.usuarioNombre.toLowerCase() : '',
     };
 
     if (

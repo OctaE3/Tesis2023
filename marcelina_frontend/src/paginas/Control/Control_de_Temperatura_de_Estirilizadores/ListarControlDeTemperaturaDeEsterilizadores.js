@@ -210,9 +210,9 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
 
     const lowerCaseItem = {
       controlDeTemperaturaDeEsterilizadoresFecha: fechaFromat,
-      controlDeTemperaturaDeEsterilizadoresTemperatura1: item.controlDeTemperaturaDeEsterilizadoresTemperatura1,
-      controlDeTemperaturaDeEsterilizadoresTemperatura2: item.controlDeTemperaturaDeEsterilizadoresTemperatura2,
-      controlDeTemperaturaDeEsterilizadoresTemperatura3: item.controlDeTemperaturaDeEsterilizadoresTemperatura3,
+      controlDeTemperaturaDeEsterilizadoresTemperatura1: item.controlDeTemperaturaDeEsterilizadoresTemperatura1 ? item.controlDeTemperaturaDeEsterilizadoresTemperatura1 : '',
+      controlDeTemperaturaDeEsterilizadoresTemperatura2: item.controlDeTemperaturaDeEsterilizadoresTemperatura2 ? item.controlDeTemperaturaDeEsterilizadoresTemperatura2 : '',
+      controlDeTemperaturaDeEsterilizadoresTemperatura3: item.controlDeTemperaturaDeEsterilizadoresTemperatura3 ? item.controlDeTemperaturaDeEsterilizadoresTemperatura3 : '',
       controlDeTemperaturaDeEsterilizadoresObservaciones: item.controlDeTemperaturaDeEsterilizadoresObservaciones ? item.controlDeTemperaturaDeEsterilizadoresObservaciones.toLowerCase() : '',
       controlDeTemperaturaDeEsterilizadoresResponsable: item.controlDeTemperaturaDeEsterilizadoresResponsable ? item.controlDeTemperaturaDeEsterilizadoresResponsable.usuarioNombre.toLowerCase() : '',
     };
@@ -223,7 +223,7 @@ function ListarControlDeTemperaturaDeEsterilizadores() {
       (!filtros.temperatura1 || lowerCaseItem.controlDeTemperaturaDeEsterilizadoresTemperatura1.toString().startsWith(filtros.temperatura1)) &&
       (!filtros.temperatura2 || lowerCaseItem.controlDeTemperaturaDeEsterilizadoresTemperatura2.toString().startsWith(filtros.temperatura2)) &&
       (!filtros.temperatura3 || lowerCaseItem.controlDeTemperaturaDeEsterilizadoresTemperatura3.toString().startsWith(filtros.temperatura3)) &&
-      (!filtros.observaciones || lowerCaseItem.controlDeTemperaturaDeEsterilizadoresObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.observaciones || lowerCaseItem.controlDeTemperaturaDeEsterilizadoresObservaciones.includes(filtros.observaciones)) &&
       (!filtros.responsable || lowerCaseItem.controlDeTemperaturaDeEsterilizadoresResponsable.startsWith(filtros.responsable))
     ) {
       return true;

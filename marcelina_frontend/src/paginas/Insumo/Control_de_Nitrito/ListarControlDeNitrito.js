@@ -223,7 +223,7 @@ function ListarControlDeNitrito() {
       (!filtros.lote || lowerCaseItem.controlDeNitritoProductoLote.toString().startsWith(filtros.lote)) &&
       (!filtros.cantidad || lowerCaseItem.controlDeNitritoCantidadUtilizada.toString().startsWith(filtros.cantidad)) &&
       (!filtros.stock || lowerCaseItem.controlDeNitritoStock.toString().startsWith(filtros.stock)) &&
-      (!filtros.observaciones || lowerCaseItem.controlDeNitritoObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.observaciones || lowerCaseItem.controlDeNitritoObservaciones.includes(filtros.observaciones)) &&
       (!filtros.responsable || lowerCaseItem.controlDeNitritoResponsable.startsWith(filtros.responsable))
     ) {
       return true;

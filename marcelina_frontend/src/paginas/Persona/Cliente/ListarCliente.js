@@ -145,7 +145,7 @@ function ListarCliente() {
         const localidadesData = localidadesResponse.data;
 
         setData(clientesData);
-        setLocalidades(localidadesData.map((localidad) => localidad.localidadDepartamento)); // Obtener solo los nombres de las localidades
+        setLocalidades(localidadesData.map((localidad) => localidad.localidadCiudad)); // Obtener solo los nombres de las localidades
       } catch (error) {
         console.error('Error al cargar los datos:', error);
       }
@@ -156,9 +156,9 @@ function ListarCliente() {
 
 
   const mapData = (item, key) => {
-    if (key === 'clienteLocalidad.localidadDepartamento') {
-      if (item.clienteLocalidad && item.clienteLocalidad.localidadDepartamento) {
-        return item.clienteLocalidad.localidadDepartamento;
+    if (key === 'clienteLocalidad.localidadCiudad') {
+      if (item.clienteLocalidad && item.clienteLocalidad.localidadCiudad) {
+        return item.clienteLocalidad.localidadCiudad;
       } else {
         return '';
       }
@@ -178,7 +178,7 @@ function ListarCliente() {
     { id: 'clienteEmail', numeric: false, disablePadding: false, label: 'Email' },
     { id: 'clienteContacto', numeric: false, disablePadding: false, label: 'Teléfonos' },
     { id: 'clienteObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
-    { id: 'clienteLocalidad.localidadDepartamento', numeric: false, disablePadding: false, label: 'Localidad' },
+    { id: 'clienteLocalidad.localidadCiudad', numeric: false, disablePadding: false, label: 'Localidad' },
   ];
 
   const filters = [
@@ -199,11 +199,11 @@ function ListarCliente() {
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-      clienteNombre: item.clienteNombre.toLowerCase(),
-      clienteEmail: item.clienteEmail.toLowerCase(),
+      clienteNombre: item.clienteNombre ? item.clienteNombre.toLowerCase() : '',
+      clienteEmail: item.clienteEmail ? item.clienteEmail.toLowerCase() : '',
       clienteObservaciones: item.clienteObservaciones ? item.clienteObservaciones.toLowerCase() : '',
       clienteContacto: item.clienteContacto.map(contacto => contacto.toLowerCase()),
-      clienteLocalidad: item.clienteLocalidad ? item.clienteLocalidad.localidadDepartamento.toLowerCase() : '',
+      clienteLocalidad: item.clienteLocalidad ? item.clienteLocalidad.localidadCiudad.toLowerCase() : '',
     };
 
     if (
