@@ -96,7 +96,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const Navbar = () => {
+const Navbar = ({notifications}) => {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const location = useLocation();

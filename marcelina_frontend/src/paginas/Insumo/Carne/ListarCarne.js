@@ -236,7 +236,7 @@ function ListarCarne() {
       }
     })
       .then(response => {
-        if (response.status === 204) {
+        if (response.status === 200) {
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);

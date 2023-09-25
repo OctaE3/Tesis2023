@@ -133,13 +133,9 @@ const Login = () => {
                     if (response.status === 200) {
                         window.localStorage.setItem('token', response.data.token);
                         window.localStorage.setItem('user', response.data.usuarioNombre);
-                        setShowAlertSuccess(true);
-                        setTimeout(() => {
-                            setShowAlertSuccess(false);
-                            redireccionar();
-                        }, 5000);
+                        redireccionar();
                     } else {
-                        updateErrorAlert(`Error al iniciar sesión, intente de nuevo.`);
+                        updateErrorAlert(`Usuario o contraseña incorrectos.`);
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
@@ -149,6 +145,13 @@ const Login = () => {
                 .catch(error => {
                     if (error.request.status === 401) {
                         updateErrorAlert('Error al iniciar sesión, intente de nuevo.');
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 5000);
+                    }
+                    else if (error.request.status === 404) {
+                        updateErrorAlert(`Usuario o contraseña incorrectos.`);
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);

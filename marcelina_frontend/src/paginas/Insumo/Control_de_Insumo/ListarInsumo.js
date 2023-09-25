@@ -7,7 +7,7 @@ import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutili
 import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
 const theme = createTheme({
@@ -96,7 +96,7 @@ function ListarInsumo() {
     }));
   };
 
-useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       updateErrorAlert('El token no existe, inicie sesión nuevamente.')
@@ -145,10 +145,23 @@ useEffect(() => {
         });
 
 
-        const data = response.data.map((data) => ({
-          ...data,
-          Id: data.insumoId,
-        }));
+        const data = response.data.map((data) => {
+          const fechaVencimiento = new Date(data.insumoFechaVencimiento);
+          const fechaActual = new Date();
+          const diferenciaDias = differenceInDays(fechaVencimiento, fechaActual);
+          if (diferenciaDias <= 3 && diferenciaDias >= 0) {
+            return {
+              ...data,
+              Id: data.insumoId,
+              isExpired: 'Yes',
+            };
+          } else {
+            return {
+              ...data,
+              Id: data.insumoId,
+            };
+          }
+        });
         const ResponsableData = ResponsableResponse.data;
         const ProveedorData = ProveedorResponse.data;
 
@@ -295,7 +308,7 @@ useEffect(() => {
       }
     })
       .then(response => {
-        if (response.status === 204) {
+        if (response.status === 200) {
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
@@ -414,7 +427,7 @@ useEffect(() => {
                         <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se filtrará la lista con los registros asociados a ese responsable.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Desde Fecha vencimeinto y Hasta Fecha vencimeinto</span>: Estos campos funcionan de la misma manera que Desde Fecha y Hasta Fecha, 
+                        <span className={classes.liTitleBlue}>Desde Fecha vencimeinto y Hasta Fecha vencimeinto</span>: Estos campos funcionan de la misma manera que Desde Fecha y Hasta Fecha,
                         nada más que se tiene en cuenta la fecha de vencimiento.
                       </li>
                     </ul>
@@ -422,7 +435,13 @@ useEffect(() => {
                   <span style={{ fontWeight: 'bold' }}>
                     Lista:
                   </span>
+                  <br />
+                  <br />
                   <span>
+                    Detalles: 
+                    Los registros que contengan una fecha de vencimiento con 3 días o menos de diferencia con la fecha actual, aparecerán de color rojo,
+                    esto es para señalizar que el insumo está por caducar, además una vez el insumo sea usado por completo(la cantidad sea 0) se eliminara de la lista, 
+                    para evitar la acumulación de registros.
                     <ul>
                       <li>
                         <span className={classes.liTitleRed}>Nombre</span>: En esta columna se muestra el nombre del insumo.

@@ -170,10 +170,11 @@ const AgregarControlDeCloroLibre = () => {
 
   const handleFormSubmit = (formData) => {
     console.log(formData.controlDeCloroLibreResultado)
-    const numResultado = parseFloat(formData.controlDeCloroLibreResultado);
+    const numResultado = formData.controlDeCloroLibreResultado
+    console.log(numResultado)
     const controlDeCloroLibreConResponsable = {
       ...formData,
-      controlDeCloroLibreResultado: numResultado ? numResultado : undefined,
+      controlDeCloroLibreResultado: numResultado,
       controlDeCloroLibreResponsable: window.localStorage.getItem('user'),
     }
     console.log(controlDeCloroLibreConResponsable)

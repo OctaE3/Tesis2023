@@ -7,9 +7,10 @@ import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Logo from '../../assets/images/LogoOp.png'
 import { useNavigate } from 'react-router-dom';
+import { format, differenceInDays } from 'date-fns';
 import AlertasReutilizable from '../../components/Reutilizable/AlertasReutilizable';
 
 const theme = createTheme({
@@ -76,15 +77,35 @@ const Home = () => {
   const classes = useStyles();
 
   const navigate = useNavigate();
+  const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+  const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [showAlertInfo, setShowAlertInfo] = useState(false);
+  
+  const [alertSuccess, setAlertSuccess] = useState({
+    title: 'Correcto', body: 'Se registró el anual de insumos cárnicos con éxito!', severity: 'success', type: 'description'
   });
+  const [alertError, setAlertError] = useState({
+    title: 'Correcto', body: 'No se logro registrar el anual de insumos cárnicos, ocurrio un error inesperado.', severity: 'success', type: 'description'
+  });
+  const [alertWarning, setAlertWarning] = useState({
+    title: 'Advertencia', body: 'Expiro el inicio de sesión, para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  });
+  const [alertInfo, setAlertInfo] = useState({
+    title: 'Notificación', body: '', severity: 'info', type: 'actions'
+  });
+
+  const updateInfoAlert = (newBody) => {
+    setAlertInfo((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
 
   useEffect(() => {
     const fecha = new Date();
     console.log(window.localStorage.getItem('token'));
-    if (fecha.getDate() === 15) {
+    if (fecha.getDate() === 1) {
       axios.post('/agregar-anual-de-insumos-carnicos-automatico', null, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -92,15 +113,45 @@ const Home = () => {
       })
         .then(response => {
           if (response.status === 201) {
-            console.log(response.data);
+            setShowAlertSuccess(true);
+            setTimeout(() => {
+              setShowAlertSuccess(false);
+            }, 3000);
           } else {
-            console.log("Anashe");
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 3000);
           }
         })
         .catch(error => {
-          console.error(error);
+          if (error.request.status === 401) {
+            setShowAlertWarning(true);
+            setTimeout(() => {
+              setShowAlertWarning(false);
+              navigate('/')
+            }, 3000);
+          } 
+          else if (error.request.status === 500) {
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 3000);
+          }
         })
     } else { }
+
+    const primerDiaProximoMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 1);
+    const diferenciaDias = differenceInDays(primerDiaProximoMes, fecha);
+    console.log(diferenciaDias)
+    if (diferenciaDias <= 5 && diferenciaDias > 1) {
+      updateInfoAlert(`El anual de insumos cárnicos se registrará automáticamente dentro de ${diferenciaDias} días`);
+      setShowAlertInfo(true);
+    }
+    else if (diferenciaDias === 1) {
+      updateInfoAlert(`El anual de insumos cárnicos se registrará automáticamente dentro de ${diferenciaDias} día`);
+      setShowAlertInfo(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -132,6 +183,16 @@ const Home = () => {
       <Navbar />
       <Container className={classes.root}>
         <Box className={classes.box}>
+          <Grid
+            container
+            spacing={0}
+          >
+            <Grid item lg={1} md={1} sm={1} xs={1}></Grid>
+            <Grid item lg={10} md={10} sm={10} xs={10}>
+              <AlertasReutilizable alert={alertInfo} isVisible={showAlertInfo} open={showAlertInfo} setOpen={setShowAlertInfo} />
+            </Grid>
+            <Grid item lg={1} md={1} sm={1} xs={1}></Grid>
+          </Grid>
           <Grid container spacing={0}>
             <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
             <Grid item lg={8} md={8} sm={8} xs={8}>
@@ -144,6 +205,8 @@ const Home = () => {
           <Grid container spacing={0}>
             <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
             <Grid item lg={4} md={4} sm={4} xs={4}>
+              <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
+              <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
               <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
             </Grid>
             <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
