@@ -203,11 +203,11 @@ function ListarControlDeTemperaturaEnCamaras() {
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-      controlDeTemperaturaEnCamarasNroCamara: item.controlDeTemperaturaEnCamarasNroCamara.toLowerCase(),
+      controlDeTemperaturaEnCamarasNroCamara: item.controlDeTemperaturaEnCamarasNroCamara ? item.controlDeTemperaturaEnCamarasNroCamara.toLowerCase() : '',
       controlDeTemperaturaEnCamarasFecha: new Date(item.controlDeTemperaturaEnCamarasFecha),
-      controlDeTemperaturaEnCamarasHora: item.controlDeTemperaturaEnCamarasHora,
-      controlDeTemperaturaEnCamarasTempInterna: item.controlDeTemperaturaEnCamarasTempInterna,
-      controlDeTemperaturaEnCamaraTempExterna: item.controlDeTemperaturaEnCamaraTempExterna,
+      controlDeTemperaturaEnCamarasHora: item.controlDeTemperaturaEnCamarasHora ? item.controlDeTemperaturaEnCamarasHora : '',
+      controlDeTemperaturaEnCamarasTempInterna: item.controlDeTemperaturaEnCamarasTempInterna ? item.controlDeTemperaturaEnCamarasTempInterna : '',
+      controlDeTemperaturaEnCamaraTempExterna: item.controlDeTemperaturaEnCamaraTempExterna ? item.controlDeTemperaturaEnCamaraTempExterna : '',
     };
 
     if (

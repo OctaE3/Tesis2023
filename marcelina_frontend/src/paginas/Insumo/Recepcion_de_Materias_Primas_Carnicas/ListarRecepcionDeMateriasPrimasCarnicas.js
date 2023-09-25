@@ -189,7 +189,7 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
     { id: 'paseSanitario', label: 'Pase sanitario', type: 'text' },
     { id: 'temperatura', label: 'Temperatura', type: 'text' },
     { id: 'motivoDeRechazo', label: 'Motivo de rechazo', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -231,7 +231,7 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
       }
     } else if (key === 'recepcionDeMateriasPrimasCarnicasProductos') {
       if (item.recepcionDeMateriasPrimasCarnicasProductos && item.recepcionDeMateriasPrimasCarnicasProductos.length > 0) {
-        const nombresProductos = item.recepcionDeMateriasPrimasCarnicasProductos.map(producto => producto.carneNombre);
+        const nombresProductos = item.recepcionDeMateriasPrimasCarnicasProductos.map(producto => `${producto.carneNombre} - ${producto.carneCorte}`);
         console.log(nombresProductos)
         return nombresProductos;
       } else {
@@ -260,7 +260,7 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
       (!filtros.producto || lowerCaseItem.recepcionDeMateriasPrimasCarnicasProductos.some(producto => producto.carneNombre.toLowerCase().includes(filtros.producto))) &&
       (!filtros.paseSanitario || lowerCaseItem.recepcionDeMateriasPrimasCarnicasPaseSanitario.startsWith(filtros.paseSanitario)) &&
       (!filtros.temperatura || lowerCaseItem.recepcionDeMateriasPrimasCarnicasTemperatura.toString().startsWith(filtros.temperatura)) &&
-      (!filtros.motivoDeRechazo || lowerCaseItem.recepcionDeMateriasPrimasCarnicasMotivoDeRechazo.startsWith(filtros.motivoDeRechazo)) &&
+      (!filtros.motivoDeRechazo || lowerCaseItem.recepcionDeMateriasPrimasCarnicasMotivoDeRechazo.includes(filtros.motivoDeRechazo)) &&
       (!filtros.responsable || lowerCaseItem.recepcionDeMateriasPrimasCarnicasResponsable.startsWith(filtros.responsable))
     ) {
       return true;

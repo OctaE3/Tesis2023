@@ -198,7 +198,7 @@ function ListarInsumo() {
     { id: 'unidad', label: 'Unidad', type: 'select', options: ['Kg', 'Metros', 'Litros'] },
     { id: 'nroLote', label: 'Número Lote', type: 'text' },
     { id: 'motivoDeRechazo', label: 'Motivo de rechazo', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
     { id: 'fechaVencimiento', label: 'Fecha vencimiento', type: 'date', options: ['desde', 'hasta'] },
   ];
 
@@ -258,28 +258,28 @@ function ListarInsumo() {
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-      insumoNombre: item.insumoNombre.toLowerCase(),
+      insumoNombre: item.insumoNombre ? item.insumoNombre.toLowerCase() : '',
       insumoFecha: new Date(item.insumoFecha),
       insumoProveedor: item.insumoProveedor.proveedorNombre ? item.insumoProveedor.proveedorNombre.toLowerCase() : '',
-      insumoTipo: item.insumoTipo.toLowerCase(),
-      insumoCantidad: item.insumoCantidad,
-      insumoUnidad: item.insumoUnidad.toLowerCase(),
-      insumoNroLote: item.insumoNroLote.toLowerCase(),
+      insumoTipo: item.insumoTipo ? item.insumoTipo.toLowerCase() : '',
+      insumoCantidad: item.insumoCantidad ? item.insumoCantidad : '',
+      insumoUnidad: item.insumoUnidad ? item.insumoUnidad.toLowerCase() : '',
+      insumoNroLote: item.insumoNroLote ? item.insumoNroLote.toLowerCase() : '',
       insumoMotivoDeRechazo: item.insumoMotivoDeRechazo ? item.insumoMotivoDeRechazo.toLowerCase() : '',
       insumoResponsable: item.insumoResponsable.usuarioNombre ? item.insumoResponsable.usuarioNombre.toLowerCase() : '',
       insumoFechaVencimiento: new Date(item.insumoFechaVencimiento),
     };
 
     if (
-      (!filtros.nombre || lowerCaseItem.insumoNombreNombre.startsWith(filtros.nombre)) &&
+      (!filtros.nombre || lowerCaseItem.insumoNombre.startsWith(filtros.nombre)) &&
       (!filtros['fecha-desde'] || lowerCaseItem.insumoFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.insumoFecha <= new Date(filtros['fecha-hasta'])) &&
       (!filtros.proveedor || lowerCaseItem.insumoProveedor.startsWith(filtros.proveedor)) &&
       (!filtros.tipo || lowerCaseItem.insumoTipo.startsWith(filtros.tipo)) &&
-      (!filtros.cantidad || lowerCaseItem.insumoCantidad.startsWith(filtros.cantidad)) &&
+      (!filtros.cantidad || lowerCaseItem.insumoCantidad.toString().startsWith(filtros.cantidad)) &&
       (!filtros.unidad || lowerCaseItem.insumoUnidad.startsWith(filtros.unidad)) &&
       (!filtros.nroLote || lowerCaseItem.insumoNroLote.startsWith(filtros.nroLote)) &&
-      (!filtros.motivoDeRechazo || lowerCaseItem.insumoMotivoDeRechazo.startsWith(filtros.motivoDeRechazo)) &&
+      (!filtros.motivoDeRechazo || lowerCaseItem.insumoMotivoDeRechazo.includes(filtros.motivoDeRechazo)) &&
       (!filtros.responsable || lowerCaseItem.insumoResponsable.startsWith(filtros.responsable)) &&
       (!filtros['fechaVencimiento-desde'] || lowerCaseItem.insumoFechaVencimiento >= new Date(filtros['fechaVencimiento-desde'])) &&
       (!filtros['fechaVencimiento-hasta'] || lowerCaseItem.insumoFechaVencimiento <= new Date(filtros['fechaVencimiento-hasta']))

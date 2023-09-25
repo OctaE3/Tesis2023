@@ -195,7 +195,7 @@ function ListarExpedicionDeProducto() {
     { id: 'cantidad', label: 'Cantidad', type: 'text' },
     { id: 'cliente', label: 'Cliente', type: 'select', options: cliente },
     { id: 'documento', label: 'Documento', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
     { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
   ];
 
@@ -232,11 +232,17 @@ function ListarExpedicionDeProducto() {
       }
     } else if (key === 'expedicionDeProductoProductos') {
       if (item.expedicionDeProductoProductos && item.expedicionDeProductoProductos.length > 0) {
-        const nombresProductos = item.expedicionDeProductoProductos.map(producto => `${producto.productoNombre}`);
-        const loteProductos = item.expedicionDeProductoLotes.map(lote => `${lote.loteCodigo}`);
-        const cantidadProductos = item.expedicionDeProductoCantidad.map(cantidadproducto => cantidadproducto.detalleCantidadLoteCantidadVendida);
-        const cantidad = [[`${nombresProductos} - ${loteProductos} - ${cantidadProductos} Kg`]]
-        return cantidad;
+        const cantidadCarne = [];
+        for (let i = 0; i < item.expedicionDeProductoProductos.length; i++) {
+          const insumo = item.expedicionDeProductoProductos[i];
+          const lote = item.expedicionDeProductoLotes[i].loteCodigo;
+          const cantidad = item.expedicionDeProductoCantidad[i].detalleCantidadLoteCantidadVendida;
+          
+          const texto = `${insumo.productoNombre} - ${lote} - ${cantidad}`;
+      
+          cantidadCarne.push(texto);
+        }
+        return cantidadCarne;
       } else {
         return [];
       }
@@ -255,17 +261,21 @@ function ListarExpedicionDeProducto() {
     const lowerCaseItem = {
       expedicionDeProductoProductos: item.expedicionDeProductoProductos.map(expedicionDeProductoProductos => expedicionDeProductoProductos),
       expedicionDeProductoLotes: item.expedicionDeProductoLotes.map(expedicionDeProductoLotes => expedicionDeProductoLotes),
-      expedicionDeProductoCliente: item.expedicionDeProductoCliente ? item.expedicionDeProductoCliente : '',
+      expedicionDeProductoCliente: item.expedicionDeProductoCliente ? item.expedicionDeProductoCliente.clienteNombre.toLowerCase() : '',
       expedicionDeProductoDocumento: item.expedicionDeProductoDocumento ? item.expedicionDeProductoDocumento : '',
-      expedicionDeProductoUsuario: item.expedicionDeProductoUsuario ? item.expedicionDeProductoUsuario : '',
+      expedicionDeProductoUsuario: item.expedicionDeProductoUsuario ? item.expedicionDeProductoUsuario.usuarioNombre.toLowerCase() : '',
       expedicionDeProductoFecha: new Date(item.expedicionDeProductoFecha)
     };
 
+    console.log(filtros.lote)
+
+
     if (
       (!filtros.producto || lowerCaseItem.expedicionDeProductoProductos.some(producto => producto.productoNombre.toLowerCase().includes(filtros.producto))) &&
-      (!filtros.lote || lowerCaseItem.diariaDeProduccionAditivos.some(lote => lote.loteCodigo.includes(filtros.lote))) &&
+      (!filtros.cantidad || item.expedicionDeProductoCantidad.some(cantidad => cantidad.detalleCantidadLoteCantidadVendida.toString().includes(filtros.cantidad))) &&
+      (!filtros.lote || lowerCaseItem.expedicionDeProductoLotes.some(lote => lote.loteCodigo.toLowerCase().includes(filtros.lote))) &&
       (!filtros.cliente || lowerCaseItem.expedicionDeProductoCliente.startsWith(filtros.cliente)) &&
-      (!filtros.documento || lowerCaseItem.expedicionDeProductoDocumento.startsWith(filtros.documento)) &&
+      (!filtros.documento || lowerCaseItem.expedicionDeProductoDocumento.toString().startsWith(filtros.documento)) &&
       (!filtros.responsable || lowerCaseItem.expedicionDeProductoUsuario.startsWith(filtros.responsable)) &&
       (!filtros['fecha-desde'] || lowerCaseItem.expedicionDeProductoFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.expedicionDeProductoFecha <= new Date(filtros['fecha-hasta']))
@@ -276,6 +286,7 @@ function ListarExpedicionDeProducto() {
   });
 
   const columnRenderers = {
+    expedicionDeProductoLotes: (lote) => lote.loteCodigo,
     expedicionDeProductoUsuario: (responsable) => responsable.usuarioNombre,
     expedicionDeProductoCliente: (cliente) => cliente.clienteNombre,
     expedicionDeProductoProductos: (prod) => <ColumnaReutilizable contacts={prod} />,
@@ -461,9 +472,9 @@ function ListarExpedicionDeProducto() {
       <FiltroReutilizable filters={filters} handleFilter={handleFilter} />
       <ListaReutilizable
         data={filteredData}
-        dataKey="listarDiariaDeProduccion"
+        dataKey="listarExpediciondeProductos"
         tableHeadCells={tableHeadCells}
-        title="Diaria De Produccion"
+        title="Expedición de Productos"
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditExpd}

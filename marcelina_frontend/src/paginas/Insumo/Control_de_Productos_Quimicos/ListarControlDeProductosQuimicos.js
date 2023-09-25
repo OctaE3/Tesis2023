@@ -178,7 +178,7 @@ function ListarControlDeProductosQuimicos() {
     { id: 'proveedor', label: 'Proveedor', type: 'select', options: proveedor },
     { id: 'nroLote', label: 'Número Lote', type: 'text' },
     { id: 'motivoDeRechazo', label: 'Motivo de rechazo', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
 
   const handleFilter = (filter) => {
@@ -239,7 +239,7 @@ function ListarControlDeProductosQuimicos() {
       (!filtros['fecha-hasta'] || lowerCaseItem.controlDeProductosQuimicosFecha <= new Date(filtros['fecha-hasta'])) &&
       (!filtros.proveedor || lowerCaseItem.controlDeProductosQuimicosProveedor.startsWith(filtros.proveedor)) &&
       (!filtros.nroLote || lowerCaseItem.controlDeProductosQuimicosLote.startsWith(filtros.nroLote)) &&
-      (!filtros.motivoDeRechazo || lowerCaseItem.controlDeProductosQuimicosMotivoDeRechazo.startsWith(filtros.motivoDeRechazo)) &&
+      (!filtros.motivoDeRechazo || lowerCaseItem.controlDeProductosQuimicosMotivoDeRechazo.includes(filtros.motivoDeRechazo)) &&
       (!filtros.responsable || lowerCaseItem.controlDeProductosQuimicosResponsable.startsWith(filtros.responsable))
     ) {
       return true;

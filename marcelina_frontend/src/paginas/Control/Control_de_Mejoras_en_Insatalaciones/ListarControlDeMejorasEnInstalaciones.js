@@ -203,18 +203,18 @@ function ListarControlDeMejorasEnInstalaciones() {
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
       controlDeMejorasEnInstalacionesFecha: new Date(item.controlDeMejorasEnInstalacionesFecha),
-      controlDeMejorasEnInstalacionesSector: item.controlDeMejorasEnInstalacionesSector.toLowerCase(),
-      controlDeMejorasEnInstalacionesDefecto: item.controlDeMejorasEnInstalacionesDefecto.toLowerCase(),
-      controlDeMejorasEnInstalacionesMejoraRealizada: item.controlDeMejorasEnInstalacionesMejoraRealizada.toLowerCase(),
+      controlDeMejorasEnInstalacionesSector: item.controlDeMejorasEnInstalacionesSector ? item.controlDeMejorasEnInstalacionesSector.toLowerCase() : '',
+      controlDeMejorasEnInstalacionesDefecto: item.controlDeMejorasEnInstalacionesDefecto ? item.controlDeMejorasEnInstalacionesDefecto.toLowerCase() : '',
+      controlDeMejorasEnInstalacionesMejoraRealizada: item.controlDeMejorasEnInstalacionesMejoraRealizada ? item.controlDeMejorasEnInstalacionesMejoraRealizada.toLowerCase() : '',
       controlDeMejorasEnInstalacionesResponsable: item.controlDeMejorasEnInstalacionesResponsable ? item.controlDeMejorasEnInstalacionesResponsable.usuarioNombre.toLowerCase() : '',
     };
 
     if (
       (!filtros['fecha-desde'] || lowerCaseItem.controlDeMejorasEnInstalacionesFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.controlDeMejorasEnInstalacionesFecha <= new Date(filtros['fecha-hasta'])) &&
-      (!filtros.sector || lowerCaseItem.controlDeMejorasEnInstalacionesSector.startsWith(filtros.sector)) &&
-      (!filtros.defecto || lowerCaseItem.controlDeMejorasEnInstalacionesDefecto.startsWith(filtros.defecto)) &&
-      (!filtros.mejora || lowerCaseItem.controlDeMejorasEnInstalacionesMejoraRealizada.startsWith(filtros.mejora)) &&
+      (!filtros.sector || lowerCaseItem.controlDeMejorasEnInstalacionesSector.includes(filtros.sector)) &&
+      (!filtros.defecto || lowerCaseItem.controlDeMejorasEnInstalacionesDefecto.includes(filtros.defecto)) &&
+      (!filtros.mejora || lowerCaseItem.controlDeMejorasEnInstalacionesMejoraRealizada.includes(filtros.mejora)) &&
       (!filtros.responsable || lowerCaseItem.controlDeMejorasEnInstalacionesResponsable.startsWith(filtros.responsable))
     ) {
       return true;

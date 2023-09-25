@@ -145,7 +145,7 @@ function ListarProveedor() {
         const localidadesData = localidadesResponse.data;
 
         setData(Data);
-        setLocalidades(localidadesData.map((localidad) => localidad.localidadDepartamento)); // Obtener solo los nombres de las localidades
+        setLocalidades(localidadesData.map((localidad) => localidad.localidadCiudad)); // Obtener solo los nombres de las localidades
       } catch (error) {
         console.error('Error al cargar los datos:', error);
       }
@@ -156,9 +156,9 @@ function ListarProveedor() {
 
 
   const mapData = (item, key) => {
-    if (key === 'proveedorLocalidad.localidadDepartamento') {
-      if (item.proveedorLocalidad && item.proveedorLocalidad.localidadDepartamento) {
-        return item.proveedorLocalidad.localidadDepartamento;
+    if (key === 'proveedorLocalidad.localidadCiudad') {
+      if (item.proveedorLocalidad && item.proveedorLocalidad.localidadCiudad) {
+        return item.proveedorLocalidad.localidadCiudad;
       } else {
         return '';
       }
@@ -179,7 +179,7 @@ function ListarProveedor() {
     { id: 'proveedorEmail', numeric: false, disablePadding: false, label: 'Email' },
     { id: 'proveedorContacto', numeric: false, disablePadding: false, label: 'Teléfonos' },
     { id: 'proveedorRUT', numeric: false, disablePadding: false, label: 'RUT' },
-    { id: 'proveedorLocalidad.localidadDepartamento', numeric: false, disablePadding: false, label: 'Localidad' },
+    { id: 'proveedorLocalidad.localidadCiudad', numeric: false, disablePadding: false, label: 'Localidad' },
   ];
 
   const filters = [
@@ -200,11 +200,11 @@ function ListarProveedor() {
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-      proveedorNombre: item.proveedorNombre.toLowerCase(),
+      proveedorNombre: item.proveedorNombre ? item.proveedorNombre.toLowerCase() : '',
       proveedorEmail: item.proveedorEmail ? item.proveedorEmail.toLowerCase() : '',
       proveedorContacto: item.proveedorContacto.map(contacto => contacto.toLowerCase()), // Convertir todos los contactos a minúsculas
-      proveedorRUT: item.proveedorRUT.toLowerCase(),
-      proveedorLocalidad: item.proveedorLocalidad ? item.proveedorLocalidad.localidadDepartamento.toLowerCase() : '',
+      proveedorRUT: item.proveedorRUT ? item.proveedorRUT.toLowerCase() : '',
+      proveedorLocalidad: item.proveedorLocalidad ? item.proveedorLocalidad.localidadCiudad.toLowerCase() : '',
     };
 
     if (

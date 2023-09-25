@@ -84,10 +84,6 @@ function ListarDiariaDeProduccion() {
     title: 'Correcto', body: 'Se elimino la diaria de producción con éxito!', severity: 'success', type: 'description'
   });
 
-  const [alertSuccess2, setAlertSuccess2] = useState({
-    title: 'Correcto', body: 'Prueba picada.', severity: 'success', type: 'actions'
-  });
-
   const [alertError, setAlertError] = useState({
     title: 'Error', body: 'No se logró eliminar la diaria de producción, recargue la pagina.', severity: 'error', type: 'description'
   });
@@ -174,8 +170,8 @@ function ListarDiariaDeProduccion() {
             };
           } else {
             return {
-              ...diaria,
-              Id: diaria.diariaDeProduccionId,
+          ...diaria,
+          Id: diaria.diariaDeProduccionId,
             };
           }
         });
@@ -184,12 +180,10 @@ function ListarDiariaDeProduccion() {
         const ProductoData = ProductoResponse.data;
         const CarneData = carneResponse.data;
 
-        console.log(data);
-
         setData(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
         setProducto(ProductoData.map((producto) => producto.productoNombre));
-        setCarne(CarneData.map((carne) => `${carne.carneNombre} - ${carne.carneCorte}`));
+        setCarne(CarneData.map((carne) => carne.carneNombre));
         setInsumo(InsumoData.map((insumo) => insumo.insumoNombre));
       } catch (error) {
         console.error('Error al cargar los datos:', error);
@@ -220,7 +214,7 @@ function ListarDiariaDeProduccion() {
     { id: 'cantidadProducida', label: 'Cantidad producida', type: 'text' },
     { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
     { id: 'lote', label: 'Lote', type: 'text' },
-    { id: 'resposable', label: 'Responsable', type: 'select', options: responsable },
+    { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
     { id: 'envasado', label: 'Envasado', type: 'select', options: ['Si', 'No'] },
     { id: 'fechaVencimiento', label: 'Fecha vencimiento', type: 'date', options: ['desde', 'hasta'] },
   ];
@@ -232,6 +226,11 @@ function ListarDiariaDeProduccion() {
           const [desde, hasta] = filter[key].split(' hasta ');
           acc['fecha-desde'] = desde;
           acc['fecha-hasta'] = hasta;
+        }
+        else if (key === 'fechaVencimiento') {
+          const [desdeV, hastaV] = filter[key].split(' hasta ');
+          acc['fechaVencimiento-desde'] = desdeV;
+          acc['fechaVencimiento-hasta'] = hastaV;
         } else {
           acc[key] = filter[key].toLowerCase();
         }
@@ -242,9 +241,17 @@ function ListarDiariaDeProduccion() {
   };
 
   const mapData = (item, key) => {
-    if (key === 'recepcionDeMateriasPrimasCarnicasFecha') {
-      if (item.recepcionDeMateriasPrimasCarnicasFecha) {
-        const fecha = new Date(item.recepcionDeMateriasPrimasCarnicasFecha);
+    if (key === 'diariaDeProduccionFecha') {
+      if (item.diariaDeProduccionFecha) {
+        const fecha = new Date(item.diariaDeProduccionFecha); // Convertir fecha a objeto Date
+        return format(fecha, 'dd/MM/yyyy');
+      } else {
+        return '';
+      }
+    }
+    if (key === 'diariaDeProduccionFechaVencimiento') {
+      if (item.diariaDeProduccionFechaVencimiento) {
+        const fecha = new Date(item.diariaDeProduccionFechaVencimiento); // Convertir fecha a objeto Date
         return format(fecha, 'dd/MM/yyyy');
       } else {
         return '';
@@ -265,25 +272,30 @@ function ListarDiariaDeProduccion() {
     } else if (key === 'diariaDeProduccionInsumosCarnicos') {
       if (item.diariaDeProduccionInsumosCarnicos && item.diariaDeProduccionInsumosCarnicos.length > 0) {
         const cantidadCarne = [];
-
         for (let i = 0; i < item.diariaDeProduccionInsumosCarnicos.length; i++) {
           const productoCarnico = item.diariaDeProduccionInsumosCarnicos[i];
           const cantidad = item.diariaDeProduccionCantidadUtilizadaCarnes[i].detalleCantidadCarneCantidad;
-
+          
           const texto = `${productoCarnico.carneNombre} - ${productoCarnico.carneCorte} - ${cantidad} Kg`;
-
+      
           cantidadCarne.push(texto);
         }
         return cantidadCarne;
       } else {
         return [];
       }
-    } else if (key === 'diariaDeProduccionAditivos') {
+    }else if (key === 'diariaDeProduccionAditivos') {
       if (item.diariaDeProduccionAditivos && item.diariaDeProduccionAditivos.length > 0) {
-        const nombresAditivos = item.diariaDeProduccionAditivos.map(aditivo => `${aditivo.insumoNombre} - ${aditivo.insumoUnidad}`);
-        const cantidadAditivos = item.diariaDeProduccionCantidadUtilizadaInsumos.map(cantidadinsumo => cantidadinsumo.detalleCantidadInsumoCantidad);
-        const cantidadAditivo = [[`${nombresAditivos} - ${cantidadAditivos}`]]
-        return cantidadAditivo;
+        const cantidadCarne = [];
+        for (let i = 0; i < item.diariaDeProduccionAditivos.length; i++) {
+          const insumo = item.diariaDeProduccionAditivos[i];
+          const cantidad = item.diariaDeProduccionCantidadUtilizadaInsumos[i].detalleCantidadInsumoCantidad;
+          
+          const texto = `${insumo.insumoNombre} - ${insumo.insumoUnidad} - ${cantidad}`;
+      
+          cantidadCarne.push(texto);
+        }
+        return cantidadCarne;
       } else {
         return [];
       }
@@ -296,28 +308,30 @@ function ListarDiariaDeProduccion() {
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-      diariaDeProduccionProducto: item.diariaDeProduccionProducto,
+      diariaDeProduccionProducto: item.diariaDeProduccionProducto ? item.diariaDeProduccionProducto.productoNombre.toLowerCase() : '',
       diariaDeProduccionInsumosCarnicos: item.diariaDeProduccionInsumosCarnicos.map(diariaDeProduccionInsumosCarnicos => diariaDeProduccionInsumosCarnicos),
       diariaDeProduccionAditivos: item.diariaDeProduccionAditivos.map(diariaDeProduccionAditivos => diariaDeProduccionAditivos),
       diariaDeProduccionCantidadProducida: item.diariaDeProduccionCantidadProducida,
       diariaDeProduccionFecha: new Date(item.diariaDeProduccionFecha),
-      diariaDeProduccionLote: item.diariaDeProduccionLote ? item.diariaDeProduccionLote : '',
-      diariaDeProduccionResponsable: item.diariaDeProduccionResponsable ? item.diariaDeProduccionResponsable : '',
+      diariaDeProduccionLote: item.diariaDeProduccionLote ? item.diariaDeProduccionLote.loteCodigo.toLowerCase() : '',
+      diariaDeProduccionResponsable: item.diariaDeProduccionResponsable ? item.diariaDeProduccionResponsable.usuarioNombre.toLowerCase() : '',
       diariaDeProduccionFechaVencimiento: new Date(item.diariaDeProduccionFechaVencimiento)
     };
-
+  
     if (
       (!filtros.producto || lowerCaseItem.diariaDeProduccionProducto.startsWith(filtros.producto)) &&
+      (!filtros.cantidadCarne || item.diariaDeProduccionCantidadUtilizadaCarnes.some(cantidadCarne => cantidadCarne.detalleCantidadCarneCantidad.toString().includes(filtros.cantidadCarne))) &&
+      (!filtros.cantidadInsumo || item.diariaDeProduccionCantidadUtilizadaInsumos.some(cantidadInsumo => cantidadInsumo.detalleCantidadInsumoCantidad.toString().includes(filtros.cantidadInsumo))) &&
       (!filtros.carne || lowerCaseItem.diariaDeProduccionInsumosCarnicos.some(carne => carne.carneNombre.toLowerCase().includes(filtros.carne))) &&
       (!filtros.insumo || lowerCaseItem.diariaDeProduccionAditivos.some(insumo => insumo.insumoNombre.toLowerCase().includes(filtros.insumo))) &&
       (!filtros.cantidadProducida || lowerCaseItem.diariaDeProduccionCantidadProducida.toString().startsWith(filtros.cantidadProducida)) &&
       (!filtros['fecha-desde'] || lowerCaseItem.diariaDeProduccionFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.diariaDeProduccionFecha <= new Date(filtros['fecha-hasta'])) &&
-      (!filtros.lote || lowerCaseItem.diariaDeProduccionLote.startsWith(filtros.lote)) &&
+      (!filtros.lote || lowerCaseItem.diariaDeProduccionLote.includes(filtros.lote)) &&
       (!filtros.responsable || lowerCaseItem.diariaDeProduccionResponsable.startsWith(filtros.responsable)) &&
       (!filtros.envasado || (filtros.envasado === 'Si' && item.diariaDeProduccionEnvasado) || (filtros.envasado === 'No' && !item.diariaDeProduccionEnvasado)) &&
-      (!filtros['fecha-desde'] || lowerCaseItem.diariaDeProduccionFechaVencimiento >= new Date(filtros['fecha-desde'])) &&
-      (!filtros['fecha-hasta'] || lowerCaseItem.diariaDeProduccionFechaVencimiento <= new Date(filtros['fecha-hasta']))
+      (!filtros['fechaVencimiento-desde'] || lowerCaseItem.diariaDeProduccionFechaVencimiento >= new Date(filtros['fechaVencimiento-desde'])) &&
+      (!filtros['fechaVencimiento-hasta'] || lowerCaseItem.diariaDeProduccionFechaVencimiento <= new Date(filtros['fechaVencimiento-hasta']))
     ) {
       return true;
     }
@@ -439,10 +453,14 @@ function ListarDiariaDeProduccion() {
                         <span className={classes.liTitleBlue}>Producto</span>: En este campo se puede seleccionar el producto por el cual quiere filtrar la lista.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Carne y Cantidad carne</span>: En filtro esta compuesto por 2 campos ANAHSEEEEEEE.
+                        <span className={classes.liTitleBlue}>Carne y Cantidad carne</span>: En filtro esta compuesto por 2 campos carne y carne cantidad, los cuales en el de carne se puede seleccionar una carne 
+                        y se mostara en la lista todas las producciones con esta carne, en el de cantidad se puede escribir una cantidad y se listaran todas las producciones que contengan esa cantidad sin importar el tipo de carne.
+                        Para una mejor busqueda se aconseja usar los dos filtros a la vez.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Aditivo y Cantidad aditivo</span>: En filtro esta compuesto por 2 campos ANAHSEEEEEEE.
+                        <span className={classes.liTitleBlue}>Aditivo y Cantidad aditivo</span>: En filtro esta compuesto por 2 campos aditivo y aditivo cantidad, los cuales en el de aditvo se puede seleccionar un aditivo 
+                        y se mostara en la lista todas las producciones con este adiivo, en el de cantidad se puede escribir una cantidad y se listaran todas las producciones que contengan esa cantidad sin importar el tipo de aditivo.
+                        Para una mejor busqueda se aconseja usar los dos filtros a la vez.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Cantidad producida</span>: En este campo se puede ingresar la cantidad que se produjo de un producto y filtrar la lista.
@@ -454,7 +472,7 @@ function ListarDiariaDeProduccion() {
                         se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Lote</span>: Anasheeeeeeeeeeeeee.
+                        <span className={classes.liTitleBlue}>Lote</span>: En este campo se puede escribir un lote y se listaran las producciones que correspondan dicho lote.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y mostrar todos los registros asociados a ese responsable.
