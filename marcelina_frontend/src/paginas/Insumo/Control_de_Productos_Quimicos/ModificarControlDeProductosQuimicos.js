@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -39,6 +31,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -91,7 +86,6 @@ const ModificarControlDeProductosQuimicos = () => {
     const classes = useStyles();
     const { id } = useParams();
     const [control, setControl] = useState({});
-    const [controles, setControles] = useState([]);
     const [proveedores, setProveedores] = useState([]);
     const [proveedorSelect, setProveedorSelect] = useState([]);
     const [quimicoProveedor, setQuimicoProveedor] = useState({});
@@ -99,6 +93,7 @@ const ModificarControlDeProductosQuimicos = () => {
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -108,16 +103,16 @@ const ModificarControlDeProductosQuimicos = () => {
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Control de productos quimicos modificado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el control de productos quimicos, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el control de productos quimicos, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -138,31 +133,23 @@ const ModificarControlDeProductosQuimicos = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -177,11 +164,6 @@ const ModificarControlDeProductosQuimicos = () => {
                     if (!controlEncontrado) {
                         navigate('/listar-control-de-productos-quimicos')
                     }
-                    const controlesRestantes = controlesData.filter(
-                        (control) => control.controlDeProductosQuimicosId.toString() !== controlEncontrado.controlDeProductosQuimicosId.toString()
-                    );
-                    setControles(controlesRestantes);
-                    console.log(controlEncontrado)
 
                     setQuimicoProveedor({
                         value: controlEncontrado.controlDeProductosQuimicosProveedor.proveedorId,
@@ -196,11 +178,19 @@ const ModificarControlDeProductosQuimicos = () => {
                         ...controlEncontrado,
                         controlDeProductosQuimicosFecha: fechaFormateada,
                     }
-                    console.log(controlConFechaParseada);
                     setControl(controlConFechaParseada);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            redirect();
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -221,7 +211,15 @@ const ModificarControlDeProductosQuimicos = () => {
 
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                      } else {
+                        updateErrorAlert('No se logró cargar los proveedores, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                          setShowAlertError(false);
+                        }, 2000);
+                      }
                 });
         };
 
@@ -247,7 +245,7 @@ const ModificarControlDeProductosQuimicos = () => {
     const handleChange = event => {
         const { name, value } = event.target;
         if (name === "controlDeProductosQuimicosProductoQuimico") {
-            const regex = new RegExp("^[A-Za-z0-9\\s]{0,50}$");
+            const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$");
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -265,7 +263,7 @@ const ModificarControlDeProductosQuimicos = () => {
             }
         }
         else if (name === "controlDeProductosQuimicosMotivoDeRechazo") {
-            const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+            const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$");
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -308,7 +306,6 @@ const ModificarControlDeProductosQuimicos = () => {
         let fechaNueva = new Date(fecha);
         let fechaFormateada = '';
         fechaNueva.setDate(fechaNueva.getDate() + 1);
-        console.log(fechaNueva)
         if (fechaNueva.toString() === 'Invalid Date') {
             fechaFormateada = undefined;
         }
@@ -320,7 +317,6 @@ const ModificarControlDeProductosQuimicos = () => {
             controlDeProductosQuimicosFecha: fechaFormateada,
             controlDeProductosQuimicosProveedor: proveedorCompleto,
         };
-        console.log(data);
 
         const check = checkError(data.controlDeProductosQuimicosFecha, data.controlDeProductosQuimicosProveedor,
             data.controlDeProductosQuimicosProductoQuimico, data.controlDeProductosQuimicosLote);
@@ -330,14 +326,14 @@ const ModificarControlDeProductosQuimicos = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             if (check === false) {
                 updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 2500);
             } else {
                 axios.put(`/modificar-control-de-productos-quimicos/${id}`, data, {
                     headers: {
@@ -351,9 +347,9 @@ const ModificarControlDeProductosQuimicos = () => {
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
                                 navigate('/listar-control-de-productos-quimicos');
-                            }, 3000)
+                            }, 2500)
                         } else {
-                            updateErrorAlert('No se logro modificar el control de productos quimicos, revise los datos ingresados.')
+                            updateErrorAlert('No se logró modificar el control de productos quimicos, revise los datos ingresados.')
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
@@ -362,22 +358,23 @@ const ModificarControlDeProductosQuimicos = () => {
                     })
                     .catch(error => {
                         if (error.request.status === 401) {
-                            setShowAlertWarning(true);
-                            setTimeout(() => {
-                                setShowAlertWarning(false);
-                            }, 5000);
+                            setCheckToken(true);
                         }
                         else if (error.request.status === 500) {
-                            updateErrorAlert('No se logro modificar el control de productos quimicos, revise los datos ingresados.');
+                            updateErrorAlert('No se logró modificar el control de productos quimicos, revise los datos ingresados.');
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
             }
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-control-de-productos-quimicos')
+    }
 
     return (
         <div>
@@ -391,14 +388,12 @@ const ModificarControlDeProductosQuimicos = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Control de Productos Químicos</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -408,26 +403,26 @@ const ModificarControlDeProductosQuimicos = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los productos químicos que recibe la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar un control de productos quimícos, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 5 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se recibe el producto químico.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se registro el control de productos químicos.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Proveedor</span>: en este campo se debe seleccionar el proveedor al que se le compra el producto químico.
+                                                                <span className={classes.liTitleBlue}>Proveedor</span>: En este campo se debe seleccionar el proveedor al que se le compra el producto químico.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Producto Químico</span>: en este campo se ingresa el producto químico que se recibe.
+                                                                <span className={classes.liTitleBlue}>Producto Químico</span>: En este campo se debe ingresar el producto químico que se recibe.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Lote</span>: este campo se ingresa el código del lote, del producto químico que se recibe.
+                                                                <span className={classes.liTitleBlue}>Lote</span>: En este campo se debe ingresar el código del lote, del producto químico que se recibe.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: en este campo se puede ingresar el motivo por el cual se rechazó el producto químico recibido.
+                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: En este campo se puede ingresar el motivo por el cual se rechazó el producto químico recibido.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -435,11 +430,18 @@ const ModificarControlDeProductosQuimicos = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifique los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -472,12 +474,11 @@ const ModificarControlDeProductosQuimicos = () => {
                                             autoFocus
                                             required
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="controlDeProductosQuimicosFecha"
                                             value={control.controlDeProductosQuimicosFecha}
@@ -514,12 +515,11 @@ const ModificarControlDeProductosQuimicos = () => {
                                             autoFocus
                                             required
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Producto Químico"
-                                            defaultValue="Producto Químico"
                                             type="text"
                                             name="controlDeProductosQuimicosProductoQuimico"
                                             value={control.controlDeProductosQuimicosProductoQuimico}
@@ -532,12 +532,11 @@ const ModificarControlDeProductosQuimicos = () => {
                                             autoFocus
                                             required
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Lote"
-                                            defaultValue={0}
                                             type="text"
                                             name="controlDeProductosQuimicosLote"
                                             value={control.controlDeProductosQuimicosLote}
@@ -551,12 +550,11 @@ const ModificarControlDeProductosQuimicos = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            InputLabelProps={{ className: classes.customLabelRed, shrink: true }}
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Motivo de rechazo"
-                                            defaultValue="Motivo de rechazo"
                                             type="text"
                                             name="controlDeProductosQuimicosMotivoDeRechazo"
                                             value={
@@ -573,7 +571,8 @@ const ModificarControlDeProductosQuimicos = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

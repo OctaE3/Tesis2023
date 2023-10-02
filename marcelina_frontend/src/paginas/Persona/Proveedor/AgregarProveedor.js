@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -64,12 +56,12 @@ const useStyles = makeStyles(theme => ({
 const AgregarProveedor = () => {
 
     const formFieldsModal = [
-        { name: 'localidadDepartamento', label: 'Departamento', type: 'text', obligatorio: true, pattern: "^[A-Za-z\\s]{0,40}$", color: 'primary' },
-        { name: 'localidadCiudad', label: 'Ciudad', obligatorio: true, pattern: "^[A-Za-z\\s]{0,50}$", type: 'text', color: 'primary' },
+        { name: 'localidadDepartamento', label: 'Departamento', type: 'text', obligatorio: true, pattern: "^[A-Za-zÁáÉéÍíÓóÚúÜüÑñ\\s]{0,40}$", color: 'primary' },
+        { name: 'localidadCiudad', label: 'Ciudad', obligatorio: true, pattern: "^[A-Za-zÁáÉéÍíÓóÚúÜüÑñ\\s]{0,40}$", type: 'text', color: 'primary' },
     ];
 
     const formFields = [
-        { name: 'proveedorNombre', label: 'Nombre', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,50}$", color: 'primary' },
+        { name: 'proveedorNombre', label: 'Nombre', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,40}$", color: 'primary' },
         { name: 'proveedorRUT', label: 'RUT', type: 'text', obligatorio: true, pattern: "^[0-9]{0,12}$", color: 'primary' },
         { name: 'proveedorEmail', label: 'Email', type: 'email', pattern: "^[A-Za-z0-9.@]{0,50}$", color: 'secondary' },
         { name: 'proveedorContacto', label: 'Contacto', type: 'phone', obligatorio: true, pattern: "^[0-9]{0,9}$", color: 'primary' },
@@ -81,22 +73,22 @@ const AgregarProveedor = () => {
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro registrar el proveedor, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró registrar el proveedor, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const navigate = useNavigate();
     const [proveedores, setProveedores] = useState({});
-    const [localidad, setLocalidad] = useState({});
     const [localidades, setLocalidades] = useState([]);
     const [localidadesSelect, setLocalidadesSelect] = useState('');
     const [reloadLocalidades, setReloadLocalidades] = useState(false);
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const classes = useStyles();
 
@@ -117,31 +109,24 @@ const AgregarProveedor = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
+            setCheckToken(false)
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerProveedores = () => {
@@ -154,7 +139,15 @@ const AgregarProveedor = () => {
                     setProveedores(response.data);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los proveedores, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -174,7 +167,15 @@ const AgregarProveedor = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar las localidades, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -182,6 +183,7 @@ const AgregarProveedor = () => {
         obtenerLocalidades();
 
         if (reloadLocalidades) {
+            obtenerProveedores();
             obtenerLocalidades();
             setReloadLocalidades(false);
         }
@@ -218,19 +220,15 @@ const AgregarProveedor = () => {
     };
 
     const checkRut = (rut) => {
-        console.log(rut)
         const rutProveedores = [];
         proveedores.forEach(proveedor => {
             rutProveedores.push(proveedor.proveedorRUT);
         })
-        console.log(rutProveedores);
         const rutEncontrado = rutProveedores.includes(rut);
-        console.log(rutEncontrado)
         return rutEncontrado;
     }
 
     const checkTelefono = (telefonos) => {
-        console.log(telefonos)
         const telefonosProveedores = [];
         if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
             return true;
@@ -259,7 +257,9 @@ const AgregarProveedor = () => {
         if (email) {
             const emailProveedores = [];
             proveedores.forEach(proveedor => {
-                emailProveedores.push(proveedor.proveedorEmail);
+                if (proveedor.proveedorEmail !== null && proveedor.proveedorEmail !== '') {
+                    emailProveedores.push(proveedor.proveedorEmail);
+                }
             })
 
             const emailEncontrado = emailProveedores.includes(email);
@@ -268,7 +268,7 @@ const AgregarProveedor = () => {
     }
 
     const checkError = (nombre, rut, email, localidad) => {
-        if (nombre === undefined || nombre === null || nombre.trim() === '') {
+        if (nombre === undefined || nombre === null || nombre === '') {
             return false;
         }
 
@@ -280,7 +280,7 @@ const AgregarProveedor = () => {
         }
 
         if (email) {
-            if (email === undefined || email === null || email.trim() === '') { return false }
+            if (email === undefined || email === null || email === '') { return false }
             else {
                 if (!email.includes(".") && !email.includes("@")) {
                     return false;
@@ -288,7 +288,7 @@ const AgregarProveedor = () => {
             }
         }
 
-        if (localidad === undefined || localidad === null) {
+        if (localidad === undefined || localidad === null || localidad === 'Seleccionar') {
             return false;
         }
 
@@ -297,19 +297,15 @@ const AgregarProveedor = () => {
 
     const checkErrorTelefono = (telefonos) => {
         let resp = true;
-        console.log(telefonos)
         if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
             return false;
         } else {
-            const regex = /^\d{9}$/;
+            const regex = /^\d{8,9}$/;
             telefonos.forEach((tel) => {
-                console.log(tel.telefono);
                 if (regex.test(tel.telefono)) {
                     const primerNum = tel.telefono[0];
                     const longitud = tel.telefono.length;
-                    console.log(primerNum)
-                    console.log(longitud)
-                    if (parseInt(primerNum) === 0 && parseInt(longitud) === 9) { }
+                    if (parseInt(primerNum) === 0 && parseInt(longitud) === 9 || parseInt(primerNum) === 4 && parseInt(longitud) === 8) { }
                     else { resp = false }
                 }
                 else { resp = false }
@@ -340,14 +336,14 @@ const AgregarProveedor = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             if (proveedorConLocalidad.proveedorLocalidad === undefined || proveedorConLocalidad.proveedorConLocalidad === 'Seleccionar') {
                 updateErrorAlert(`Seleccione una localidad válida.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 5000);
+                }, 2000);
             } else {
                 const telefonoCheckError = checkErrorTelefono(tel);
                 if (telefonoCheckError === false) {
@@ -355,7 +351,7 @@ const AgregarProveedor = () => {
                     setShowAlertError(true);
                     setTimeout(() => {
                         setShowAlertError(false);
-                    }, 7000);
+                    }, 3000);
                 } else {
                     if (email) {
                         const regex = /^(([^<>()[\]\.,;:\s@"]+(\.[^<>()[\]\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -363,8 +359,6 @@ const AgregarProveedor = () => {
                             const rutCheck = checkRut(rut);
                             const emailCheck = checkEmail(email);
                             const telefonoCheck = checkTelefono(tel);
-                            console.log(rutCheck);
-                            console.log(emailCheck);
 
                             if (telefonoCheck === false && emailCheck === false && rutCheck === false) {
                                 const telefonosConvertidos = proveedorConLocalidad.proveedorContacto.map((tel) => tel.telefono);
@@ -383,28 +377,25 @@ const AgregarProveedor = () => {
                                             setShowAlertSuccess(true);
                                             setTimeout(() => {
                                                 setShowAlertSuccess(false);
-                                            }, 5000);
+                                            }, 2500);
                                         } else {
-                                            updateErrorAlert('No se logro registrar el proveedor, revise los datos ingresados.')
+                                            updateErrorAlert('No se logró registrar el proveedor, revise los datos ingresados.')
                                             setShowAlertError(true);
                                             setTimeout(() => {
                                                 setShowAlertError(false);
-                                            }, 5000);
+                                            }, 2500);
                                         }
                                     })
                                     .catch(error => {
                                         if (error.request.status === 401) {
-                                            setShowAlertWarning(true);
-                                            setTimeout(() => {
-                                                setShowAlertWarning(false);
-                                            }, 5000);
+                                            setCheckToken(true);
                                         }
                                         else if (error.request.status === 500) {
-                                            updateErrorAlert('No se logro registrar el proveedor, revise los datos ingresados.');
+                                            updateErrorAlert('No se logró registrar el proveedor, revise los datos ingresados.');
                                             setShowAlertError(true);
                                             setTimeout(() => {
                                                 setShowAlertError(false);
-                                            }, 5000);
+                                            }, 2500);
                                         }
                                     })
                             } else {
@@ -412,20 +403,18 @@ const AgregarProveedor = () => {
                                 setShowAlertError(true);
                                 setTimeout(() => {
                                     setShowAlertError(false);
-                                }, 7000);
+                                }, 3000);
                             }
                         } else {
                             updateErrorAlert(`El mail ingresado no es válido.`);
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 7000);
+                            }, 2000);
                         }
                     } else {
                         const rutCheck = checkRut(rut);
                         const telefonoCheck = checkTelefono(tel);
-                        console.log(rutCheck);
-                        console.log(telefonoCheck);
 
                         if (telefonoCheck === false && rutCheck === false) {
                             const telefonosConvertidos = proveedorConLocalidad.proveedorContacto.map((tel) => tel.telefono);
@@ -442,31 +431,29 @@ const AgregarProveedor = () => {
                                 .then(response => {
                                     if (response.status === 201) {
                                         updateSuccessAlert('Proveedor registrado con éxito!')
+                                        setReloadLocalidades(true);
                                         setShowAlertSuccess(true);
                                         setTimeout(() => {
                                             setShowAlertSuccess(false);
-                                        }, 5000);
+                                        }, 2000);
                                     } else {
-                                        updateErrorAlert('No se logro registrar el proveedor, revise los datos ingresados.')
+                                        updateErrorAlert('No se logró registrar el proveedor, revise los datos ingresados.')
                                         setShowAlertError(true);
                                         setTimeout(() => {
                                             setShowAlertError(false);
-                                        }, 5000);
+                                        }, 2500);
                                     }
                                 })
                                 .catch(error => {
                                     if (error.request.status === 401) {
-                                        setShowAlertWarning(true);
-                                        setTimeout(() => {
-                                            setShowAlertWarning(false);
-                                        }, 5000);
+                                        setCheckToken(true);
                                     }
                                     else if (error.request.status === 500) {
-                                        updateErrorAlert('No se logro registrar el proveedor, revise los datos ingresados.');
+                                        updateErrorAlert('No se logró registrar el proveedor, revise los datos ingresados.');
                                         setShowAlertError(true);
                                         setTimeout(() => {
                                             setShowAlertError(false);
-                                        }, 5000);
+                                        }, 2500);
                                     }
                                 })
                         } else {
@@ -474,7 +461,7 @@ const AgregarProveedor = () => {
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 7000);
+                            }, 3000);
                         }
                     }
                 }
@@ -486,16 +473,15 @@ const AgregarProveedor = () => {
 
         const localidadDepartamento = formDataModal.localidadDepartamento;
         const localidadCiudad = formDataModal.localidadCiudad;
-
+        console.log(localidades);
         const localidadesExisten = localidades.some(localidad => {
-            return localidad.departamento === localidadDepartamento && localidad.ciudad === localidadCiudad;
+            return localidad.localidadDepartamento.toLowerCase().toString() === localidadDepartamento.toLowerCase().toString() && localidad.localidadCiudad.toLowerCase().toString() === localidadCiudad.toLowerCase().toString();
         });
 
-        setLocalidad(formDataModal);
-        console.log(formDataModal);
+        const data = formDataModal
 
         if (!localidadesExisten) {
-            axios.post('/agregar-localidad', formDataModal, {
+            axios.post('/agregar-localidad', data, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     "Content-Type": "application/json"
@@ -504,31 +490,29 @@ const AgregarProveedor = () => {
                 .then(response => {
                     if (response.status === 201) {
                         updateSuccessAlert('Localidad registrada con éxito!')
+                        setReloadLocalidades(true);
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                        }, 5000);
+                        }, 2500);
                     } else {
-                        updateErrorAlert('No se logro registrar la localidad, revise los datos ingresados.')
+                        updateErrorAlert('No se logró registrar la localidad, revise los datos ingresados.')
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
                 .catch(error => {
                     if (error.request.status === 401) {
-                        setShowAlertWarning(true);
-                        setTimeout(() => {
-                            setShowAlertWarning(false);
-                        }, 5000);
+                        setCheckToken(true);
                     }
                     else if (error.request.status === 500) {
-                        updateErrorAlert('No se logro registrar la localidad, revise los datos ingresados.');
+                        updateErrorAlert('No se logró registrar la localidad, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
         } else {
@@ -536,8 +520,12 @@ const AgregarProveedor = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 5000);
+            }, 2500);
         }
+    }
+
+    const redirect = () => {
+        navigate('/listar-proveedor')
     }
 
     return (
@@ -552,14 +540,12 @@ const AgregarProveedor = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
                                     <Typography component='h1' variant='h4'>Agregar Proveedor</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -573,24 +559,28 @@ const AgregarProveedor = () => {
                                                     </span>
                                                     <br />
                                                     <span>
-                                                        Este formulario cuenta con 4 campos:
+                                                        Este formulario cuenta con 5 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre del proveedor o de su empresa.
+                                                                <span className={classes.liTitleBlue}>Nombre</span>: En este campo se debe ingresar el nombre del proveedor o de su empresa,
+                                                                este campo solo acepta palabras y números, a su vez cuenta con una longitud máxima de 40 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>RUT</span>: en este campo se debe ingresar el email entregado por el cliente.
+                                                                <span className={classes.liTitleBlue}>RUT</span>: en este campo se debe ingresar el código RUT por el cual se identifica el proveedor,
+                                                                este campo solo acepta números, a su vez cuenta con una longitud máxima de 12 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Email</span>: en este campo se debe ingresar el código RUT por el cual se identifica el proveedor.
+                                                                <span className={classes.liTitleBlue}>Email</span>: en este campo se debe ingresar el email del proveedor,
+                                                                este campo solo acepta palabras, números, arroba y punto, a su vez cuenta con un máximo de 50 caracteres.
                                                             </li>
                                                             <li>
                                                                 <span className={classes.liTitleBlue}>Contacto</span>: en este campo se ingresa el número de teléfono del proveedor,
                                                                 en caso de que tenga mas de un teléfono, se puede agregar mas al darle click al icono de más a la derecha del campo
-                                                                y si desea eliminar el campo, consta en darle click a la X a la derecha del campo generado.
+                                                                y si desea eliminar el campo, consta en darle click a la X a la derecha del campo generado, los campos de teléfono aceptan solo números y
+                                                                cuentan con una longitud máxima de 9 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Localidad</span>: en este campo se puede seleccionar la localidad en donde esta ubicado el proveedor o su empresa,
+                                                                <span className={classes.liTitleBlue}>Localidad</span>: en este campo se debe seleccionar la localidad en donde esta ubicado el proveedor o su empresa,
                                                                 en caso de querer añadir una localidad nueva, es posible dandole al icono de más a la derecha del campo.
                                                             </li>
                                                         </ul>
@@ -599,12 +589,25 @@ const AgregarProveedor = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
                                                         </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones:
+                                                        <br />
+                                                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                                                        <br />
+                                                        - Una vez registre el proveedor, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro proveedor.
+                                                        <br />
+                                                        - Los campos para dar de alta una localidad solo aceptan palabras y cuentan con una longitud máxima de 40 caracteres.
+                                                        <br />
+                                                        - En el campo de teléfono también se acepta números de teléfono fijo, en caso de que quiera agregar un teléfono fijo ingréselo todo junto.
+                                                        <br />
+                                                        - Los proveedores se eliminan lógicamente.
                                                     </span>
                                                 </DialogContentText>
                                             </DialogContent>
@@ -633,6 +636,7 @@ const AgregarProveedor = () => {
                         fields={formFields}
                         onSubmit={handleFormSubmit}
                         onSubmitModal={handleFormSubmitModal}
+                        handleRedirect={redirect}
                         selectOptions={{ proveedorLocalidad: localidadesSelect }}
                     />
                 </Grid>

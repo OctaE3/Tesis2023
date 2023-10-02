@@ -19,7 +19,7 @@ public class PControl_de_Alarma_Luminica_y_Sonora_de_Cloro implements Serializab
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "control_de_alarma_luminica_y_sonara_de_cloro")
+    @Column(name = "control_de_alarma_luminica_y_sonara_de_cloro_id")
     private Long controlDeAlarmaLuminicaYSonaraDeCloroId;
 
     @Column(name = "control_de_alarma_luminica_y_sonora_de_cloro_fecha_hora", nullable = false)

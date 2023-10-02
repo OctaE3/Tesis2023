@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -66,28 +58,30 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
     { name: 'monitoreoDeSSOPOperativoFechaInicio', label: 'Fecha de Inicio de la Semana', type: 'date', color: 'primary' },
     { name: 'monitoreoDeSSOPOperativoArea', label: 'Área *', type: 'selector', color: 'primary' },
     { name: 'monitoreoDeSSOPOperativoDias', label: 'Días Implementados *', type: 'selector', multiple: 'si', color: 'primary' },
-    { name: 'monitoreoDeSSOPOperativoObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
-    { name: 'monitoreoDeSSOPOperativoAccCorrectivas', label: 'Acciones Correctivas', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
-    { name: 'monitoreoDeSSOPOperativoAccPreventivas', label: 'Acciones Preventivas', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
+    { name: 'monitoreoDeSSOPOperativoObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", multi: '3', color: 'secondary' },
+    { name: 'monitoreoDeSSOPOperativoAccCorrectivas', label: 'Acciones Correctivas', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
+    { name: 'monitoreoDeSSOPOperativoAccPreventivas', label: 'Acciones Preventivas', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
+  const [alertSuccess,] = useState({
     title: 'Correcto', body: 'Monitoreo de ssop operativo agregado con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro agregar el monitoreo de ssop operativo, revise los datos ingresados.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró agregar el monitoreo de ssop operativo, revise los datos ingresados.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
-  const [dias, setDias] = useState([
+  const [checkToken, setCheckToken] = useState(false);
+  const navigate = useNavigate();
+  const [dias] = useState([
     { value: 'Lunes', label: 'Lunes' },
     { value: 'Martes', label: 'Martes' },
     { value: 'Miercoles', label: 'Miércoles' },
@@ -95,7 +89,7 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
     { value: 'Viernes', label: 'Viernes' },
     { value: 'Sabado', label: 'Sábado' },
   ]);
-  const [area, setArea] = useState([
+  const [area] = useState([
     { value: 'Mesadas', label: 'Mesadas' },
     { value: 'Pisos', label: 'Pisos' },
     { value: 'Utensilios', label: 'Utensilios' },
@@ -119,6 +113,28 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
   const handleClose = () => {
     setOpen(false);
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/')
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+
+      const tokenExpiration = payload.exp * 1000;
+      const currentTime = Date.now();
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 2000);
+      }
+      setCheckToken(false)
+    }
+  }, [checkToken]);
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -175,13 +191,16 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
 
     const valoresDias = dias.map(dia => dia.value);
 
+    const fecha = new Date(formData.monitoreoDeSSOPOperativoFechaInicio);
+    fecha.setDate(fecha.getDate() + 1);
+
     const updateFormData = {
       ...formData,
       monitoreoDeSSOPOperativoDias: valoresDias,
       monitoreoDeSSOPOperativoFechaFinal: formattedFechaFinal,
+      monitoreoDeSSOPOperativoFechaInicio: fecha,
       monitoreoDeSSOPOperativoResponsable: window.localStorage.getItem('user'),
     }
-    console.log(updateFormData);
 
     const check = checkError(updateFormData.monitoreoDeSSOPOperativoFechaInicio, updateFormData.monitoreoDeSSOPOperativoArea,
       updateFormData.monitoreoDeSSOPOperativoDias, updateFormData.monitoreoDeSSOPOperativoAccCorrectivas, updateFormData.monitoreoDeSSOPOperativoAccPreventivas);
@@ -191,7 +210,7 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 2500);
     } else {
       axios.post('/agregar-monitoreo-de-ssop-operativo', updateFormData, {
         headers: {
@@ -204,31 +223,32 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
-            }, 5000);
+            }, 2500);
           } else {
-            updateErrorAlert('No se logro agregar el monitoreo de ssop operativo, revise los datos ingresados.')
+            updateErrorAlert('No se logró agregar el monitoreo de ssop operativo, revise los datos ingresados.')
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 2500);
           }
         })
         .catch(error => {
           if (error.request.status === 401) {
-            setShowAlertWarning(true);
-            setTimeout(() => {
-              setShowAlertWarning(false);
-            }, 5000);
+            setCheckToken(true);
           }
           else if (error.request.status === 500) {
-            updateErrorAlert('No se logro agregar el monitoreo de ssop operativo, revise los datos ingresados.');
+            updateErrorAlert('No se logró agregar el monitoreo de ssop operativo, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 2500);
           }
         })
     }
+  }
+
+  const redirect = () => {
+    navigate('/listar-monitoreo-de-ssop-operativo')
   }
 
   return (
@@ -241,14 +261,12 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
               <Typography component='h1' variant='h4'>Agregar Monitoreo de SSOP Operativo</Typography>
               <div>
-                <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton className={blinking ? classes.blinkingButton : ''}>
-                    <HelpOutlineIcon fontSize="large" color="primary" />
-                  </IconButton>
-                </Button>
+                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
                 <Dialog
                   fullScreen={fullScreen}
-                  fullWidth='md'
+                  fullWidth
                   maxWidth='md'
                   open={open}
                   onClose={handleClose}
@@ -265,22 +283,22 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
                         Este formulario cuenta con 6 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Fecha de incio de la semana</span>: en este campo se debe ingresar la fecha en la que inicia el monitoreo.
+                            <span className={classes.liTitleBlue}>Fecha de incio de la semana</span>: En este campo se debe ingresar la fecha en la que inició el monitoreo.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Área</span>: en este campo se selecciona el área en la que se realiza el monitoreo.
+                            <span className={classes.liTitleBlue}>Área</span>: En este campo se debe seleccionar el área en la que se realizó el monitoreo.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Días implementados</span>: en este campo se selecciona el o los dias en los que se realizo el monitoreo.
+                            <span className={classes.liTitleBlue}>Días implementados</span>: En este campo se debe seleccionar el o los días en los que se realizó el monitoreo.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron en el momento que se realizo el monitoreo.
+                            <span className={classes.liTitleRed}>Observaciones</span>: En este campo se pueden registrar las observaciones o detalles que se encontraron en el momento que se realizó el monitoreo.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Acciones Correctivas</span>: en este campo se ingresa las acciones que se implementaron para corregir el inconveniente.
+                            <span className={classes.liTitleBlue}>Acciones Correctivas</span>: En este campo se ingresa las acciones que se implementaron para corregir el inconveniente.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Acciones Preventivas</span>: en este campo se ingresa las acciones que se implementaran para solucionar posibles problemas a futuro.
+                            <span className={classes.liTitleBlue}>Acciones Preventivas</span>: En este campo se ingresa las acciones que se implementaran para solucionar posibles problemas a futuro.
                           </li>
                         </ul>
                       </span>
@@ -288,12 +306,21 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                        <br />
+                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                        <br />
+                        - Una vez se registre el monitoreo de ssop operativo, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro monitoreo de ssop operativo.
+                        <br />
+                        - Los campos de Observaciones, Acciones Correctivas y Acciones Preventivas cuentan con una longitud máxima de 250 caracteres y se podrán ingresar letras y números.
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -321,6 +348,7 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
       <FormularioReutilizable
         fields={formFields}
         onSubmit={handleFormSubmit}
+        handleRedirect={redirect}
         selectOptions={{
           monitoreoDeSSOPOperativoDias: dias,
           monitoreoDeSSOPOperativoArea: area,

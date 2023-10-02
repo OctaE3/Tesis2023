@@ -15,7 +15,8 @@ import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid } from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, useMediaQuery, TextField } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
   toolbar: {
@@ -38,8 +39,8 @@ const useStyles = makeStyles((theme) => ({
   paper: {
     width: '95%',
     marginBottom: theme.spacing(2),
-    border: '2px solid black',
-    margin: '5% auto',
+    border: '1px solid black',
+    marginLeft: '2.5%',
     overflowX: 'auto'
   },
   table: {
@@ -60,8 +61,56 @@ const useStyles = makeStyles((theme) => ({
     marginRight: theme.spacing(1),
     marginBottom: theme.spacing(1)
   },
+  buttonAlta: {
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
+    marginBottom: theme.spacing(1),
+    backgroundColor: 'green',
+    color: 'white',
+    '&:hover': {
+      backgroundColor: 'darkgreen',
+    },
+  },
   colorExpired: {
     color: 'red',
+  },
+  colorDelete: {
+    color: 'blue',
+  },
+  sendButton: {
+    display: 'flex',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginLeft: '5%',
+  },
+  sendButtonList: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginRight: '5%',
+  },
+  sendButtonListMarg: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginRight: '1%',
+  },
+  sendButtonMarg: {
+    display: 'flex',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginLeft: '1%',
+  },
+  sendButtonListSolo: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginRight: '2.5%',
+  },
+  sendButtonQuery: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }));
 
@@ -78,7 +127,7 @@ function EnhancedTableHead(props) {
           <TableCell
             key={headCell.id}
             align={headCell.numeric ? 'right' : 'left'}
-            padding={headCell.disablePadding ? 'none' : 'default'}
+            padding={headCell.disablePadding ? 'none' : 'normal'}
             sortDirection={orderBy === headCell.id ? order : false}
           >
             <TableSortLabel
@@ -108,15 +157,20 @@ EnhancedTableHead.propTypes = {
   tableHeadCells: PropTypes.array.isRequired,
 };
 
-function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, columnRenderers, onEditButton, onDeleteButton }) {
+function ListaReutilizable({ data, tableHeadCells, title, titleListButton, linkButton, listButton, dataMapper, columnRenderers, onEditButton, onDeleteButton, onAddButton }) {
   const classes = useStyles();
-  const [order, setOrder] = useState('asc');
+  const [order, setOrder] = useState('desc');
   const [orderBy, setOrderBy] = useState(tableHeadCells[0].id);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [rows, setRows] = useState([]);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [elementToDelete, setElementToDelete] = useState(null);
+  const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [elementToAdd, setElementToAdd] = useState(null);
+  const [cantidad, setCantidad] = useState(0);
+  const [cantidadNueva, setCantidadNueva] = useState(0);
+  const buttonQuery = useMediaQuery('(max-width:850px)');
 
   useEffect(() => {
     const mappedRows = data.map((item) => {
@@ -126,6 +180,12 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
       });
       if (item.isExpired) {
         row.isExpired = item.isExpired;
+      }
+      if (item.isDelete) {
+        row.isDelete = item.isDelete;
+      }
+      if (item.icl) {
+        row.icl = item.icl;
       }
       return row;
     });
@@ -167,6 +227,34 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
     setOpenDeleteDialog(false);
   };
 
+  const handleOpenAddDialog = (row) => {
+    setElementToAdd(row)
+    if (row.loteCantidad) {
+      setCantidad(row.loteCantidad);
+    }
+    else if (row.carneCantidad) {
+      setCantidad(row.carneCantidad);
+    }
+    else if (row.insumoCantidad) {
+      setCantidad(row.insumoCantidad);
+    }
+    setOpenAddDialog(true);
+  };
+
+  const handleCloseAddDialog = () => {
+    setElementToAdd(null)
+    setOpenAddDialog(false);
+  };
+
+  const handleAdd = () => {
+    const añadir = {
+      ...elementToAdd,
+      cantidaICL: cantidadNueva,
+    }
+    onAddButton(añadir);
+    setOpenAddDialog(false);
+  };
+
   const handleClick = (event, property) => {
     handleRequestSort(event, property);
   };
@@ -196,6 +284,51 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
           </DialogActions>
         </Dialog>
       </div>
+      <div>
+        <Dialog
+          open={openAddDialog}
+          onClose={handleCloseAddDialog}
+          aria-labelledby="responsive-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="responsive-dialog-title">Confirmación</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description" className={classes.text}>
+              ¿Estás seguro de que deseas agregar de nuevo este elemento?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseAddDialog} color="primary" autoFocus>
+              No
+            </Button>
+            <Button onClick={handleAdd} color="primary" autoFocus>
+              Sí
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+      {linkButton ? (
+        <Grid container className={buttonQuery ? classes.sendButtonQuery : ''}>
+          <Grid item lg={6} md={6} sm={6} xs={6}>
+            <Grid className={!buttonQuery ? classes.sendButton : classes.sendButtonListMarg}>
+              <Button type="submit" variant="contained" color="primary" onClick={linkButton}>Añadir Registro</Button>
+            </Grid>
+          </Grid>
+          <Grid item lg={6} md={6} sm={6} xs={6}>
+            <Grid className={!buttonQuery ? classes.sendButtonList : classes.sendButtonMarg}>
+              <Button type="submit" variant="contained" color="primary" onClick={listButton}>{titleListButton}</Button>
+            </Grid>
+          </Grid>
+        </Grid>
+      ) : (
+        <Grid container>
+          <Grid item lg={12} md={12} sm={12} xs={12}>
+            <Grid className={buttonQuery ? classes.sendButtonQuery : classes.sendButtonListSolo}>
+              <Button type="submit" variant="contained" color="primary" onClick={listButton}>{titleListButton}</Button>
+            </Grid>
+          </Grid>
+        </Grid>
+      )}
       <div className={classes.root}>
         <Paper className={classes.paper}>
           <Toolbar className={classes.toolbar}>
@@ -217,7 +350,11 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
                   .map((row, index) => (
                     <TableRow key={index}>
                       {tableHeadCells.map((column) => (
-                        <TableCell key={column.id} align={column.numeric ? 'right' : 'left'} className={row.isExpired ? classes.colorExpired : ''}>
+                        <TableCell
+                          key={column.id}
+                          align={column.numeric ? 'right' : 'left'}
+                          className={row.isExpired ? classes.colorExpired : row.isDelete ? classes.colorDelete : ''}
+                        >
                           {columnRenderers[column.id] ? (
                             columnRenderers[column.id](row[column.id])
                           ) : (
@@ -229,9 +366,16 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
                         <Button className={classes.button} variant="contained" color="primary" onClick={() => onEditButton(row)}>
                           <EditIcon />
                         </Button>
-                        <Button className={classes.button} variant="contained" color="secondary" onClick={() => handleOpenDeleteDialog(row)}>
-                          <DeleteIcon />
-                        </Button>
+                        {row.icl === undefined && (
+                          <Button
+                            className={onAddButton && row.isDelete ? classes.buttonAlta : classes.button}
+                            variant="contained"
+                            color={onAddButton && row.isDelete ? '' : "secondary"}
+                            onClick={row.isDelete || row.isExpired ? () => handleOpenAddDialog(row) : () => handleOpenDeleteDialog(row)}
+                          >
+                            {onAddButton && row.isDelete ? <AddIcon /> : <DeleteIcon />}
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -246,15 +390,16 @@ function ListaReutilizable({ data, dataKey, tableHeadCells, title, dataMapper, c
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
+            labelRowsPerPage="Filas por página"
             count={rows.length}
             rowsPerPage={rowsPerPage}
             page={page}
-            onChangePage={handleChangePage}
-            onChangeRowsPerPage={handleChangeRowsPerPage}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Paper>
       </div>
-    </div>
+    </div >
   );
 }
 

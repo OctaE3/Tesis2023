@@ -4,19 +4,11 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,7 +52,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarControlDeTemperaturaEnCamaras() {
   const [data, setData] = useState([]);
-  const [responsable, setResponsable] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [deleteItem, setDeleteItem] = useState(false);
@@ -76,16 +70,16 @@ function ListarControlDeTemperaturaEnCamaras() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el control de temperaturas en cámaras con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el control de temperaturas en cámaras con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logró eliminar el control de temperaturas en cámaras, recargue la pagina.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar el control de temperaturas en cámaras, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -98,28 +92,20 @@ function ListarControlDeTemperaturaEnCamaras() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
   }, []);
@@ -132,22 +118,32 @@ function ListarControlDeTemperaturaEnCamaras() {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
-        const ResponsableResponse = await axios.get('/listar-usuarios', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+
+        const dataL = response.data.map((control, index) => {
+          if (index < 30) {
+            return {
+              ...control,
+              Id: control.controlDeTemperaturaEnCamarasId,
+            }
           }
         });
-
-        const data = response.data.map((controlDeTemperaturaEnCamaras) => ({
-          ...controlDeTemperaturaEnCamaras,
-          Id: controlDeTemperaturaEnCamaras.controlDeTemperaturaEnCamarasId,
+        const dataLast30 = dataL.filter((data) => data !== undefined);
+        const data = response.data.map((control) => ({
+          ...control,
+          Id: control.controlDeTemperaturaEnCamarasId,
         }));
-        const ResponsableData = ResponsableResponse.data;
 
-        setData(data);
-        setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
+        setButtonName('Listar Todos');
+        setDeleteItem(false)
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        updateErrorAlert('No se logró cargar los datos de la página, recargue la página.')
+        setShowAlertError(true);
+        setTimeout(() => {
+          setShowAlertError(false);
+        }, 2000);
       }
     };
 
@@ -155,15 +151,16 @@ function ListarControlDeTemperaturaEnCamaras() {
   }, [deleteItem]);
 
   const tableHeadCells = [
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
     { id: 'controlDeTemperaturaEnCamarasNroCamara', numeric: false, disablePadding: false, label: 'Número de Cámara' },
-    { id: 'controlDeTemperaturaEnCamarasFecha', numeric: false, disablePadding: true, label: 'Fecha' },
+    { id: 'controlDeTemperaturaEnCamarasFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'controlDeTemperaturaEnCamarasHora', numeric: false, disablePadding: false, label: 'Hora' },
     { id: 'controlDeTemperaturaEnCamarasTempInterna', numeric: false, disablePadding: false, label: 'Temperatura Interna' },
     { id: 'controlDeTemperaturaEnCamaraTempExterna', numeric: false, disablePadding: false, label: 'Temperatura Externa' },
   ];
 
   const filters = [
-    { id: 'numero', label: 'Número de Cámara', type: 'select', options: ['Camara 1', 'Camara 2', 'Camara 3', 'Camara 4', 'Camara 5', 'Camara 6'] },
+    { id: 'numero', label: 'Número de Cámara', type: 'select', options: ['Cámara 1', 'Cámara 2', 'Cámara 3', 'Cámara 4', 'Cámara 5', 'Cámara 6'] },
     { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
     { id: 'hora', label: 'Hora', type: 'text' },
     { id: 'interna', label: 'Temperatura Interna', type: 'text' },
@@ -214,9 +211,9 @@ function ListarControlDeTemperaturaEnCamaras() {
       (!filtros.numero || lowerCaseItem.controlDeTemperaturaEnCamarasNroCamara.startsWith(filtros.numero)) &&
       (!filtros['fecha-desde'] || lowerCaseItem.controlDeTemperaturaEnCamarasFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.controlDeTemperaturaEnCamarasFecha <= new Date(filtros['fecha-hasta'])) &&
-      (!filtros.hora || lowerCaseItem.controlDeTemperaturaEnCamarasHora.toString().startsWith(filtros.hora)) &&
-      (!filtros.interna || lowerCaseItem.controlDeTemperaturaEnCamarasTempInterna.toString().startsWith(filtros.interna)) &&
-      (!filtros.externa || lowerCaseItem.controlDeTemperaturaEnCamaraTempExterna.toString().startsWith(filtros.externa))
+      (!filtros.hora || lowerCaseItem.controlDeTemperaturaEnCamarasHora.toString() === filtros.hora) &&
+      (!filtros.interna || lowerCaseItem.controlDeTemperaturaEnCamarasTempInterna.toString() === filtros.interna) &&
+      (!filtros.externa || lowerCaseItem.controlDeTemperaturaEnCamaraTempExterna.toString() === filtros.externa)
     ) {
       return true;
     }
@@ -239,17 +236,17 @@ function ListarControlDeTemperaturaEnCamaras() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
           updateErrorAlert('No se logró eliminar el control de temperaturas en cámaras, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
@@ -257,14 +254,14 @@ function ListarControlDeTemperaturaEnCamaras() {
           setShowAlertWarning(true);
           setTimeout(() => {
             setShowAlertWarning(false);
-          }, 5000);
+          }, 2000);
         }
         else if (error.request.status === 500) {
           updateErrorAlert('No se logró eliminar el control de temperaturas en cámaras, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -292,22 +289,34 @@ function ListarControlDeTemperaturaEnCamaras() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/control-de-temperatura-en-camaras')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Control De Temperatura En Cámaras</Typography>
+          <Typography component='h1' variant='h5'>Listar de Control De Temperatura En Cámaras</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -317,7 +326,7 @@ function ListarControlDeTemperaturaEnCamaras() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los controles de temperaturas en cámaras que fueron registrados.
+                    En esta página se encarga de listar los controles de temperaturas en cámaras que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -336,13 +345,13 @@ function ListarControlDeTemperaturaEnCamaras() {
                         se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Hora</span>: En este campo se puede ingresar la hora por la cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Hora</span>: En este campo se puede ingresar la hora por la cual se quiere filtrar la lista y se listarán todos los registros con esa misma hora. 
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Temperatura Interna</span>: En este campo se puede ingresar la temperatura interna de las cámara por la cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Temperatura Interna</span>: En este campo se puede ingresar la temperatura interna de la cámara por la cual se quiere filtrar la lista y se listarán todos los registros con esa misma temperatura interna.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Temperatura Externa</span>: En este campo se puede ingresar la temperatura externa de las cámara por la cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Temperatura Externa</span>: En este campo se puede ingresar la temperatura externa de la cámara por la cual se quiere filtrar la lista y se listarán todos los registros con esa misma temperatura externa.
                       </li>
                     </ul>
                   </span>
@@ -352,25 +361,39 @@ function ListarControlDeTemperaturaEnCamaras() {
                   <span>
                     <ul>
                       <li>
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
+                      </li>
+                      <li>
                         <span className={classes.liTitleRed}>Número de Cámara</span>: En esta columna se muestra el número de la cámara en la que midió su temperatura.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró o midió la temperatura.
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró el control de temperatura en cámaras.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Hora</span>: En esta columna se muestra la hora en la que se midió la temperatura.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Temperatura Interna</span>: En esta columna se muestran el valor en °C de la temperatura interna que se midió de la cámara.
+                        <span className={classes.liTitleRed}>Temperatura Interna</span>: En esta columna se muestran el valor en °C de la temperatura interna que se obtuvo de la cámara.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Temperatura Externa</span>: En esta columna se muestran el valor en °C de la temperatura externa que se midió de la cámara.
+                        <span className={classes.liTitleRed}>Temperatura Externa</span>: En esta columna se muestran el valor en °C de la temperatura externa que se obtuvo de la cámara.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -399,7 +422,11 @@ function ListarControlDeTemperaturaEnCamaras() {
         data={filteredData}
         dataKey="listarControlDeTemperaturaEnCamaras"
         tableHeadCells={tableHeadCells}
-        title="Control De Temperatura En Cámaras"
+        title="Lista de Controles de Temperatura en Cámaras"
+        titleButton="Contol de Temperatura en Cámaras"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={""}
         onEditButton={handleEditControl}

@@ -4,19 +4,11 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
 import { useNavigate } from 'react-router-dom';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,10 +52,14 @@ const useStyles = makeStyles(theme => ({
 
 function ListarCliente() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const [localidades, setLocalidades] = useState([]);
   const classes = useStyles();
   const [deleteItem, setDeleteItem] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
   const navigate = useNavigate();
 
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
@@ -76,16 +72,16 @@ function ListarCliente() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el cliente con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el cliente con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logró eliminar el cliente, recargue la pagina.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar el cliente, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -98,31 +94,23 @@ function ListarCliente() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -138,16 +126,49 @@ function ListarCliente() {
           }
         });
 
-        const clientesData = clientesResponse.data.map((cliente) => ({
-          ...cliente,
-          Id: cliente.clienteId,
-        }));
+        const clientesDataL = clientesResponse.data.map((cliente, index) => {
+          if (index < 30) {
+            if (cliente.clienteEliminado === false) {
+              return {
+                ...cliente,
+                Id: cliente.clienteId,
+              }
+            }
+          }
+        });
+        const dataLast30 = clientesDataL.filter((data) => data !== undefined);
+        const data = clientesResponse.data.map((cliente) => {
+          if (cliente.clienteEliminado === true) {
+            return {
+              ...cliente,
+              Id: cliente.clienteId,
+              isDelete: 'Yes',
+            }
+          } else {
+            return {
+              ...cliente,
+              Id: cliente.clienteId,
+            }
+          }
+        })
         const localidadesData = localidadesResponse.data;
 
-        setData(clientesData);
-        setLocalidades(localidadesData.map((localidad) => localidad.localidadCiudad)); // Obtener solo los nombres de las localidades
+        setData(dataLast30);
+        setData30(dataLast30)
+        setDataAll(data)
+        setLocalidades(localidadesData.map((localidad) => localidad.localidadCiudad));
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -174,7 +195,8 @@ function ListarCliente() {
   };
 
   const tableHeadCells = [
-    { id: 'clienteNombre', numeric: false, disablePadding: true, label: 'Nombre' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'clienteNombre', numeric: false, disablePadding: false, label: 'Nombre' },
     { id: 'clienteEmail', numeric: false, disablePadding: false, label: 'Email' },
     { id: 'clienteContacto', numeric: false, disablePadding: false, label: 'Teléfonos' },
     { id: 'clienteObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
@@ -207,10 +229,10 @@ function ListarCliente() {
     };
 
     if (
-      (!filtros.nombre || lowerCaseItem.clienteNombre.startsWith(filtros.nombre)) &&
+      (!filtros.nombre || lowerCaseItem.clienteNombre === filtros.nombre) &&
       (!filtros.email || lowerCaseItem.clienteEmail.startsWith(filtros.email)) &&
       (!filtros.telefono || lowerCaseItem.clienteContacto.some(contacto => contacto.startsWith(filtros.telefono))) &&
-      (!filtros.observaciones || lowerCaseItem.clienteObservaciones.startsWith(filtros.observaciones)) &&
+      (!filtros.observaciones || lowerCaseItem.clienteObservaciones.includes(filtros.observaciones)) &&
       (!filtros.localidad || lowerCaseItem.clienteLocalidad.startsWith(filtros.localidad))
     ) {
       return true;
@@ -237,33 +259,30 @@ function ListarCliente() {
     })
       .then(response => {
         if (response.status === 200) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
-          updateErrorAlert('No se logró eliminar el cliente, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el cliente, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         console.error(error)
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logró eliminar el cliente, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el cliente, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -291,22 +310,34 @@ function ListarCliente() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/cliente')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Clientes</Typography>
+          <Typography component='h1' variant='h5'>Listar de Clientes</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -316,7 +347,7 @@ function ListarCliente() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los clientes que fueron registrados.
+                    En esta página se encarga de listar los clientes que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -335,7 +366,7 @@ function ListarCliente() {
                         <span className={classes.liTitleBlue}>Teléfono</span>: En este campo se puede ingresar un teléfono por el cual se quiere filtrar la lista.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra y mostrará los registros en donde esta incluida esa palabra.
+                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra o frase y mostrará los registros en donde esta incluida esa palabra o frase.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Localidad</span>: En este campo se puede seleccionar una localidad y mostrar los clientes asociados a esa localidad.
@@ -347,6 +378,9 @@ function ListarCliente() {
                   </span>
                   <span>
                     <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro
+                      </li>
                       <li>
                         <span className={classes.liTitleRed}>Nombre</span>: En esta columna se muestra el nombre del cliente o de su empresa.
                       </li>
@@ -363,10 +397,22 @@ function ListarCliente() {
                         <span className={classes.liTitleRed}>Localidad</span>: En esta columna se muestra la localidad a la que pertenece la empresa o el cliente.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>El registro de los clientes eliminados aparecerá de color azul.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -395,7 +441,11 @@ function ListarCliente() {
         data={filteredData}
         dataKey="cliente"
         tableHeadCells={tableHeadCells}
-        title="Clientes"
+        title="Lista de Clientes"
+        titleButton="Cliente"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditCliente}

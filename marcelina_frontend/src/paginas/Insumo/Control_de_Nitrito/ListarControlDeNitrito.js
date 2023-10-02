@@ -4,19 +4,11 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,6 +52,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarControlDeNitrito() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const [responsable, setResponsables] = useState([]);
   const classes = useStyles();
@@ -69,6 +64,7 @@ function ListarControlDeNitrito() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -76,16 +72,16 @@ function ListarControlDeNitrito() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el control de nitrito con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el control de nitrito con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
     title: 'Error', body: 'No se logró eliminar el control de nitrito, recargue la pagina.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -98,36 +94,28 @@ function ListarControlDeNitrito() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const clientesResponse = await axios.get('/listar-control-de-nitrito', {
+        const nitritosResponse = await axios.get('/listar-control-de-nitrito', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -138,13 +126,37 @@ function ListarControlDeNitrito() {
           }
         });
 
-        const clientesData = clientesResponse.data;
+        const nitritosDataL = nitritosResponse.data.map((nitrito, index) => {
+          if (index < 30) {
+            return {
+              ...nitrito,
+              Id: nitrito.controlDeNitritoId,
+            }
+          }
+        });
+        const nitritosLast30 = nitritosDataL.filter((data) => data !== undefined);
+        const nitratos = nitritosResponse.data.map((nitrito) => ({
+          ...nitrito,
+          Id: nitrito.controlDeNitritoId,
+        }));
         const responsableData = responsableResponse.data;
 
-        setData(clientesData);
-        setResponsables(responsableData.map((usuario) => usuario.usuarioNombre)); // Obtener solo los nombres de las localidades
+        setData(nitritosLast30);
+        setData30(nitritosLast30);
+        setDataAll(nitratos);
+        setResponsables(responsableData.map((usuario) => usuario.usuarioNombre));
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -174,7 +186,8 @@ function ListarControlDeNitrito() {
   };
 
   const tableHeadCells = [
-    { id: 'controlDeNitritoFecha', numeric: false, disablePadding: true, label: 'Fecha' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'controlDeNitritoFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'controlDeNitritoProductoLote', numeric: false, disablePadding: false, label: 'Lote' },
     { id: 'controlDeNitritoCantidadUtilizada', numeric: false, disablePadding: false, label: 'Cantidad utilizada' },
     { id: 'controlDeNitritoStock', numeric: false, disablePadding: false, label: 'Stock' },
@@ -220,11 +233,11 @@ function ListarControlDeNitrito() {
     if (
       (!filtros['fecha-desde'] || lowerCaseItem.controlDeNitritoFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.controlDeNitritoFecha <= new Date(filtros['fecha-hasta'])) &&
-      (!filtros.lote || lowerCaseItem.controlDeNitritoProductoLote.toString().startsWith(filtros.lote)) &&
-      (!filtros.cantidad || lowerCaseItem.controlDeNitritoCantidadUtilizada.toString().startsWith(filtros.cantidad)) &&
-      (!filtros.stock || lowerCaseItem.controlDeNitritoStock.toString().startsWith(filtros.stock)) &&
+      (!filtros.lote || lowerCaseItem.controlDeNitritoProductoLote.toString() === filtros.lote) &&
+      (!filtros.cantidad || lowerCaseItem.controlDeNitritoCantidadUtilizada.toString() === filtros.cantidad) &&
+      (!filtros.stock || lowerCaseItem.controlDeNitritoStock.toString() === filtros.stock) &&
       (!filtros.observaciones || lowerCaseItem.controlDeNitritoObservaciones.includes(filtros.observaciones)) &&
-      (!filtros.responsable || lowerCaseItem.controlDeNitritoResponsable.startsWith(filtros.responsable))
+      (!filtros.responsable || lowerCaseItem.controlDeNitritoResponsable === filtros.responsable)
     ) {
       return true;
     }
@@ -237,7 +250,7 @@ function ListarControlDeNitrito() {
 
   const handleEditControl = (rowData) => {
     const id = rowData.Id;
-    navigate(`/modificar-control-de-nitrito/${id}`);
+    navigate(`/modificar-control-de-nitritos/${id}`);
   }
 
   const handleDeleteControl = (rowData) => {
@@ -250,32 +263,29 @@ function ListarControlDeNitrito() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
-          updateErrorAlert('No se logró eliminar el control de nitrito, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el control de nitrito, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logró eliminar el control de nitrito, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el control de nitrito, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -303,22 +313,34 @@ function ListarControlDeNitrito() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/control-de-nitritos')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Control de Nitritos</Typography>
+          <Typography component='h1' variant='h5'>Listar de Control de Nitritos</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -328,7 +350,7 @@ function ListarControlDeNitrito() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los controles de nitritos que fueron registrados.
+                    En esta página se encarga de listar los controles de nitritos que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -353,7 +375,7 @@ function ListarControlDeNitrito() {
                         <span className={classes.liTitleBlue}>Stock</span>: En este campo se puede ingresar el stock por el cual le gustaria filtrar la lista.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra y se mostrará los registros que tengan esa palabra incluida.
+                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra o frase y se mostrarán los registros que tengan esa palabra o frase incluida.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y mostrar todos los registros asociados a ese responsable.
@@ -366,10 +388,13 @@ function ListarControlDeNitrito() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró o añadió el nitrito al lote.
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Lote</span>: En esta columna se muestra el lote al que se la añadió el nitrito.
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha en la que se registró el control de nitrito.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Lote</span>: En esta columna se muestra el lote al que se le añadió el nitrito.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Cantidad utilizada</span>: En esta columna se muestra la cantidad de nitrito que se le añadió al lote.
@@ -378,16 +403,27 @@ function ListarControlDeNitrito() {
                         <span className={classes.liTitleRed}>Stock</span>: En esta columna se muestra la cantidad restante que quedó de nitrito después de añadirle al lote.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra los detalles o observaciones que encontraron al añadirle el nitrito al lote.
+                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra los detalles o observaciones que se encontraron al añadirle el nitrito al lote.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el usuario que registró el control de nitrito.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -416,7 +452,11 @@ function ListarControlDeNitrito() {
         data={filteredData}
         dataKey="listarControlDeNitrato"
         tableHeadCells={tableHeadCells}
-        title="Control De Nitrito"
+        title="Lista de Controles de Nitritos"
+        titleButton="Control de Nitrito"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditControl}

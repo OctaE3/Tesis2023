@@ -4,20 +4,12 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -61,6 +53,8 @@ const useStyles = makeStyles(theme => ({
 
 function ListarDiariaDeProduccion() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
@@ -68,6 +62,8 @@ function ListarDiariaDeProduccion() {
   const [insumo, setInsumo] = useState([]);
   const [carne, setCarne] = useState([]);
   const [deleteItem, setDeleteItem] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const navigate = useNavigate();
 
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
@@ -80,16 +76,16 @@ function ListarDiariaDeProduccion() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino la diaria de producción con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó la diaria de producción con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
     title: 'Error', body: 'No se logró eliminar la diaria de producción, recargue la pagina.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -102,31 +98,23 @@ function ListarDiariaDeProduccion() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2500);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -161,32 +149,63 @@ function ListarDiariaDeProduccion() {
           const fechaVencimiento = new Date(diaria.diariaDeProduccionFechaVencimiento);
           const fechaActual = new Date();
           const diferenciaDias = differenceInDays(fechaVencimiento, fechaActual);
-          console.log(diferenciaDias);
           if (diferenciaDias <= 3 && diferenciaDias >= 0) {
             return {
               ...diaria,
               Id: diaria.diariaDeProduccionId,
               isExpired: 'Yes',
+              diaria: 'Yes',
             };
+          } else if (diferenciaDias < 0) {
+            return {
+              ...diaria,
+              Id: diaria.diariaDeProduccionId,
+              isDelete: 'Yes',
+              diaria: 'Yes',
+            }
           } else {
             return {
-          ...diaria,
-          Id: diaria.diariaDeProduccionId,
+              ...diaria,
+              Id: diaria.diariaDeProduccionId,
+              diaria: 'Yes',
             };
           }
         });
+
+        const dataL30 = data.map((dataL, index) => {
+          const fechaVencimiento = new Date(dataL.diariaDeProduccionFechaVencimiento);
+          const fechaActual = new Date();
+          if (index < 30 && fechaVencimiento > fechaActual) {
+            return { ...dataL }
+          }
+        })
+
+        const dataLast30 = dataL30.filter((dataLast) => dataLast !== undefined);
+        const dataAll = data;
         const ResponsableData = ResponsableResponse.data;
         const InsumoData = InsumoResponse.data;
         const ProductoData = ProductoResponse.data;
         const CarneData = carneResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(dataAll);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
         setProducto(ProductoData.map((producto) => producto.productoNombre));
         setCarne(CarneData.map((carne) => carne.carneNombre));
         setInsumo(InsumoData.map((insumo) => insumo.insumoNombre));
+        setDeleteItem(false);
+        setButtonName('Listar Todos')
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -194,6 +213,7 @@ function ListarDiariaDeProduccion() {
   }, [deleteItem]);
 
   const tableHeadCells = [
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
     { id: 'diariaDeProduccionProducto', numeric: false, disablePadding: false, label: 'Producto' },
     { id: 'diariaDeProduccionInsumosCarnicos', numeric: false, disablePadding: false, label: 'Insumo cárnico - Cantidad utilizada' },
     { id: 'diariaDeProduccionAditivos', numeric: false, disablePadding: false, label: 'Aditivos - Cantidad utilizada' },
@@ -207,9 +227,9 @@ function ListarDiariaDeProduccion() {
 
   const filters = [
     { id: 'producto', label: 'Producto', type: 'select', options: producto },
-    { id: 'carne', label: 'Carne', type: 'select', options: carne },
+    { id: 'carne', label: 'Carne', type: 'text' },
     { id: 'cantidadCarne', label: 'Cantidad carne', type: 'text' },
-    { id: 'insumo', label: 'Aditivo', type: 'select', options: insumo },
+    { id: 'insumo', label: 'Aditivo', type: 'text' },
     { id: 'cantidadInsumo', label: 'Cantidad aditivo', type: 'text' },
     { id: 'cantidadProducida', label: 'Cantidad producida', type: 'text' },
     { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
@@ -275,24 +295,24 @@ function ListarDiariaDeProduccion() {
         for (let i = 0; i < item.diariaDeProduccionInsumosCarnicos.length; i++) {
           const productoCarnico = item.diariaDeProduccionInsumosCarnicos[i];
           const cantidad = item.diariaDeProduccionCantidadUtilizadaCarnes[i].detalleCantidadCarneCantidad;
-          
+
           const texto = `${productoCarnico.carneNombre} - ${productoCarnico.carneCorte} - ${cantidad} Kg`;
-      
+
           cantidadCarne.push(texto);
         }
         return cantidadCarne;
       } else {
         return [];
       }
-    }else if (key === 'diariaDeProduccionAditivos') {
+    } else if (key === 'diariaDeProduccionAditivos') {
       if (item.diariaDeProduccionAditivos && item.diariaDeProduccionAditivos.length > 0) {
         const cantidadCarne = [];
         for (let i = 0; i < item.diariaDeProduccionAditivos.length; i++) {
           const insumo = item.diariaDeProduccionAditivos[i];
           const cantidad = item.diariaDeProduccionCantidadUtilizadaInsumos[i].detalleCantidadInsumoCantidad;
-          
-          const texto = `${insumo.insumoNombre} - ${insumo.insumoUnidad} - ${cantidad}`;
-      
+
+          const texto = `${insumo.insumoNombre} - ${cantidad} - ${insumo.insumoUnidad}`;
+
           cantidadCarne.push(texto);
         }
         return cantidadCarne;
@@ -317,11 +337,11 @@ function ListarDiariaDeProduccion() {
       diariaDeProduccionResponsable: item.diariaDeProduccionResponsable ? item.diariaDeProduccionResponsable.usuarioNombre.toLowerCase() : '',
       diariaDeProduccionFechaVencimiento: new Date(item.diariaDeProduccionFechaVencimiento)
     };
-  
+
     if (
       (!filtros.producto || lowerCaseItem.diariaDeProduccionProducto.startsWith(filtros.producto)) &&
       (!filtros.cantidadCarne || item.diariaDeProduccionCantidadUtilizadaCarnes.some(cantidadCarne => cantidadCarne.detalleCantidadCarneCantidad.toString().includes(filtros.cantidadCarne))) &&
-      (!filtros.cantidadInsumo || item.diariaDeProduccionCantidadUtilizadaInsumos.some(cantidadInsumo => cantidadInsumo.detalleCantidadInsumoCantidad.toString().includes(filtros.cantidadInsumo))) &&
+      (!filtros.cantidadInsumo || item.diariaDeProduccionCantidadUtilizadaInsumos.some(insumoCantidad => insumoCantidad.detalleCantidadInsumoCantidad.toString().includes(filtros.cantidadInsumo))) &&
       (!filtros.carne || lowerCaseItem.diariaDeProduccionInsumosCarnicos.some(carne => carne.carneNombre.toLowerCase().includes(filtros.carne))) &&
       (!filtros.insumo || lowerCaseItem.diariaDeProduccionAditivos.some(insumo => insumo.insumoNombre.toLowerCase().includes(filtros.insumo))) &&
       (!filtros.cantidadProducida || lowerCaseItem.diariaDeProduccionCantidadProducida.toString().startsWith(filtros.cantidadProducida)) &&
@@ -347,7 +367,6 @@ function ListarDiariaDeProduccion() {
   };
 
   const handleEditControl = (rowData) => {
-    console.log(rowData);
     const id = rowData.Id;
     navigate(`/modificar-diaria-de-produccion/${id}`);
   };
@@ -365,29 +384,26 @@ function ListarDiariaDeProduccion() {
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
+          }, 2500);
           setDeleteItem(true);
         } else {
           updateErrorAlert('No se logró eliminar la diaria de producción, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
           updateErrorAlert('No se logró eliminar la diaria de producción, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
   }
@@ -415,22 +431,34 @@ function ListarDiariaDeProduccion() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/diaria-de-produccion')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Diaria De Producción</Typography>
+          <Typography component='h1' variant='h5'>Listar de Diaria De Producción</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -440,7 +468,7 @@ function ListarDiariaDeProduccion() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar las diarias de producción que fueron registrados.
+                    En esta página se encarga de listar las diarias de producción que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -450,20 +478,20 @@ function ListarDiariaDeProduccion() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleBlue}>Producto</span>: En este campo se puede seleccionar el producto por el cual quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Producto</span>: En este campo se puede seleccionar un producto y se listarán los registros que contengan ese producto.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Carne y Cantidad carne</span>: En filtro esta compuesto por 2 campos carne y carne cantidad, los cuales en el de carne se puede seleccionar una carne 
-                        y se mostara en la lista todas las producciones con esta carne, en el de cantidad se puede escribir una cantidad y se listaran todas las producciones que contengan esa cantidad sin importar el tipo de carne.
+                        <span className={classes.liTitleBlue}>Carne y Cantidad carne</span>: Este filtro esta compuesto por 2 campos carne y carne cantidad, los cuales en el de carne se puede ingresar el nombre de una carne
+                        y se mostará en la lista todos los registros que contengan esa carne, en el de cantidad se puede escribir una cantidad y se listarán todos los registros que contengan esa cantidad sin importar el tipo de carne.
                         Para una mejor busqueda se aconseja usar los dos filtros a la vez.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Aditivo y Cantidad aditivo</span>: En filtro esta compuesto por 2 campos aditivo y aditivo cantidad, los cuales en el de aditvo se puede seleccionar un aditivo 
-                        y se mostara en la lista todas las producciones con este adiivo, en el de cantidad se puede escribir una cantidad y se listaran todas las producciones que contengan esa cantidad sin importar el tipo de aditivo.
+                        <span className={classes.liTitleBlue}>Aditivo y Cantidad aditivo</span>: Este filtro esta compuesto por 2 campos aditivo y aditivo cantidad, los cuales en el de aditvo se puede ingresar el nombre de un aditivo
+                        y se mostará en la lista todos los registros que contengan ese adiivo, en el de cantidad se puede escribir una cantidad y se listarán todos los registros que contengan esa cantidad sin importar el tipo de aditivo.
                         Para una mejor busqueda se aconseja usar los dos filtros a la vez.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Cantidad producida</span>: En este campo se puede ingresar la cantidad que se produjo de un producto y filtrar la lista.
+                        <span className={classes.liTitleBlue}>Cantidad producida</span>: En este campo se puede ingresar la cantidad que se produjo de un producto y se mostrará todos los registros que tengan esa cantidad producida.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Desde Fecha y Hasta Fecha</span>: Estos campos son utilizados para filtrar los registros entre un rango de fechas,
@@ -472,13 +500,13 @@ function ListarDiariaDeProduccion() {
                         se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Lote</span>: En este campo se puede escribir un lote y se listaran las producciones que correspondan dicho lote.
+                        <span className={classes.liTitleBlue}>Lote</span>: En este campo se puede escribir un lote o un número y se listarán los registros que incluyan el lote o el número ingresado.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y mostrar todos los registros asociados a ese responsable.
+                        <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y mostrár todos los registros asociados a ese responsable.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Envasado</span>: En este campo se puede seleccionar si el producto esta envasado o no y filtar la lista por el envasado.
+                        <span className={classes.liTitleBlue}>Envasado</span>: En este campo se puede seleccionar si el producto está envasado o no y filtar la lista por el envasado.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Desde Fecha vencimeinto y Hasta Fecha vencimeinto</span>: Estos campos funcionan de la misma manera que Desde Fecha y Hasta Fecha,
@@ -489,11 +517,13 @@ function ListarDiariaDeProduccion() {
                   <span style={{ fontWeight: 'bold' }}>
                     Lista:
                   </span>
+                  <br />
+                  <br />
                   <span>
-                    Detalles:
-                    Los registros que contengan una fecha de vencimiento con 3 días o menos de diferencia con la fecha actual, aparecerán de color rojo,
-                    esto es para señalizar que el producto está por caducar.
                     <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
+                      </li>
                       <li>
                         <span className={classes.liTitleRed}>Producto</span>: En esta columna se muestra el producto que se produjo.
                       </li>
@@ -522,10 +552,24 @@ function ListarDiariaDeProduccion() {
                         <span className={classes.liTitleRed}>Fecha vencimeinto</span>: En esta columna se muestra la fecha de vencimiento del producto.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>Cuando entre la fecha de vencimiento y la fecha actual haya una diferencia de 3 días o menos, el registro se volverá de color rojo, esto se determino así para avisar al usuario de que el produto elaborado esta por caducar.</li>
+                      <li>Los registro que cuenten con una fecha de vencimiento menor a la actual se pondrán de color azul, indicando que están eliminados (lógicamente).</li>
+                      <li>No se recomienda eliminar registros de la lista, a menos que sea necesario</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -554,7 +598,11 @@ function ListarDiariaDeProduccion() {
         data={filteredData}
         dataKey="listarDiariaDeProduccion"
         tableHeadCells={tableHeadCells}
-        title="Diaria De Producción"
+        title="Lista de Diarias de Producción"
+        titleButton="Diaria de Producción"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditControl}

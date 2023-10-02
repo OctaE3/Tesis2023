@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -62,30 +54,27 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AgregarControlDeCloroLibre = () => {
-  const text = "Este campo es Obligatorio";
-
   const formFields = [
     { name: 'controlDeCloroLibreFecha', label: 'Fecha y Hora', type: 'datetime-local', color: 'primary' },
     { name: 'controlDeCloroLibreGrifoPico', label: 'Número del Grifo', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", color: 'primary' },
-    { name: 'controlDeCloroLibreResultado', label: 'Resultado', type: 'text', obligatorio: true, pattern: "^[0-9]{0,4}\,?[0-9]{0,3}$", color: 'primary' },
-    { name: 'controlDeCloroLibreObservaciones', label: 'Observaciones', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'secondary' },
+    { name: 'controlDeCloroLibreResultado', label: 'Resultado', type: 'text', obligatorio: true, pattern: "^[0-9]{0,2}\\.?[0-9]{0,3}$", color: 'primary' },
+    { name: 'controlDeCloroLibreObservaciones', label: 'Observaciones', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", type: 'text', multi: '3', color: 'secondary' },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se registro el control de cloro libre con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se registró el control de cloro libre con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro regristrar el control de cloro libre, revise los datos ingresados', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró regristrar el control de cloro libre, revise los datos ingresados', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
   const navigate = useNavigate();
-  const [controlDeCloroLibre, setControlDeCloroLibre] = useState({});
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
@@ -93,8 +82,30 @@ const AgregarControlDeCloroLibre = () => {
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+  const [checkToken, setCheckToken] = useState(false);
 
   const [blinking, setBlinking] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/')
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+
+      const tokenExpiration = payload.exp * 1000;
+      const currentTime = Date.now();
+      setCheckToken(false);
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 2000);
+      }
+    }
+  }, [checkToken]);
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -109,35 +120,6 @@ const AgregarControlDeCloroLibre = () => {
     return () => {
       clearInterval(blinkInterval);
     };
-  }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
-    } else {
-      const tokenParts = token.split('.');
-      const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
-
-      const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
-      const currentTime = Date.now();
-      console.log(currentTime)
-
-      if (tokenExpiration < currentTime) {
-        setShowAlertWarning(true);
-        setTimeout(() => {
-          setShowAlertWarning(false);
-          navigate('/')
-        }, 3000);
-      }
-    }
   }, []);
 
   const handleClickOpen = () => {
@@ -156,7 +138,7 @@ const AgregarControlDeCloroLibre = () => {
   };
 
   const checkError = (fecha, grifo, resultado) => {
-    if (fecha === undefined || fecha === null || fecha === '') {
+    if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
       return false;
     }
     else if (grifo === undefined || grifo === "" || grifo === null) {
@@ -169,15 +151,12 @@ const AgregarControlDeCloroLibre = () => {
   }
 
   const handleFormSubmit = (formData) => {
-    console.log(formData.controlDeCloroLibreResultado)
-    const numResultado = formData.controlDeCloroLibreResultado
-    console.log(numResultado)
+    const numResultado = parseFloat(formData.controlDeCloroLibreResultado);
     const controlDeCloroLibreConResponsable = {
       ...formData,
       controlDeCloroLibreResultado: numResultado,
       controlDeCloroLibreResponsable: window.localStorage.getItem('user'),
     }
-    console.log(controlDeCloroLibreConResponsable)
 
     const fechaHora = controlDeCloroLibreConResponsable.controlDeCloroLibreFecha;
     const grifo = controlDeCloroLibreConResponsable.controlDeCloroLibreGrifoPico;
@@ -190,10 +169,8 @@ const AgregarControlDeCloroLibre = () => {
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 3000);
     } else {
-      setControlDeCloroLibre(controlDeCloroLibreConResponsable);
-      console.log(controlDeCloroLibreConResponsable);
       axios.post('/agregar-control-de-cloro-libre', controlDeCloroLibreConResponsable, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -205,32 +182,33 @@ const AgregarControlDeCloroLibre = () => {
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
-            }, 5000);
-            formData = {};
+              navigate('/control-de-cloro-libre')
+            }, 2000);
           } else {
-            updateErrorAlert('No se logro regristrar el control de cloro libre, revise los datos ingresados');
+            updateErrorAlert('No se logró regristrar el control de cloro libre, revise los datos ingresados');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
         .catch(error => {
           if (error.request.status === 401) {
-            setShowAlertWarning(true);
-            setTimeout(() => {
-              setShowAlertWarning(false);
-            }, 5000);
+            setCheckToken(true);
           }
           else if (error.request.status === 500) {
             updateErrorAlert('No se logró registrar el estado de las alarmas, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
     }
+  }
+
+  const redirect = () => {
+    navigate('/listar-control-de-cloro-libre')
   }
 
   return (
@@ -241,16 +219,14 @@ const AgregarControlDeCloroLibre = () => {
           <Grid container spacing={0}>
             <Grid item lg={2} md={2} ></Grid>
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-              <Typography component='h1' variant='h4'>Control de Cloro Libre</Typography>
+              <Typography component='h1' variant='h4'>Registrar Control de Cloro Libre</Typography>
               <div>
-                <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton className={blinking ? classes.blinkingButton : ''}>
-                    <HelpOutlineIcon fontSize="large" color="primary" />
-                  </IconButton>
-                </Button>
+                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
                 <Dialog
                   fullScreen={fullScreen}
-                  fullWidth='md'
+                  fullWidth
                   maxWidth='md'
                   open={open}
                   onClose={handleClose}
@@ -260,23 +236,25 @@ const AgregarControlDeCloroLibre = () => {
                   <DialogContent>
                     <DialogContentText className={classes.text}>
                       <span>
-                        En esta página puedes registrar la cantidad de cloro medido en el agua y de qué grifo, asegúrate de completar los campos necesarios para registrar el estado.
+                        En esta página puedes registrar la cantidad de cloro que hay en el agua y de que grifo se obtuvo, asegúrate de completar los campos necesarios para registrar el estado.
                       </span>
+                      <br />
                       <br />
                       <span>
                         Este formulario cuenta con 4 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Fecha y Hora</span>: en este campo se debe registrar la fecha y la hora en que se registró el chequeo de los grifos.
+                            <span className={classes.liTitleBlue}>Fecha y Hora</span>: En este campo se debe registrar la fecha y la hora en que se registró el chequeo de los grifos.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Número del Grifo</span>: en este campo se registrará el número del grifo que se revisó.
+                            <span className={classes.liTitleBlue}>Número del Grifo</span>: En este campo se registrará el número del grifo que se revisó, este campo solo acepta números enteros.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Resultado</span>: en este campo se registrará la cantidad de cloro medido en el agua.
+                            <span className={classes.liTitleBlue}>Resultado</span>: En este campo se registrará la cantidad la medida de cloro obtenida del agua, este campo solo acepta números enteros y decimales.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de medir el cloro en el agua.
+                            <span className={classes.liTitleRed}>Observaciones</span>: En este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de medir el cloro en el agua,
+                            este campo acepta palabras minúsculas, mayúsculas y también números, el campo cuenta con una longitud máxima de 250 caracteres.
                           </li>
                         </ul>
                       </span>
@@ -284,12 +262,21 @@ const AgregarControlDeCloroLibre = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                        <br />
+                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                        <br />
+                        - Los números decimales ingresados en Resultado tienen que ser utilizando un punto y no con una coma, ejemplo: 0.5.
+                        <br />
+                        - Una vez registre el control de cloro libre, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro control de cloro libre.
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -317,6 +304,7 @@ const AgregarControlDeCloroLibre = () => {
       <FormularioReutilizanle
         fields={formFields}
         onSubmit={handleFormSubmit}
+        handleRedirect={redirect}
       />
     </Grid>
   )

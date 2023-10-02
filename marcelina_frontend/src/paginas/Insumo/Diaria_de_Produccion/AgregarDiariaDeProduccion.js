@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -73,23 +65,23 @@ const AgregarDiariaDeProduccion = () => {
     const formFields = [
         { name: 'diariaDeProduccionProducto', label: 'Producto *', type: 'selector', color: 'primary' },
         { name: 'diariaDeProduccionInsumosCarnicos', label: 'Carne *', type: 'cantidadMultiple', tipo: 'carne', campo: campoCarne, color: 'primary' },
-        { name: 'diariaDeProduccionAditivos', label: 'Aditivos *', type: 'cantidadMultiple', tipo: 'aditivo', campo: campoInsumo, color: 'primary' },
+        { name: 'diariaDeProduccionAditivos', label: 'Aditivo *', type: 'cantidadMultiple', tipo: 'aditivo', campo: campoInsumo, color: 'primary' },
         { name: 'diariaDeProduccionCantidadProducida', label: 'Cantidad Producida', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", color: 'primary' },
-        { name: 'diariaDeProduccionFecha', label: 'Fecha de Produccion', type: 'datetime-local', color: 'primary' },
+        { name: 'diariaDeProduccionFecha', label: 'Fecha de Produccion', type: 'date', color: 'primary' },
         { name: 'diariaDeProduccionEnvasado', label: 'Envasado *', type: 'selector', color: 'primary' },
         { name: 'diariaDeProduccionFechaVencimiento', label: 'Fecha de Vencimiento', type: 'date', color: 'primary' },
     ];
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Diaria de producción agregada con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro agregar la diaria de producción, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró agregar la diaria de producción, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const classes = useStyles();
@@ -104,7 +96,8 @@ const AgregarDiariaDeProduccion = () => {
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
-    const [envasado, setEnvasado] = useState([
+    const [checkToken, setCheckToken] = useState(false);
+    const [envasado] = useState([
         { value: true, label: 'Empaquetado' },
         { value: false, label: 'Sin empaquetar' }
     ]);
@@ -126,31 +119,24 @@ const AgregarDiariaDeProduccion = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
+            setCheckToken(false)
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerProductos = () => {
@@ -169,7 +155,15 @@ const AgregarDiariaDeProduccion = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los productos, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -181,15 +175,27 @@ const AgregarDiariaDeProduccion = () => {
             })
                 .then(response => {
                     setCarnes(response.data);
-                    setCarneSelect(
-                        response.data.map((carne) => ({
-                            value: carne.carneId,
-                            label: `${carne.carneNombre} - ${carne.carneCorte} - ${carne.carneCantidad} Kg`,
-                        }))
-                    );
+                    const carneS = response.data.map((carne) => {
+                        if (carne.carneCantidad > 0 && carne.carneEliminado === false) {
+                            return {
+                                value: carne.carneId,
+                                label: `${carne.carneNombre} - ${carne.carneCorte} - ${carne.carneCantidad} Kg`,
+                            }
+                        }
+                    })
+                    const carnesSelect = carneS.filter((carne) => carne !== undefined);
+                    setCarneSelect(carnesSelect);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar las carnes, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -201,15 +207,28 @@ const AgregarDiariaDeProduccion = () => {
             })
                 .then(response => {
                     setInsumos(response.data);
-                    setInsumoSelect(
-                        response.data.map((insumo) => ({
-                            value: insumo.insumoId,
-                            label: `${insumo.insumoNombre} - ${insumo.insumoNroLote} - ${insumo.insumoCantidad} ${insumo.insumoUnidad}`,
-                        }))
-                    );
+                    const fechaActual = new Date();
+                    const insumoS = response.data.map((insumo) => {
+                        if (insumo.insumoCantidad > 0 && insumo.insumoFechaVencimiento > fechaActual) {
+                            return {
+                                value: insumo.insumoId,
+                                label: `${insumo.insumoNombre} - ${insumo.insumoNroLote} - ${insumo.insumoCantidad} ${insumo.insumoUnidad}`,
+                            }
+                        }
+                    })
+                    const insumosSelect = insumoS.filter((insumo) => insumos !== undefined);
+                    setInsumoSelect(insumosSelect);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los aditivos, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -225,7 +244,15 @@ const AgregarDiariaDeProduccion = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los lotes, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -284,7 +311,6 @@ const AgregarDiariaDeProduccion = () => {
                 if (carne.selectValue === '' || carne.textFieldValue === '') {
                     resp = false;
                 } else { }
-
                 if (resp === false) { return }
             });
 
@@ -298,13 +324,12 @@ const AgregarDiariaDeProduccion = () => {
         } else {
             return false;
         }
+        return resp;
     }
 
     const generarNumRandom = () => {
         const array = new Uint8Array(1);
-        console.log(array)
         window.crypto.getRandomValues(array);
-        console.log(window.crypto.getRandomValues(array));
         return array[0];
     }
 
@@ -313,19 +338,12 @@ const AgregarDiariaDeProduccion = () => {
         const aleatorio = generarNumRandom();
         const prefijo = "MAR";
 
-        console.log(timeStamp)
-        console.log(aleatorio)
-        console.log(prefijo)
-
         const numeroLote = `${prefijo}${timeStamp}${aleatorio}`;
-
-        console.log(numeroLote)
 
         return numeroLote;
     }
 
     const handleFormSubmit = (formData) => {
-        console.log(lotesCod);
         const { cantidadCarne, cantidadInsumo, ...formDataWithoutCantidad } = formData;
 
         const cantidadValueCarne = formData.cantidadCarne;
@@ -335,182 +353,183 @@ const AgregarDiariaDeProduccion = () => {
         const checkE = checkError(formData.diariaDeProduccionProducto, formData.diariaDeProduccionCantidadProducida, formData.diariaDeProduccionFecha,
             formData.diariaDeProduccionEnvasado, formData.diariaDeProduccionFechaVencimiento);
 
-        if (checkE === false) {
-            updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+        if (checkMul === false) {
+            updateErrorAlert(`No deje vacío el campo de Carne-Cantidad y tampoco el de Aditivo-Cantidad`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
-
-            const selectCarneValues = cantidadValueCarne.map(item => item.selectValue);
-            const selectInsumoValues = cantidadValueInsumo.map(item => item.selectValue);
-
-            const carnesCompletas = carnes.filter(carne => selectCarneValues.includes(carne.carneId.toString()));
-            const insumosCompletos = insumos.filter(insumo => selectInsumoValues.includes(insumo.insumoId.toString()));
-
-            //console.log(carnesCompletas);
-            //console.log(insumosCompletos);
-
-            const resultadoCarne = carnesCompletas.map(carne => {
-                const cantidaValueEncontradaCarne = cantidadValueCarne.find(cv => cv.selectValue === carne.carneId.toString());
-                console.log(cantidaValueEncontradaCarne);
-                if (cantidaValueEncontradaCarne) {
-                    const cantidad = cantidaValueEncontradaCarne.textFieldValue;
-                    console.log(cantidad);
-                    if (cantidad > carne.carneCantidad) {
-                        console.log(carne);
-                        return `${carne.carneNombre} - ${carne.carneCorte} - ${carne.carneCantidad} Kg / `;
-                    }
-                }
-                return null;
-            })
-
-            const resultadoInsumo = insumosCompletos.map(insumo => {
-                const cantidaValueEncontradaInsumo = cantidadValueInsumo.find(cv => cv.selectValue === insumo.insumoId.toString());
-                console.log(cantidaValueEncontradaInsumo);
-                if (cantidaValueEncontradaInsumo) {
-                    const cantidad = cantidaValueEncontradaInsumo.textFieldValue;
-                    console.log(cantidad);
-                    if (cantidad > insumo.insumoCantidad) {
-                        console.log(insumo);
-                        return `${insumo.insumoNombre} - ${insumo.insumoNroLote} - ${insumo.insumoCantidad} ${insumo.insumoUnidad} / `;
-                    }
-                }
-                return null;
-            })
-
-            const elementoUndefinedCarne = resultadoCarne.some(elemento => elemento === null);
-            const elementoUndefinedInsumo = resultadoInsumo.some(elemento => elemento === null);
-            if (!elementoUndefinedInsumo || !elementoUndefinedCarne) {
-                updateErrorAlert(`La cantidad ingresada de carnes o aditivos utilizada en la producción, es mayor a la disponible, revise los datos ingresados.`);
+            if (checkE === false) {
+                updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 2500);
             } else {
-                const listaCarneActualizada = [];
-                const listaCarneCantidad = [];
-                carnesCompletas.forEach((carne, index) => {
-                    const cantidadCarne = cantidadValueCarne[index].textFieldValue;
-                    const carneActualizada = { ...carne, carneCantidad: carne.carneCantidad - cantidadCarne };
-                    listaCarneActualizada.push(carneActualizada);
-                    const detalleCantidadCarne = {
-                        detalleCantidadCarneCarne: carneActualizada,
-                        detalleCantidadCarneCantidad: cantidadCarne,
-                    };
-                    listaCarneCantidad.push(detalleCantidadCarne);
-                })
+                const selectCarneValues = cantidadValueCarne.map(item => item.selectValue);
+                const selectInsumoValues = cantidadValueInsumo.map(item => item.selectValue);
 
-                const listaInsumoActualizado = [];
-                const listaInsumoCantidad = [];
-                insumosCompletos.forEach((insumo, index) => {
-                    const cantidadInsumo = cantidadValueInsumo[index].textFieldValue;
-                    const insumoActualizado = { ...insumo, insumoCantidad: insumo.insumoCantidad - cantidadInsumo };
-                    listaInsumoActualizado.push(insumoActualizado);
-                    const detalleCantidadInsumo = {
-                        detalleCantidadInsumoInsumo: insumoActualizado,
-                        detalleCantidadInsumoCantidad: cantidadInsumo,
-                    };
-                    listaInsumoCantidad.push(detalleCantidadInsumo);
-                })
+                const carnesCompletas = carnes.filter(carne => selectCarneValues.includes(carne.carneId.toString()));
+                const insumosCompletos = insumos.filter(insumo => selectInsumoValues.includes(insumo.insumoId.toString()));
 
-                const productoCompleto = productos.filter((producto) => producto.productoId.toString() === formDataWithoutCantidad.diariaDeProduccionProducto)[0];
-                console.log(productoCompleto);
-
-
-                let loteNum = '';
-                let retorno = false;
-                while (retorno === false) {
-                    const lote = generarLote();
-
-                    const loteExiste = lotesCod.includes(lote);
-
-                    if (loteExiste === false) {
-                        loteNum = lote;
-                        retorno = true;
+                const resultadoCarne = carnesCompletas.map(carne => {
+                    const cantidaValueEncontradaCarne = cantidadValueCarne.find(cv => cv.selectValue === carne.carneId.toString());
+                    if (cantidaValueEncontradaCarne) {
+                        const cantidad = cantidaValueEncontradaCarne.textFieldValue;
+                        if (cantidad > carne.carneCantidad) {
+                            return `${carne.carneNombre} - ${carne.carneCorte} - ${carne.carneCantidad} Kg / `;
+                        }
                     }
-                }
+                    return null;
+                })
 
-                const loteCompleto = {
-                    loteCodigo: loteNum,
-                    loteProducto: productoCompleto,
-                    loteCantidad: formDataWithoutCantidad.diariaDeProduccionCantidadProducida,
-                };
+                const resultadoInsumo = insumosCompletos.map(insumo => {
+                    const cantidaValueEncontradaInsumo = cantidadValueInsumo.find(cv => cv.selectValue === insumo.insumoId.toString());
+                    if (cantidaValueEncontradaInsumo) {
+                        const cantidad = cantidaValueEncontradaInsumo.textFieldValue;
+                        if (cantidad > insumo.insumoCantidad) {
+                            return `${insumo.insumoNombre} - ${insumo.insumoNroLote} - ${insumo.insumoCantidad} ${insumo.insumoUnidad} / `;
+                        }
+                    }
+                    return null;
+                })
 
-                const updateFormData = {
-                    ...formDataWithoutCantidad,
-                    diariaDeProduccionProducto: productoCompleto,
-                    diariaDeProduccionInsumosCarnicos: listaCarneActualizada,
-                    diariaDeProduccionAditivos: listaInsumoActualizado,
-                    diariaDeProduccionResponsable: window.localStorage.getItem('user'),
-                };
-
-                const data = {
-                    diariaDeProduccion: updateFormData,
-                    listaCarneCantidad: listaCarneCantidad,
-                    listaInsumoCantidad: listaInsumoCantidad,
-                    lote: loteCompleto,
-                };
-
-                console.log(data);
-
-                const check = checkError(updateFormData.diariaDeProduccionProducto, updateFormData.diariaDeProduccionCantidadProducida,
-                    updateFormData.diariaDeProduccionFecha, updateFormData.diariaDeProduccionEnvasado, updateFormData.diariaDeProduccionFechaVencimiento);
-
-                if (check === false) {
-                    updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+                const elementoUndefinedCarne = resultadoCarne.some(elemento => elemento === null);
+                const elementoUndefinedInsumo = resultadoInsumo.some(elemento => elemento === null);
+                if (!elementoUndefinedInsumo || !elementoUndefinedCarne) {
+                    updateErrorAlert(`La cantidad ingresada de carnes o aditivos utilizada en la producción, es mayor a la disponible y no deje campos vacíos.`);
                     setShowAlertError(true);
                     setTimeout(() => {
                         setShowAlertError(false);
-                    }, 7000);
+                    }, 3000);
                 } else {
-                    if (checkMul === false) {
-                        updateErrorAlert(`Seleccione e ingrese la/el carne/aditivo y la cantidad, no deje los campos vacíos.`);
+                    const listaCarneActualizada = [];
+                    const listaCarneCantidad = [];
+                    carnesCompletas.forEach((carne, index) => {
+                        const cantidadCarne = cantidadValueCarne[index].textFieldValue;
+                        const carneActualizada = { ...carne, carneCantidad: carne.carneCantidad - cantidadCarne };
+                        listaCarneActualizada.push(carneActualizada);
+                        const detalleCantidadCarne = {
+                            detalleCantidadCarneCarne: carneActualizada,
+                            detalleCantidadCarneCantidad: cantidadCarne,
+                        };
+                        listaCarneCantidad.push(detalleCantidadCarne);
+                    })
+
+                    const listaInsumoActualizado = [];
+                    const listaInsumoCantidad = [];
+                    insumosCompletos.forEach((insumo, index) => {
+                        const cantidadInsumo = cantidadValueInsumo[index].textFieldValue;
+                        const insumoActualizado = { ...insumo, insumoCantidad: insumo.insumoCantidad - cantidadInsumo };
+                        listaInsumoActualizado.push(insumoActualizado);
+                        const detalleCantidadInsumo = {
+                            detalleCantidadInsumoInsumo: insumoActualizado,
+                            detalleCantidadInsumoCantidad: cantidadInsumo,
+                        };
+                        listaInsumoCantidad.push(detalleCantidadInsumo);
+                    })
+
+                    const productoCompleto = productos.filter((producto) => producto.productoId.toString() === formDataWithoutCantidad.diariaDeProduccionProducto)[0];
+
+                    let loteNum = '';
+                    let retorno = false;
+                    while (retorno === false) {
+                        const lote = generarLote();
+
+                        const loteExiste = lotesCod.includes(lote);
+
+                        if (loteExiste === false) {
+                            loteNum = lote;
+                            retorno = true;
+                        }
+                    }
+
+                    const loteCompleto = {
+                        loteCodigo: loteNum,
+                        loteProducto: productoCompleto,
+                        loteCantidad: formDataWithoutCantidad.diariaDeProduccionCantidadProducida,
+                    };
+                    const fecha = new Date(formDataWithoutCantidad.diariaDeProduccionFecha);
+                    console.log(fecha.getDate())
+                    const fechaV = new Date(formDataWithoutCantidad.diariaDeProduccionFechaVencimiento);
+                    fecha.setDate(fecha.getDate() + 1);
+                    fechaV.setDate(fechaV.getDate() + 1);
+                    const updateFormData = {
+                        ...formDataWithoutCantidad,
+                        diariaDeProduccionFecha: fecha,
+                        diariaDeProduccionFechaVencimiento: fechaV,
+                        diariaDeProduccionProducto: productoCompleto,
+                        diariaDeProduccionInsumosCarnicos: listaCarneActualizada,
+                        diariaDeProduccionAditivos: listaInsumoActualizado,
+                        diariaDeProduccionResponsable: window.localStorage.getItem('user'),
+                    };
+
+                    const data = {
+                        diariaDeProduccion: updateFormData,
+                        listaCarneCantidad: listaCarneCantidad,
+                        listaInsumoCantidad: listaInsumoCantidad,
+                        lote: loteCompleto,
+                    };
+
+                    const check = checkError(updateFormData.diariaDeProduccionProducto, updateFormData.diariaDeProduccionCantidadProducida,
+                        updateFormData.diariaDeProduccionFecha, updateFormData.diariaDeProduccionEnvasado, updateFormData.diariaDeProduccionFechaVencimiento);
+
+                    if (check === false) {
+                        updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 7000);
+                        }, 2500);
                     } else {
-                        axios.post('/agregar-diaria-de-produccion', data, {
-                            headers: {
-                                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                                "Content-Type": "application/json"
-                            }
-                        })
-                            .then(response => {
-                                if (response.status === 201) {
-                                    setShowAlertSuccess(true);
-                                    setTimeout(() => {
-                                        setShowAlertSuccess(false);
-                                    }, 5000);
-                                } else {
-                                    updateErrorAlert('No se logro agregar la diaria de producción, revise los datos ingresados.')
-                                    setShowAlertError(true);
-                                    setTimeout(() => {
-                                        setShowAlertError(false);
-                                    }, 5000);
+                        if (checkMul === false) {
+                            updateErrorAlert(`Seleccione e ingrese la/el carne/aditivo y la cantidad, no deje los campos vacíos.`);
+                            setShowAlertError(true);
+                            setTimeout(() => {
+                                setShowAlertError(false);
+                            }, 2500);
+                        } else {
+                            axios.post('/agregar-diaria-de-produccion', data, {
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    "Content-Type": "application/json"
                                 }
                             })
-                            .catch(error => {
-                                if (error.request.status === 401) {
-                                    setShowAlertWarning(true);
-                                    setTimeout(() => {
-                                        setShowAlertWarning(false);
-                                    }, 5000);
-                                }
-                                else if (error.request.status === 500) {
-                                    updateErrorAlert('No se logro agregar la diaria de producción, revise los datos ingresados.');
-                                    setShowAlertError(true);
-                                    setTimeout(() => {
-                                        setShowAlertError(false);
-                                    }, 5000);
-                                }
-                            })
+                                .then(response => {
+                                    if (response.status === 201) {
+                                        setShowAlertSuccess(true);
+                                        setTimeout(() => {
+                                            setShowAlertSuccess(false);
+                                        }, 2500);
+                                    } else {
+                                        updateErrorAlert('No se logró agregar la diaria de producción, revise los datos ingresados.')
+                                        setShowAlertError(true);
+                                        setTimeout(() => {
+                                            setShowAlertError(false);
+                                        }, 2500);
+                                    }
+                                })
+                                .catch(error => {
+                                    if (error.request.status === 401) {
+                                        setCheckToken(true);
+                                    }
+                                    else if (error.request.status === 500) {
+                                        updateErrorAlert('No se logró agregar la diaria de producción, revise los datos ingresados.');
+                                        setShowAlertError(true);
+                                        setTimeout(() => {
+                                            setShowAlertError(false);
+                                        }, 2500);
+                                    }
+                                })
+                        }
                     }
                 }
             }
         }
+    }
+
+    const redirect = () => {
+        navigate('/listar-diaria-de-produccion')
     }
 
     return (
@@ -523,14 +542,12 @@ const AgregarDiariaDeProduccion = () => {
                         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
                             <Typography component='h1' variant='h4'>Agregar Diaria de Producción</Typography>
                             <div>
-                                <Button color="primary" onClick={handleClickOpen}>
-                                    <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                        <HelpOutlineIcon fontSize="large" color="primary" />
-                                    </IconButton>
-                                </Button>
+                                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                    <HelpOutlineIcon fontSize="large" color="primary" />
+                                </IconButton>
                                 <Dialog
                                     fullScreen={fullScreen}
-                                    fullWidth='md'
+                                    fullWidth
                                     maxWidth='md'
                                     open={open}
                                     onClose={handleClose}
@@ -540,38 +557,38 @@ const AgregarDiariaDeProduccion = () => {
                                     <DialogContent>
                                         <DialogContentText className={classes.text}>
                                             <span>
-                                                En esta página puedes registrar los productos que se producen en la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                En esta página puedes registrar los productos que se realizan, asegúrate de completar los campos necesarios para registrar el estado.
                                             </span>
                                             <br />
                                             <span>
                                                 Este formulario cuenta con 7 campos:
                                                 <ul>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Producto</span>: en este campo se debe seleccionar el producto que se realizara.
+                                                        <span className={classes.liTitleBlue}>Producto</span>: En este campo se debe seleccionar el producto que se realizara.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Carne y Cantidad</span>: en este campo se divide en 2, en el primero llamado carne donde se ingresa la carne que se utiliza para realizar el producto
-                                                        y el segundo es cantidad, en el cual se ingresa la cantidad que se utiliza de esa carne, a su vez,
-                                                        este campo cuenta con un icono de más a la derecha del campo de carne para añadir otros 2 campos también denominados carne y cantidad, en caso de que el producto este compuesto por más de una carne,
+                                                        <span className={classes.liTitleBlue}>Carne y Cantidad</span>: Este campo se divide en 2 campos, el primero llamado carne que es donde se selecciona la carne que se utilizó para realizar el producto
+                                                        y el segundo es cantidad, en el cual se ingresa la cantidad que se utilizó de esa carne seleccionada para hacer el producto, a su vez
+                                                        este campo cuenta con un icono de más a la derecha del campo de carne, este icono añade otros 2 campos también denominados carne y cantidad, estos campos se añaden en caso de que el producto este compuesto por más de una carne,
                                                         cuando añades más campos de carne y cantidad, del que ya está predeterminado, el icono de más cambia por una X por si deseas eliminar los nuevos campos generados.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Aditivo y Cantidad</span>: en este campo se divide en 2, el primero llamado aditivo donde se ingresa el aditivo que se utiliza para realizar el producto
-                                                        y el segundo es cantidad, en el cual se ingresa la cantidad que se utiliza de ese aditivo, a su vez,
-                                                        este campo cuenta con un icono de más a la derecha del campo de aditivo para añadir otros 2 campos también denominados aditivo y cantidad, en caso de que el producto este compuesto por más de un aditivo,
+                                                        <span className={classes.liTitleBlue}>Aditivo y Cantidad</span>: Este campo se divide en 2 campos, el primero llamado aditivo que es donde se selecciona el aditivo que se utilizó para realizar el producto
+                                                        y el segundo es cantidad, en el cual se ingresa la cantidad que se utilizó de ese aditivo seleccionado para hacer el producto, a su vez
+                                                        este campo cuenta con un icono de más a la derecha del campo de aditivo, este icono añade otros 2 campos también denominados aditivo y cantidad, estos campos se añaden en caso de que el producto este compuesto por más de un aditivo,
                                                         cuando añades más campos de aditivo y cantidad, del que ya está predeterminado, el icono de más cambia por una X por si deseas eliminar los nuevos campos generados.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Cantidad Producida</span>: en este campo se ingresa la cantidad producida del producto/lote.
+                                                        <span className={classes.liTitleBlue}>Cantidad Producida</span>: En este campo se debe ingresar la cantidad producida del producto/lote.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Fecha de Producción</span>: en este campo se ingresa la fecha y hora en la que se realizo el producto.
+                                                        <span className={classes.liTitleBlue}>Fecha de Producción</span>: En este campo se debe ingresar la fecha en la que se realizó el producto.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Envasado</span>: en este campo se puede seleccionar si el producto esta envasado o no esta envasado.
+                                                        <span className={classes.liTitleBlue}>Envasado</span>: En este campo se debe seleccionar si el producto está envasado o no está envasado.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Fecha de Vencimiento</span>: en este campo se puede ingresar la fecha de vencimiento del producto/lote que se realizo.
+                                                        <span className={classes.liTitleBlue}>Fecha de Vencimiento</span>: En este campo se debe ingresar la fecha de vencimiento del producto/lote que se realizó.
                                                     </li>
                                                 </ul>
                                             </span>
@@ -579,12 +596,29 @@ const AgregarDiariaDeProduccion = () => {
                                                 Campos obligatorios y no obligatorios:
                                                 <ul>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                        <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                        <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                     </li>
                                                 </ul>
+                                            </span>
+                                            <span>
+                                                Aclaraciones:
+                                                <br />
+                                                - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                                                <br />
+                                                - Una vez registre el control de productos químicos, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro control de productos químicos.
+                                                <br />
+                                                - Los lotes son generados automáticamente con sus datos correspondientes.
+                                                <br />
+                                                - Cuando la cantidad de una carne o aditivo llega a 0, se eliminará lógicamente, lo que quiere decir esto es que la carne o el aditivo se eliminará pero no permanentemente, se podrá seguir viendo en la lista.
+                                                <br />
+                                                - Una vez la fecha actual sobrepase la fecha de vencimiento, los lotes/productos se eliminarán lógicamente.
+                                                <br />
+                                                - En los campos de Aditivo-Cantidad y Carne-Cantidad se mostrarán los registros que no estén eliminados y su fecha de vencimiento sea mayor a la actual.
+                                                <br />
+                                                - Los campos de cantidad carne, cantidad aditivo y cantidad producida solo aceptarán números y cuentan con una longitud máxima de 10 caracteres.
                                             </span>
                                         </DialogContentText>
                                     </DialogContent>
@@ -613,6 +647,7 @@ const AgregarDiariaDeProduccion = () => {
             <FormularioReutilizable
                 fields={formFields}
                 onSubmit={handleFormSubmit}
+                handleRedirect={redirect}
                 selectOptions={{
                     diariaDeProduccionProducto: productoSelect,
                     diariaDeProduccionInsumosCarnicos: carneSelect,

@@ -4,20 +4,12 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -61,6 +53,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
@@ -70,6 +65,7 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -77,17 +73,38 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el control de limpieza y desinfección con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el control de limpieza y desinfección con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
     title: 'Error', body: 'No se logró eliminar el control de limpieza y desinfección, recargue la pagina.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
+  const [alertWarning] = useState({
     title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/')
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+
+      const tokenExpiration = payload.exp * 1000;
+      const currentTime = Date.now();
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 2000);
+      }
+    }
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,16 +120,37 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
           }
         });
 
-        const data = response.data.map((controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias) => ({
-          ...controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias,
-          Id: controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId,
-        }));
+        const dataL = response.data.map((control, index) => {
+          if (index < 30) {
+            return {
+              ...control,
+              Id: control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId,
+            }
+          }
+        });
+        const dataLast30 = dataL.filter((data) => data !== undefined);
+        const data = response.data.map((control) => ({
+          ...control,
+          Id: control.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasId,
+        }))
         const ResponsableData = ResponsableResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
+        setButtonName('Listar Todos')
+        setDeleteItem(false)
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -126,47 +164,18 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
     }));
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
-    } else {
-      const tokenParts = token.split('.');
-      const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
-
-      const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
-      const currentTime = Date.now();
-      console.log(currentTime)
-
-      if (tokenExpiration < currentTime) {
-        setShowAlertWarning(true);
-        setTimeout(() => {
-          setShowAlertWarning(false);
-          navigate('/')
-        }, 3000);
-      }
-    }
-  }, []);
-
   const tableHeadCells = [
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha', numeric: false, disablePadding: false, label: 'Fecha' },
-    { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', numeric: false, disablePadding: false, label: 'Deposito' },
-    { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias', numeric: false, disablePadding: false, label: 'Cañeria' },
+    { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', numeric: false, disablePadding: false, label: 'Depósitos' },
+    { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias', numeric: false, disablePadding: false, label: 'Cañerías' },
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
     { id: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable', numeric: false, disablePadding: false, label: 'Responsable' }
   ];
 
   const filters = [
     { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
-    { id: 'deposito', label: 'Deposito', type: 'select', options: ['1', '2', '3'] },
-    { id: 'canieria', label: 'Cañeria', type: 'text' },
+    { id: 'deposito', label: 'Depósito', type: 'select', options: ['1', '2', '3'] },
     { id: 'observaciones', label: 'Observaciones', type: 'text' },
     { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
@@ -211,7 +220,6 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
     const lowerCaseItem = {
       controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha: new Date(item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha),
       controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito : '',
-      controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias.toLowerCase() : '',
       controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones.toLowerCase() : '',
       controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable: item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre ? item.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.usuarioNombre.toLowerCase() : '',
     };
@@ -220,9 +228,8 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
       (!filtros['fecha-desde'] || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha <= new Date(filtros['fecha-hasta'])) &&
       (!filtros.deposito || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito.includes(filtros.deposito)) &&
-      (!filtros.canieria || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias.toString().startsWith(filtros.canieria)) &&
       (!filtros.observaciones || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones.includes(filtros.observaciones)) &&
-      (!filtros.responsable || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable.startsWith(filtros.responsable))
+      (!filtros.responsable || lowerCaseItem.controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasResponsable === filtros.responsable)
     ) {
       return true;
     }
@@ -236,7 +243,7 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
 
   const handleEditControl = (rowData) => {
     const id = rowData.Id;
-    navigate(`/modificar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-canierias/${id}`);
+    navigate(`/modificar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias/${id}`);
   };
 
   const handleDeleteControl = (rowData) => {
@@ -249,32 +256,29 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
           updateErrorAlert('No se logró eliminar el control de limpieza y desinfección, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
           updateErrorAlert('No se logró eliminar el control de limpieza y desinfección, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -302,22 +306,34 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Control De Limpieza Y Desinfección De Depositos De Agua Y Canierias</Typography>
+          <Typography component='h1' variant='h5'>Listar de Control De Limpieza Y Desinfección</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -327,7 +343,7 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los controles de limpieza y desinfección de depositos y cañerias que fueron registrados.
+                    En esta página se encarga de listar los controles de limpieza y desinfección que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -343,13 +359,10 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
                         se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Deposito</span>: En este campo se puede seleccionar los depositos por los cuales se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Depósitos</span>: En este campo se puede seleccionar un depósito y al aplicar los filtros se listarán todos los registros que contengan ese depósito.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Cañeria</span>: En este campo se puede filtrar por las cañerias ingresando su identificación o en caso de que se limpiaron todas, la palabra todas.
-                      </li>
-                      <li>
-                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra y se listarán las observaciones que tienen esa palabra.
+                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra o frase y se listarán los registros que incluyan esa palabra o frase en observaciones.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se listará los registros asociados a ese responsable.
@@ -362,13 +375,16 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró o se realizó el control de limpieza y desinfección.
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Depostio</span>: En esta columna se muestran los depositos que se limpiaron.
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró el control de limpieza y desinfección.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Cañeria</span>: En esta columna se muestra las cañerias que se limpiaron.
+                        <span className={classes.liTitleRed}>Depostio</span>: En esta columna se muestran los depósitos que se limpiaron.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Cañeria</span>: En esta columna se muestra las cañerías que se limpiaron.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones que se encontraron cuando se registró el control de limpieza y desinfección.
@@ -377,10 +393,21 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
                         <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el control de limpieza y desinfección.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -409,7 +436,11 @@ function ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias() {
         data={filteredData}
         dataKey="listarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias"
         tableHeadCells={tableHeadCells}
-        title="Control De Limpieza Y Desinfección De Depositos De Agua Y Cañerias"
+        title="Lista de Controles De Limpieza Y Desinfección"
+        titleButton="Control de Limpieza y Desinfección"
+        titleListButton={buttonName}
+        listButton={listRefresh}
+        linkButton={redirect}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditControl}

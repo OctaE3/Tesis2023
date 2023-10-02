@@ -4,19 +4,11 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,6 +52,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarControlDeCloroLibre() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
@@ -73,20 +68,43 @@ function ListarControlDeCloroLibre() {
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+  const [checkToken, setCheckToken] = useState(false);
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el control de cloro libre con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el control de cloro libre con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
     title: 'Error', body: 'No se logró eliminar el control de cloro libre, recargue la pagina.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/')
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+
+      const tokenExpiration = payload.exp * 1000;
+      const currentTime = Date.now();
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 2000);
+      }
+    }
+  }, [checkToken]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,16 +120,37 @@ function ListarControlDeCloroLibre() {
           }
         });
 
+        const dataL = response.data.map((controlDeCloroLibre, index) => {
+          if (index < 30) {
+            return {
+              ...controlDeCloroLibre,
+              Id: controlDeCloroLibre.controlDeCloroLibreId,
+            }
+          }
+        });
+        const dataLast30 = dataL.filter((dataL) => dataL !== undefined);
         const data = response.data.map((controlDeCloroLibre) => ({
           ...controlDeCloroLibre,
           Id: controlDeCloroLibre.controlDeCloroLibreId,
-        }));
+        }))
         const ResponsableData = ResponsableResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
+        setButtonName('Listar Todos')
+        setDeleteItem(false)
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -119,6 +158,7 @@ function ListarControlDeCloroLibre() {
   }, [deleteItem]);
 
   const tableHeadCells = [
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
     { id: 'controlDeCloroLibreFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'controlDeCloroLibreGrifoPico', numeric: false, disablePadding: false, label: 'Pico/Grifo' },
     { id: 'controlDeCloroLibreResultado', numeric: false, disablePadding: false, label: 'Resultado' },
@@ -190,7 +230,7 @@ function ListarControlDeCloroLibre() {
       (!filtros.pico || lowerCaseItem.controlDeCloroLibreGrifoPico.toString().startsWith(filtros.pico)) &&
       (!filtros.resultado || lowerCaseItem.controlDeCloroLibreResultado.toString().startsWith(filtros.resultado)) &&
       (!filtros.observaciones || lowerCaseItem.controlDeCloroLibreObservaciones.includes(filtros.observaciones)) &&
-      (!filtros.responsable || lowerCaseItem.controlDeCloroLibreResponsable.startsWith(filtros.responsable))
+      (!filtros.responsable || lowerCaseItem.controlDeCloroLibreResponsable === filtros.responsable)
     ) {
       return true;
     }
@@ -216,32 +256,29 @@ function ListarControlDeCloroLibre() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
           updateErrorAlert('No se logró eliminar el control de cloro libre, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
           updateErrorAlert('No se logró eliminar el control de cloro libre, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -268,35 +305,6 @@ function ListarControlDeCloroLibre() {
     }));
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
-    } else {
-      const tokenParts = token.split('.');
-      const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
-
-      const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
-      const currentTime = Date.now();
-      console.log(currentTime)
-
-      if (tokenExpiration < currentTime) {
-        setShowAlertWarning(true);
-        setTimeout(() => {
-          setShowAlertWarning(false);
-          navigate('/')
-        }, 3000);
-      }
-    }
-  }, []);
-
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -305,22 +313,34 @@ function ListarControlDeCloroLibre() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/control-de-cloro-libre')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Control de Cloro Libre</Typography>
+          <Typography component='h1' variant='h5'>Listar de Control de Cloro Libre</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -330,7 +350,7 @@ function ListarControlDeCloroLibre() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los controles de cloro libre que fueron registrados.
+                    Esta página se encarga de listar los controles de cloro libre que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -346,16 +366,16 @@ function ListarControlDeCloroLibre() {
                         se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Pico/Grifo</span>: En este campo se puede ingresar el número del grifo, para listar todos los controles de cloro libre que se le hicieron a ese grifo.
+                        <span className={classes.liTitleBlue}>Pico/Grifo</span>: En este campo se puede ingresar el número que identifica al grifo, se listarán todos los registros que contengan ese grifo.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Resultado</span>: Este campo se puede filtrar por el resultado que dio al medir grifo.
+                        <span className={classes.liTitleBlue}>Resultado</span>: Este campo se puede ingresar el valor obtenido al medir el cloro del agua, se listarán todos los registros que tengan el mismo resultado que el ingresado.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra y se listarán las observaciones que tienen esa palabra.
+                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra o frase y se listarán los registros que incluyan esa palabra o frase en observaciones.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se listará los registros asociados a ese responsable.
+                        <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se listarán los registros asociados a ese responsable.
                       </li>
                     </ul>
                   </span>
@@ -365,13 +385,16 @@ function ListarControlDeCloroLibre() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró el control de cloro.
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha en la que se registró el control de cloro libre.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Pico/Grifo</span>: En esta columna se muestra el número por el cual se identifica el grifo.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Resultado</span>: En esta columna se muestra el resultado que se obtuvo en la medición del grifo.
+                        <span className={classes.liTitleRed}>Resultado</span>: En esta columna se muestra el resultado que se obtuvo al medir la cantidad de cloro que hay en el agua.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones que se encontraron cuando se registró el control de cloro libre.
@@ -380,10 +403,20 @@ function ListarControlDeCloroLibre() {
                         <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el control de cloro libre.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -412,7 +445,11 @@ function ListarControlDeCloroLibre() {
         data={filteredData}
         dataKey="listarcontrolDeCloroLibre"
         tableHeadCells={tableHeadCells}
-        title="Control De Cloro Libre"
+        title="Lista de Controles De Cloro Libre"
+        titleButton="Control de Cloro Libre"
+        titleListButton={buttonName}
+        listButton={listRefresh}
+        linkButton={redirect}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditControl}

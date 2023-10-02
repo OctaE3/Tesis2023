@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -64,31 +56,31 @@ const useStyles = makeStyles(theme => ({
 const AgregarControlDeNitrato = () => {
   const formFields = [
     { name: 'controlDeNitratoFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeNitratoProductoLote', label: 'Producto / Lote', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9]{0,20}$", color: 'primary' },
+    { name: 'controlDeNitratoProductoLote', label: 'Producto / Lote', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ]{0,20}$", color: 'primary' },
     { name: 'controlDeNitratoCantidadUtilizada', label: 'Cantidad Utilizada', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", color: 'primary' },
     { name: 'controlDeNitratoStock', label: 'Stock', type: 'text', disabled: 'si', color: 'primary' },
-    { name: 'controlDeNitratoObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
+    { name: 'controlDeNitratoObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", multi: '3', color: 'secondary' },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
+  const [alertSuccess] = useState({
     title: 'Correcto', body: 'Control de nitrato agregado con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro agregar el control de nitrato, revise los datos ingresados.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró agregar el control de nitrato, revise los datos ingresados.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
   const navigate = useNavigate();
-  const [listaN, setListaN] = useState([]);
   const [nitratoStock, setNitratoStock] = useState(0);
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -107,31 +99,24 @@ const AgregarControlDeNitrato = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
+      setCheckToken(false)
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const obtenerNitratos = () => {
@@ -141,14 +126,21 @@ const AgregarControlDeNitrato = () => {
         }
       })
         .then(response => {
-          setListaN(response.data);
           if (response.data.length > 0) {
-            const ultimoNitrato = response.data[response.data.length - 1];
+            const ultimoNitrato = response.data[0];
             setNitratoStock(ultimoNitrato.controlDeNitratoStock);
           }
         })
         .catch(error => {
-          console.error(error);
+          if (error.request.status === 401) {
+            setCheckToken(true);
+          } else {
+            updateErrorAlert('No se logró cargar el stock de nitrato, recargue la página.')
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 2000);
+          }
         });
     };
 
@@ -178,7 +170,7 @@ const AgregarControlDeNitrato = () => {
   };
 
   const checkError = (fecha, lote, cantidad, stock) => {
-    if (fecha === undefined || fecha === null || fecha === '') {
+    if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
       return false;
     }
     else if (lote === undefined || lote === null || lote === '') {
@@ -194,35 +186,27 @@ const AgregarControlDeNitrato = () => {
   }
 
   const handleFormSubmit = (formData) => {
-    console.log(formData)
     const { stockForm, ...formDataWithoutStock } = formData;
-
-    console.log(stockForm);
-    console.log(formDataWithoutStock.controlDeNitratoCantidadUtilizada);
 
     let stock = stockForm;
     if (stock === undefined) {
       stock = nitratoStock;
     }
 
-    console.log(stock)
-    if (formDataWithoutStock.controlDeNitratoCantidadUtilizada > stock) {
-      updateErrorAlert(`La cantidad utilizada no puede ser mayor al stock`);
+    if (parseInt(formDataWithoutStock.controlDeNitratoCantidadUtilizada) > parseInt(stock) || parseInt(formDataWithoutStock.controlDeNitratoCantidadUtilizada) === 0) {
+      updateErrorAlert(`La cantidad utilizada no puede ser 0 o mayor al stock y tampoco se permite dejar el stock vacío.`);
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 2500);
     } else {
       const stockRestante = parseInt(stock) - parseInt(formDataWithoutStock.controlDeNitratoCantidadUtilizada);
-      console.log(stockRestante);
 
       const controlDeNitratoConResponsable = {
         ...formDataWithoutStock,
         controlDeNitratoStock: stockRestante,
         controlDeNitratoResponsable: window.localStorage.getItem('user'),
       }
-      console.log(controlDeNitratoConResponsable);
-      console.log(controlDeNitratoConResponsable.controlDeNitratoProductoLote);
 
       const check = checkError(controlDeNitratoConResponsable.controlDeNitratoFecha, controlDeNitratoConResponsable.controlDeNitratoProductoLote,
         controlDeNitratoConResponsable.controlDeNitratoCantidadUtilizada, controlDeNitratoConResponsable.controlDeNitratoStock);
@@ -232,7 +216,7 @@ const AgregarControlDeNitrato = () => {
         setShowAlertError(true);
         setTimeout(() => {
           setShowAlertError(false);
-        }, 7000);
+        }, 2500);
       } else {
         axios.post('/agregar-control-de-nitrato', controlDeNitratoConResponsable, {
           headers: {
@@ -245,32 +229,33 @@ const AgregarControlDeNitrato = () => {
               setShowAlertSuccess(true);
               setTimeout(() => {
                 setShowAlertSuccess(false);
-              }, 5000);
+              }, 2500);
             } else {
-              updateErrorAlert('No se logro agregar el control de nitrato, revise los datos ingresados.')
+              updateErrorAlert('No se logró agregar el control de nitrato, revise los datos ingresados.')
               setShowAlertError(true);
               setTimeout(() => {
                 setShowAlertError(false);
-              }, 5000);
+              }, 2500);
             }
           })
           .catch(error => {
             if (error.request.status === 401) {
-              setShowAlertWarning(true);
-              setTimeout(() => {
-                setShowAlertWarning(false);
-              }, 5000);
+              setCheckToken(true);
             }
             else if (error.request.status === 500) {
-              updateErrorAlert('No se logro agregar el control de nitrato, revise los datos ingresados.');
+              updateErrorAlert('No se logró agregar el control de nitrato, revise los datos ingresados.');
               setShowAlertError(true);
               setTimeout(() => {
                 setShowAlertError(false);
-              }, 5000);
+              }, 2500);
             }
           })
       }
     }
+  }
+
+  const redirect = () => {
+    navigate('/listar-control-de-nitratos')
   }
 
   return (
@@ -283,14 +268,12 @@ const AgregarControlDeNitrato = () => {
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
               <Typography component='h1' variant='h4'>Agregar Control de Nitrato</Typography>
               <div>
-                <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton className={blinking ? classes.blinkingButton : ''}>
-                    <HelpOutlineIcon fontSize="large" color="primary" />
-                  </IconButton>
-                </Button>
+                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
                 <Dialog
                   fullScreen={fullScreen}
-                  fullWidth='md'
+                  fullWidth
                   maxWidth='md'
                   open={open}
                   onClose={handleClose}
@@ -307,22 +290,25 @@ const AgregarControlDeNitrato = () => {
                         Este formulario cuenta con 5 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se le agrego el nitrato a el producto/lote.
+                            <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se le registro el control de nitrato.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Producto/Lote</span>: en este campo se debe ingresar el producto/lote al que se le agrega el nitrato.
+                            <span className={classes.liTitleBlue}>Producto/Lote</span>: En este campo se debe ingresar el producto/lote al que se le agrega el nitrato,
+                            este campo solo acepta palabras minúsculas, mayúsculas y números, a su vez cuenta con un máximo de 20 caracteres.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Cantidad Utilizada</span>: en este campo se especifica la cantidad utilizada de nitrato en el producto/lote.
+                            <span className={classes.liTitleBlue}>Cantidad Utilizada</span>: En este campo se debe especifica la cantidad utilizada de nitrato en el producto/lote,
+                            este campo solo acepta números y cuenta con un máximo de 10 caracteres.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Stock</span>: este campo no se puede modificar el valor que hay en él, la única forma de agregar más stock es,
+                            <span className={classes.liTitleBlue}>Stock</span>: En este campo no se puede modificar el valor que hay en él, la única forma de agregar más stock es,
                             utilizando el más que hay a la derecha del campo, al hacer click en el icono de más se desplegara una ventana donde se puede ingresar nuevo stock,
                             al momento de darle enviar, el nuevo valor ingresado se le sumara al stock existente y en caso de que quiera restar stock por algún motivo, es seguir
                             el mismo proceso que para agregar stock, nada más que tiene que darle click al botón de menos a la izquierda del campo de stock.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de agregar el nitrato al producto/lote.
+                            <span className={classes.liTitleRed}>Observaciones</span>: En este campo se debe pueden registrar las observaciones o detalles que se encontraron al momento de agregar el nitrato al producto/lote,
+                            este campo solo acepta palabras minúsculas, mayúsculas y números, a su vez cuenta con un máximo de 250 caracteres.
                           </li>
                         </ul>
                       </span>
@@ -330,12 +316,21 @@ const AgregarControlDeNitrato = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                        <br />
+                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                        <br />
+                        - Una vez registre el control de nitrato, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro control de nitrato.
+                        <br />
+                        - En el campo de stock aparece la cantidad restante que quedó del último control de nitrato que se agregó.
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -363,6 +358,7 @@ const AgregarControlDeNitrato = () => {
       <FormularioReutilizable
         fields={formFields}
         onSubmit={handleFormSubmit}
+        handleRedirect={redirect}
         selectOptions={{ controlDeNitratoStock: nitratoStock, }}
       />
     </Grid>

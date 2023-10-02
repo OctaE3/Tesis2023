@@ -1,5 +1,4 @@
-import React from 'react'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Home from '../../paginas/Home/Home';
 import AgregarLocalidad from '../../paginas/Persona/Localidad/AgregarLocalidad';
 import Login from '../../paginas/Persona/Login/Login';
@@ -71,89 +70,93 @@ import ListarResumenDeTrazabilidad from '../../paginas/Trazabilidad/Resumen_de_T
 import ListarAnualDeInsumosCarnicos from '../../paginas/Trazabilidad/Anual_de_Insumos_Carnicos/ListarAnualDeInsumosCarnicos';
 import AgregarUsuario from '../../paginas/Persona/Usuario/AgregarUsuario';
 import ModificarUsuario from '../../paginas/Persona/Usuario/ModificarUsuario';
+import NotFound from '../../paginas/NotFound/NotFound';
+import ListarLote from '../../paginas/Insumo/Lote/ListarLote';
+import ModificarLote from '../../paginas/Insumo/Lote/ModificarLote'
 
 const AppRouter = () => {
-    return (
-      <Router>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/inicio" element={<Home />} />
-          <Route path="/agregar-usuario" element={<AgregarUsuario />} />
-          <Route path="/modificar-usuario/:id" element={<ModificarUsuario />} />
-          <Route path="/localidad" element={<AgregarLocalidad />} />
-          <Route path="/modificar-localidad/:id" element={<ModificarLocalidad />} />
-          <Route path="/listar-localidad" element={<ListarLocalidad />} />
-          <Route path="/cliente" element={<AgregarCliente />} />
-          <Route path="/listarcliente" element={<ListarCliente />} />
-          <Route path="/modificar-cliente/:id" element={<ModificarCliente />} />
-          <Route path="/listar-cliente" element={<ListarCliente />} />
-          <Route path="/modificar-carne/:id" element={<ModificarCarne />} />
-          <Route path="/listar-carne" element={<ListarCarne />} />
-          <Route path="/insumo" element={<AgregarInsumo />} />
-          <Route path="/modificar-insumo/:id" element={<ModificarInsumo />} />
-          <Route path="/producto" element={<AgregarProducto />} />
-          <Route path="/modificar-producto/:id" element={<ModificarProducto />} />
-          <Route path="/listar-producto" element={<ListarProducto />} />
-          <Route path="/proveedor" element={<AgregarProveedor />} />
-          <Route path="/listar-proveedor" element={<ListarProveedor />} />
-          <Route path="/modificar-proveedor/:id" element={<ModificProveedor />} />
-          <Route path="/control-de-alarma-luminica-y-sonora-de-cloro" element={<AgregarControlDeAlarmaLuminicaYSonoraDeCloro />} />
-          <Route path="/listar-control-de-alarma-luminica-y-sonora-de-cloro" element={<ListarControlDeAlarmaLuminicaYSonoraDeCloro />} />
-          <Route path="/modificar-control-de-alarma-luminica-y-sonora-de-cloro/:id" element={<ModificarControlDeAlarmaLuminicaYSonoraDeCloro />} />
-          <Route path="/control-de-cloro-libre" element={<AgregarControlDeCloroLibre />} />
-          <Route path="/modificar-control-de-cloro-libre/:id" element={<ModificarControlDeCloroLibre />} />
-          <Route path="/listar-control-de-cloro-libre" element={<ListarControlDeCloroLibre />} />
-          <Route path="/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" element={<AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
-          <Route path="/modificar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias/:id" element={<ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
-          <Route path="/listar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" element={<ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
-          <Route path="/control-de-mejoras-en-instalaciones" element={<AgregarControlDeMejorasEnInstalaciones />} />
-          <Route path="/modificar-control-de-mejoras-en-instalaciones/:id" element={<ModificarControlDeMejorasEnInstalaciones />} />
-          <Route path="/listar-control-de-mejoras-en-instalaciones" element={<ListarControlDeMejorasEnInstalaciones />} />
-          <Route path="/control-de-reposicion-de-cloro" element={<AgregarControlDeReposicionDeCloro />} />
-          <Route path="/modificar-control-de-reposicion-de-cloro/:id" element={<ModificarControlDeReposicionDeCloro />} />
-          <Route path="/listar-control-de-reposicion-de-cloro" element={<ListarControlDeReposicionDeCloro />} />
-          <Route path="/control-de-temperatura-de-esterilizadores" element={<AgregarControlDeTemperaturaDeEsterilizadores />} />
-          <Route path="/listar-control-de-temperatura-de-esterilizadores" element={<ListarControlDeTemperaturaDeEsterilizadores />} />
-          <Route path="/modificar-control-de-temperatura-de-esterilizadores/:id" element={<ModificarControlDeTemperaturaDeEsterilizadores />} />
-          <Route path="/control-de-temperatura-en-camaras" element={<AgregarControlDeTemperaturaEnCamaras />} />
-          <Route path="/listar-control-de-temperatura-en-camaras" element={<ListarControlDeTemperaturaEnCamaras />} />
-          <Route path="/modificar-control-de-temperatura-en-camaras/:id" element={<ModificarControlDeTemperaturaEnCamaras />} />
-          <Route path="/control-de-nitratos" element={<AgregarControlDeNitrato />} />
-          <Route path="/modificar-control-de-nitratos/:id" element={<ModificarControlDeNitrato />} />
-          <Route path="/listar-control-de-nitratos" element={<ListarControlDeNitrato />} />
-          <Route path="/control-de-nitritos" element={<AgregarControlDeNitrito />} />
-          <Route path="/modificar-control-de-nitritos/:id" element={<ModificarControlDeNitrito />} />
-          <Route path="/listar-control-de-nitritos" element={<ListarControlDeNitrito />} />
-          <Route path="/expedicion-de-producto" element={<AgregarExpedicionDeProducto />} />
-          <Route path="/listar-expedicion-de-producto" element={<ListarExpedicionDeProducto />} />
-          <Route path="/modificar-expedicion-de-producto/:id" element={<ModificarExpedicionDeProducto />} />
-          <Route path="/control-de-productos-quimicos" element={<AgregarControlDeProductosQuimicos />} />
-          <Route path="/modificar-control-de-productos-quimicos/:id" element={<ModificarControlDeProductosQuimicos />} />
-          <Route path="/listar-control-de-productos-quimicos" element={<ListarControlDeProductosQuimicos />} />
-          <Route path="/recepcion-de-materias-primas-carnicas" element={<AgregarRecepcionDeMateriasPrimasCarnicas />} />
-          <Route path="/modificar-recepcion-de-materias-primas-carnicas/:id" element={<ModificarRecepcionDeMateriasPrimasCarnicas />} />
-          <Route path="/listar-recepcion-de-materias-primas-carnicas" element={<ListarRecepcionDeMateriasPrimasCarnicas />} />
-          <Route path="/diaria-de-produccion" element={<AgregarDiariaDeProduccion />} />
-          <Route path="/modificar-diaria-de-produccion/:id" element={<ModificarDiariaDeProduccion />} />
-          <Route path="/listar-diaria-de-produccion" element={<ListarDiariaDeProduccion />} />
-          <Route path="/resumen-de-trazabilidad" element={<AgregarResumenDeTrazabilidad />} />
-          <Route path="/listar-resumen-de-trazabilidad" element={<ListarResumenDeTrazabilidad />} />
-          <Route path="/modificar-resumen-de-trazabilidad/:id" element={<ModificarResumenDeTrazabilidad />} />
-          <Route path="/monitoreo-de-ssop-operativo" element={<AgregarMonitoreoDeSSOPOPerativo />} />
-          <Route path="/listar-monitoreo-de-ssop-operativo" element={<ListarMonitoreoDeSSOPOPerativo />} />
-          <Route path="/modificar-monitoreo-de-ssop-operativo/:id" element={<ModificarMoniteoreoDeSSOPOperativo />} />
-          <Route path="/monitoreo-de-ssop-pre-operativo" element={<AgregarMonitoreoDeSSOPPreOperativo />} />
-          <Route path="/listar-monitoreo-de-ssop-pre-operativo" element={<ListarMonitoreoDeSSOPPreOPerativo />} />
-          <Route path="/modificar-monitoreo-de-ssop-pre-operativo/:id" element={<ModificarMoniteoreoDeSSOPPreOperativo />} />
-          <Route path="/listar-control-de-insumos" element={<ListarInsumo />} />
-          <Route path="/listar-usuarios" element={<ListarUsuario />} />
-          <Route path="/listar-anual-de-insumos-carnicos" element={<ListarAnualDeInsumosCarnicos />} />
-          {/* Otras rutas */}
+  return (
+    <Router>
+      <Routes>
+        <Route path="*" element={<NotFound />}  />
+        <Route path="/" element={<Login />} />
+        <Route path="/inicio" element={<Home />} />
+        <Route path="/listar-lote" element={<ListarLote />} />
+        <Route path="/modificar-lote/:id" element={<ModificarLote />} />
+        <Route path="/agregar-usuario" element={<AgregarUsuario />} />
+        <Route path="/modificar-usuario/:id" element={<ModificarUsuario />} />
+        <Route path="/localidad" element={<AgregarLocalidad />} />
+        <Route path="/modificar-localidad/:id" element={<ModificarLocalidad />} />
+        <Route path="/listar-localidad" element={<ListarLocalidad />} />
+        <Route path="/cliente" element={<AgregarCliente />} />
+        <Route path="/listarcliente" element={<ListarCliente />} />
+        <Route path="/modificar-cliente/:id" element={<ModificarCliente />} />
+        <Route path="/listar-cliente" element={<ListarCliente />} />
+        <Route path="/modificar-carne/:id" element={<ModificarCarne />} />
+        <Route path="/listar-carne" element={<ListarCarne />} />
+        <Route path="/insumo" element={<AgregarInsumo />} />
+        <Route path="/modificar-insumo/:id" element={<ModificarInsumo />} />
+        <Route path="/producto" element={<AgregarProducto />} />
+        <Route path="/modificar-producto/:id" element={<ModificarProducto />} />
+        <Route path="/listar-producto" element={<ListarProducto />} />
+        <Route path="/proveedor" element={<AgregarProveedor />} />
+        <Route path="/listar-proveedor" element={<ListarProveedor />} />
+        <Route path="/modificar-proveedor/:id" element={<ModificProveedor />} />
+        <Route path="/control-de-alarma-luminica-y-sonora-de-cloro" element={<AgregarControlDeAlarmaLuminicaYSonoraDeCloro />} />
+        <Route path="/listar-control-de-alarma-luminica-y-sonora-de-cloro" element={<ListarControlDeAlarmaLuminicaYSonoraDeCloro />} />
+        <Route path="/modificar-control-de-alarma-luminica-y-sonora-de-cloro/:id" element={<ModificarControlDeAlarmaLuminicaYSonoraDeCloro />} />
+        <Route path="/control-de-cloro-libre" element={<AgregarControlDeCloroLibre />} />
+        <Route path="/modificar-control-de-cloro-libre/:id" element={<ModificarControlDeCloroLibre />} />
+        <Route path="/listar-control-de-cloro-libre" element={<ListarControlDeCloroLibre />} />
+        <Route path="/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" element={<AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
+        <Route path="/modificar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias/:id" element={<ModificarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
+        <Route path="/listar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias" element={<ListarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias />} />
+        <Route path="/control-de-mejoras-en-instalaciones" element={<AgregarControlDeMejorasEnInstalaciones />} />
+        <Route path="/modificar-control-de-mejoras-en-instalaciones/:id" element={<ModificarControlDeMejorasEnInstalaciones />} />
+        <Route path="/listar-control-de-mejoras-en-instalaciones" element={<ListarControlDeMejorasEnInstalaciones />} />
+        <Route path="/control-de-reposicion-de-cloro" element={<AgregarControlDeReposicionDeCloro />} />
+        <Route path="/modificar-control-de-reposicion-de-cloro/:id" element={<ModificarControlDeReposicionDeCloro />} />
+        <Route path="/listar-control-de-reposicion-de-cloro" element={<ListarControlDeReposicionDeCloro />} />
+        <Route path="/control-de-temperatura-de-esterilizadores" element={<AgregarControlDeTemperaturaDeEsterilizadores />} />
+        <Route path="/listar-control-de-temperatura-de-esterilizadores" element={<ListarControlDeTemperaturaDeEsterilizadores />} />
+        <Route path="/modificar-control-de-temperatura-de-esterilizadores/:id" element={<ModificarControlDeTemperaturaDeEsterilizadores />} />
+        <Route path="/control-de-temperatura-en-camaras" element={<AgregarControlDeTemperaturaEnCamaras />} />
+        <Route path="/listar-control-de-temperatura-en-camaras" element={<ListarControlDeTemperaturaEnCamaras />} />
+        <Route path="/modificar-control-de-temperatura-en-camaras/:id" element={<ModificarControlDeTemperaturaEnCamaras />} />
+        <Route path="/control-de-nitratos" element={<AgregarControlDeNitrato />} />
+        <Route path="/modificar-control-de-nitratos/:id" element={<ModificarControlDeNitrato />} />
+        <Route path="/listar-control-de-nitratos" element={<ListarControlDeNitrato />} />
+        <Route path="/control-de-nitritos" element={<AgregarControlDeNitrito />} />
+        <Route path="/modificar-control-de-nitritos/:id" element={<ModificarControlDeNitrito />} />
+        <Route path="/listar-control-de-nitritos" element={<ListarControlDeNitrito />} />
+        <Route path="/expedicion-de-producto" element={<AgregarExpedicionDeProducto />} />
+        <Route path="/listar-expedicion-de-producto" element={<ListarExpedicionDeProducto />} />
+        <Route path="/modificar-expedicion-de-producto/:id" element={<ModificarExpedicionDeProducto />} />
+        <Route path="/control-de-productos-quimicos" element={<AgregarControlDeProductosQuimicos />} />
+        <Route path="/modificar-control-de-productos-quimicos/:id" element={<ModificarControlDeProductosQuimicos />} />
+        <Route path="/listar-control-de-productos-quimicos" element={<ListarControlDeProductosQuimicos />} />
+        <Route path="/recepcion-de-materias-primas-carnicas" element={<AgregarRecepcionDeMateriasPrimasCarnicas />} />
+        <Route path="/modificar-recepcion-de-materias-primas-carnicas/:id" element={<ModificarRecepcionDeMateriasPrimasCarnicas />} />
+        <Route path="/listar-recepcion-de-materias-primas-carnicas" element={<ListarRecepcionDeMateriasPrimasCarnicas />} />
+        <Route path="/diaria-de-produccion" element={<AgregarDiariaDeProduccion />} />
+        <Route path="/modificar-diaria-de-produccion/:id" element={<ModificarDiariaDeProduccion />} />
+        <Route path="/listar-diaria-de-produccion" element={<ListarDiariaDeProduccion />} />
+        <Route path="/resumen-de-trazabilidad" element={<AgregarResumenDeTrazabilidad />} />
+        <Route path="/listar-resumen-de-trazabilidad" element={<ListarResumenDeTrazabilidad />} />
+        <Route path="/modificar-resumen-de-trazabilidad/:id" element={<ModificarResumenDeTrazabilidad />} />
+        <Route path="/monitoreo-de-ssop-operativo" element={<AgregarMonitoreoDeSSOPOPerativo />} />
+        <Route path="/listar-monitoreo-de-ssop-operativo" element={<ListarMonitoreoDeSSOPOPerativo />} />
+        <Route path="/modificar-monitoreo-de-ssop-operativo/:id" element={<ModificarMoniteoreoDeSSOPOperativo />} />
+        <Route path="/monitoreo-de-ssop-pre-operativo" element={<AgregarMonitoreoDeSSOPPreOperativo />} />
+        <Route path="/listar-monitoreo-de-ssop-pre-operativo" element={<ListarMonitoreoDeSSOPPreOPerativo />} />
+        <Route path="/modificar-monitoreo-de-ssop-pre-operativo/:id" element={<ModificarMoniteoreoDeSSOPPreOperativo />} />
+        <Route path="/listar-control-de-insumos" element={<ListarInsumo />} />
+        <Route path="/listar-usuarios" element={<ListarUsuario />} />
+        <Route path="/listar-anual-de-insumos-carnicos" element={<ListarAnualDeInsumosCarnicos />} />
+      </Routes>
+    </Router>
+  );
+};
 
-        </Routes>
-      </Router>
-    );
-  };
-  
-  export default AppRouter;
-  
+export default AppRouter;
+

@@ -1,20 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
+import { red } from '@material-ui/core/colors';
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -41,6 +34,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -93,7 +89,6 @@ const ModificarInsumo = () => {
     const classes = useStyles();
     const { id } = useParams();
     const [control, setControl] = useState({});
-    const [controles, setControles] = useState({});
     const [proveedores, setProveedores] = useState([]);
     const [proveedorSelect, setProveedorSelect] = useState([]);
     const [insumoProveedor, setInsumoProveedor] = useState({});
@@ -110,6 +105,7 @@ const ModificarInsumo = () => {
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -119,16 +115,16 @@ const ModificarInsumo = () => {
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Insumo modificado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el Insumo, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el Insumo, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -149,31 +145,23 @@ const ModificarInsumo = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -184,12 +172,10 @@ const ModificarInsumo = () => {
             })
                 .then(response => {
                     const controlesData = response.data;
-                    setControles(controlesData);
                     const controlEncontrado = controlesData.find((control) => control.insumoId.toString() === id.toString());
                     if (controlEncontrado === undefined) {
                         navigate('/listar-control-de-insumos');
                     }
-                    console.log(controlEncontrado)
 
                     const fechaControl1 = controlEncontrado.insumoFecha;
                     const fechaControl2 = controlEncontrado.insumoFechaVencimiento;
@@ -208,11 +194,19 @@ const ModificarInsumo = () => {
                         insumoFecha: fechaFormateada1,
                         insumoFechaVencimiento: fechaFormateada2,
                     }
-                    console.log(controlConFechaParseada);
                     setControl(controlConFechaParseada);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            redirect();
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -233,7 +227,16 @@ const ModificarInsumo = () => {
 
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar a los proveedores, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            redirect();
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -259,14 +262,14 @@ const ModificarInsumo = () => {
 
     const handleChange = event => {
         const { name, value } = event.target;
-        if (name === "insumoProveedor" || name === "insumoTipo" || name === "insumoUnidad") {
+        if (name === "insumoProveedor" || name === "insumoTipo" || name === "insumoUnidad" || name === "insumoFecha" || name === "insumoFechaVencimiento") {
             setControl(prevState => ({
                 ...prevState,
                 [name]: value,
             }));
         } else {
             if (name === "insumoNombre") {
-                const regex = new RegExp("^[A-Za-z0-9\\s]{0,50}$");
+                const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$");
                 if (regex.test(value)) {
                     setControl(prevState => ({
                         ...prevState,
@@ -275,7 +278,7 @@ const ModificarInsumo = () => {
                 }
             }
             else if (name === "insumoCantidad") {
-                const regex = new RegExp("^[0-9]{0,10}$");
+                const regex = new RegExp("^[0-9]{0,5}$");
                 if (regex.test(value)) {
                     setControl(prevState => ({
                         ...prevState,
@@ -293,7 +296,7 @@ const ModificarInsumo = () => {
                 }
             }
             else if (name === "insumoMotivoDeRechazo") {
-                const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+                const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$");
                 if (regex.test(value)) {
                     setControl(prevState => ({
                         ...prevState,
@@ -337,72 +340,78 @@ const ModificarInsumo = () => {
     }
 
     const handleFormSubmit = () => {
-        const proveedorCompleto = proveedores.find((proveedor) => proveedor.proveedorId.toString() === insumoProveedor.toString());
-        console.log(proveedorCompleto);
+        const proveedorCompleto = proveedores.find((proveedor) => proveedor.proveedorId.toString() === insumoProveedor.value.toString());
         const data = {
             ...control,
             insumoProveedor: proveedorCompleto,
         };
-        console.log(data);
 
         const check = checkError(data.insumoNombre, data.insumoFecha,
             data.insumoCantidad, data.insumoNroLote, data.insumoFechaVencimiento);
 
         const checkSelect = checkSelects(data.insumoProveedor, data.insumoTipo, data.insumoUnidad);
-
         if (check === false) {
             updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
-            if (checkSelect) {
+            if (checkSelect === false) {
                 updateErrorAlert(`Revise los datos seleccionados en el selector de Proveedor, Tipo y Unidad, no se permite dejar seleccionada la opción "Seleccionar"`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 3000);
             } else {
-                axios.put(`/modificar-control-de-insumos/${id}`, data, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-                    .then(response => {
-                        if (response.status === 200) {
-                            setShowAlertSuccess(true);
-                            setTimeout(() => {
-                                setShowAlertSuccess(false);
-                                navigate('/listar-control-de-insumos');
-                            }, 3000)
-                        } else {
-                            updateErrorAlert(`No se logro modificar el Insumo, revise los datos ingresados.`);
-                            setShowAlertError(true);
-                            setTimeout(() => {
-                                setShowAlertError(false);
-                            }, 5000);
+                if (data.insumoFechaVencimiento <= data.insumoFecha) {
+                    updateErrorAlert(`La fecha de vencimiento no puede ser menor o igual a la fecha de llegada del insumo`);
+                    setShowAlertError(true);
+                    setTimeout(() => {
+                        setShowAlertError(false);
+                    }, 2500);
+                } else {
+                    axios.put(`/modificar-control-de-insumos/${id}`, data, {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            "Content-Type": "application/json"
                         }
                     })
-                    .catch(error => {
-                        if (error.request.status === 401) {
-                            setShowAlertWarning(true);
-                            setTimeout(() => {
-                                setShowAlertWarning(false);
-                            }, 5000);
-                        }
-                        else if (error.request.status === 500) {
-                            updateErrorAlert(`No se logro modificar el Insumo, revise los datos ingresados.`);
-                            setShowAlertError(true);
-                            setTimeout(() => {
-                                setShowAlertError(false);
-                            }, 5000);
-                        }
-                    })
+                        .then(response => {
+                            if (response.status === 200) {
+                                setShowAlertSuccess(true);
+                                setTimeout(() => {
+                                    setShowAlertSuccess(false);
+                                    navigate('/listar-control-de-insumos');
+                                }, 2500)
+                            } else {
+                                updateErrorAlert(`No se logró modificar el Insumo, revise los datos ingresados.`);
+                                setShowAlertError(true);
+                                setTimeout(() => {
+                                    setShowAlertError(false);
+                                }, 2500);
+                            }
+                        })
+                        .catch(error => {
+                            if (error.request.status === 401) {
+                                setCheckToken(true);
+                            }
+                            else if (error.request.status === 500) {
+                                updateErrorAlert(`No se logró modificar el Insumo, revise los datos ingresados.`);
+                                setShowAlertError(true);
+                                setTimeout(() => {
+                                    setShowAlertError(false);
+                                }, 2500);
+                            }
+                        })
+                }
             }
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-control-de-insumos')
+    }
 
     return (
         <div>
@@ -416,14 +425,12 @@ const ModificarInsumo = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Insumo</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -433,39 +440,39 @@ const ModificarInsumo = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los insumos que recibe la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar un insumo, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 9 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre del insumo que se recibió.
+                                                                <span className={classes.liTitleBlue}>Nombre</span>: En este campo se debe ingresar el nombre del insumo que se recibió.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en la que se recibió el insumo.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se recibió el insumo.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Proveedor</span>: en este campo se tendrá que seleccionar el proveedor al cual se le compró el insumo/producto.
+                                                                <span className={classes.liTitleBlue}>Proveedor</span>: En este campo se debe seleccionar el proveedor al cual se le compró el insumo/producto.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Tipo</span>: en este campo se podrá seleccionar el tipo de insumo que se recibe, hay 2 tipos,
+                                                                <span className={classes.liTitle}>Tipo</span>: En este campo se debe seleccionar el tipo de insumo que se recibio, hay 2 tipos,
                                                                 Aditivo que se refiere a los aditivos utilizados para la producción de los chacinados y Otros que se refiere a los productos de envasado, cuerdas, etc.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Cantidad</span>: en este campo se registrará la cantidad que se recibió del insumo.
+                                                                <span className={classes.liTitleBlue}>Cantidad</span>: En este campo se debe ingresar la cantidad que se recibió del insumo.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Unidad</span>: en este campo se registrará la unidad correspondiente al insumo.
+                                                                <span className={classes.liTitleBlue}>Unidad</span>: En este campo se debe seleccionar la unidad correspondiente al insumo.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Lote</span>: en este campo se registrará el código de lote del insumo recibido.
+                                                                <span className={classes.liTitleBlue}>Lote</span>: En este campo se debe ingresar el código de lote del insumo recibido.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Motivo de rechazó</span>: en este campo se puede ingresar el motivo por el cual se rechazó el producto/insumo recibido.
+                                                                <span className={classes.liTitleRed}>Motivo de rechazó</span>: En este campo se puede ingresar el motivo por el cual se rechazó el producto/insumo recibido.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha Vencimiento</span>: en este campo se registrará la fecha de vencimiento del producto/insumo.
+                                                                <span className={classes.liTitleBlue}>Fecha Vencimiento</span>: En este campo se debe ingresar la fecha de vencimiento del producto/insumo.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -473,11 +480,19 @@ const ModificarInsumo = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifique los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
+                                                            <li>Si una carne eliminada tiene un cantidad mayor a 0, se volverá a añadir.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -510,7 +525,7 @@ const ModificarInsumo = () => {
                                             autoFocus
                                             required
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
@@ -528,12 +543,11 @@ const ModificarInsumo = () => {
                                             autoFocus
                                             required
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="insumoFecha"
                                             value={control.insumoFecha}
@@ -553,7 +567,9 @@ const ModificarInsumo = () => {
                                                     name: "insumoProveedor",
                                                     id: `outlined-insumoProveedor-native-simple`,
                                                 }}
-                                                onChange={(e) => setInsumoProveedor(e.target.value)}
+                                                onChange={(e) => setInsumoProveedor({
+                                                    value: e.target.value
+                                                })}
                                             >
                                                 <option>Seleccionar</option>
                                                 {proveedorSelect.map((option, ind) => (
@@ -594,12 +610,11 @@ const ModificarInsumo = () => {
                                             autoFocus
                                             required
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Cantidad"
-                                            defaultValue={0}
                                             type="number"
                                             name="insumoCantidad"
                                             value={control.insumoCantidad}
@@ -636,12 +651,11 @@ const ModificarInsumo = () => {
                                             autoFocus
                                             required
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Lote"
-                                            defaultValue="Lote"
                                             type="text"
                                             name="insumoNroLote"
                                             value={control.insumoNroLote}
@@ -655,12 +669,11 @@ const ModificarInsumo = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            InputLabelProps={{ className: classes.customLabelRed, shrink: true }}
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Motivo de rechazó"
-                                            defaultValue="Motivo de rechazó"
                                             type="text"
                                             name="insumoMotivoDeRechazo"
                                             value={
@@ -677,12 +690,11 @@ const ModificarInsumo = () => {
                                             autoFocus
                                             required
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha de Vencimiento"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="insumoFechaVencimiento"
                                             value={control.insumoFechaVencimiento}
@@ -695,7 +707,8 @@ const ModificarInsumo = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

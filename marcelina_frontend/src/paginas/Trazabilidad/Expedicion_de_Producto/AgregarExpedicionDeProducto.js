@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -74,16 +66,16 @@ const AgregarExpedicionDeProducto = () => {
     { name: 'expedicionDeProductoDocumento', label: 'Documento', type: 'number', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,10}$" },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
+  const [alertSuccess] = useState({
     title: 'Correcto', body: 'Expedición de producto agregada con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro agregar la expedición de producto, revise los datos ingresados.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró agregar la expedición de producto, revise los datos ingresados.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
@@ -96,6 +88,7 @@ const AgregarExpedicionDeProducto = () => {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -114,31 +107,24 @@ const AgregarExpedicionDeProducto = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
+      setCheckToken(false)
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const obtenerExpedicion = () => {
@@ -155,7 +141,15 @@ const AgregarExpedicionDeProducto = () => {
           );
         })
         .catch(error => {
-          console.error(error);
+          if (error.request.status === 401) {
+            setCheckToken(true);
+          } else {
+            updateErrorAlert('No se logró cargar las expediciones de producto, recargue la página.')
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 2000);
+          }
         });
     };
 
@@ -176,7 +170,15 @@ const AgregarExpedicionDeProducto = () => {
           );
         })
         .catch(error => {
-          console.error(error);
+          if (error.request.status === 401) {
+            setCheckToken(true);
+          } else {
+            updateErrorAlert('No se logró cargar los lotes, recargue la página.')
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 2000);
+          }
         });
     };
 
@@ -196,7 +198,15 @@ const AgregarExpedicionDeProducto = () => {
           );
         })
         .catch(error => {
-          console.error(error);
+          if (error.request.status === 401) {
+            setCheckToken(true);
+          } else {
+            updateErrorAlert('No se logró cargar los clientes, recargue la página.')
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 2000);
+          }
         });
     };
 
@@ -246,22 +256,22 @@ const AgregarExpedicionDeProducto = () => {
   }
 
   const checkMultiple = (lotes) => {
-    console.log(lotes);
+    let resp = true;
     if (lotes) {
-      const resul = lotes.forEach((lote) => {
-        console.log(lote);
-        if (lote.selectValue === '' || lote.textFieldValue === '' || lote.selectValue.value === "Seleccionar" || lote.textFieldValue === 0) {
-          return false;
+      lotes.forEach((lote) => {
+        if (lote.selectValue === '' || lote.textFieldValue === '' || lote.selectValue === "Seleccionar" || lote.textFieldValue === 0) {
+          resp = false;
         } else { }
+        if (resp === false) { return }
       })
-      console.log(resul);
-      return resul ? resul : true;
-    } else { return false }
+      return resp;
+    } else {
+      return false;
+    }
   }
 
   const checkDoc = (documento) => {
     let resp = true;
-    console.log(expediciones);
     expediciones.forEach((exp) => {
       if (exp.documento.toString() === documento.toString()) {
         resp = false;
@@ -274,52 +284,38 @@ const AgregarExpedicionDeProducto = () => {
 
   const handleFormSubmit = (formData) => {
     const { cantidad, ...formDataWithoutCantidad } = formData;
-    //console.log(expedicionDeProducto);
-    const cantidadValue = formData.cantidad;
-    //console.log(cantidad);
-    console.log(cantidadValue);
 
+    const cantidadValue = formData.cantidad;
     const checkMul = checkMultiple(cantidadValue);
-    console.log(checkMul);
 
     if (checkMul === false) {
       updateErrorAlert(`Revise los los lote seleccionados y las cantidades ingresadas, no se permite dejar campos vacíos y tampoco seleccionar la opción "Seleccionar".`);
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 2500);
     } else {
       const selectValues = cantidadValue.map(item => item.selectValue);
       const hasDuplicateList = hasDuplicate(selectValues);
-      console.log(hasDuplicateList);
 
       if (hasDuplicateList === false) {
         const lotesCompletos = lotes.filter(lote => selectValues.includes(lote.loteId.toString()));
         const productosCompletos = lotesCompletos.map(lote => lote.loteProducto);
 
-        console.log(lotesCompletos);
         const resultado = lotesCompletos.map(lote => {
           const cantidaValueEncontrada = cantidadValue.find(cv => cv.selectValue.toString() === lote.loteId.toString());
-          console.log(cantidaValueEncontrada);
           if (cantidaValueEncontrada) {
             const cantidad = parseInt(cantidaValueEncontrada.textFieldValue);
-            console.log(cantidad);
-            console.log(lote.loteCantidad);
             if (cantidad > lote.loteCantidad) {
-              console.log(lote);
               return `${lote.loteCodigo} - ${lote.loteCantidad} Kg - ${lote.loteProducto.productoNombre} /`;
             }
           }
           return null;
         })
 
-        console.log(resultado);
-
         const elementoUndefined = resultado.some(elemento => elemento === null);
-        console.log(elementoUndefined);
         if (elementoUndefined === true) {
           const clienteCompleto = clientes.filter((cliente) => cliente.clienteId.toString() === formDataWithoutCantidad.expedicionDeProductoCliente)[0];
-          //console.log(clienteCompleto);
 
           const listaDetalleCantidaLote = [];
           const lotesCompletosConCantidadRestada = [];
@@ -327,16 +323,12 @@ const AgregarExpedicionDeProducto = () => {
             const cantidadLote = cantidadValue[index].textFieldValue;
             const loteActualizado = { ...lote, loteCantidad: lote.loteCantidad - cantidadLote };
             lotesCompletosConCantidadRestada.push(loteActualizado);
-            console.log(loteActualizado);
             const detalleCantidadLote = {
               detalleCantidadLoteLote: loteActualizado,
               detalleCantidadLoteCantidadVendida: cantidadLote,
             };
             listaDetalleCantidaLote.push(detalleCantidadLote);
           });
-
-          console.log(lotesCompletos);
-          console.log(lotesCompletosConCantidadRestada);
 
           const uniqueProductos = {};
           const productosSinDuplicados = productosCompletos.filter((producto) => {
@@ -348,24 +340,22 @@ const AgregarExpedicionDeProducto = () => {
             return false;
           });
 
-          console.log(productosSinDuplicados);
+          const fecha = new Date(formDataWithoutCantidad.expedicionDeProductoFecha);
+          fecha.setDate(fecha.getDate() + 1);
 
           const updateFormData = {
             ...formDataWithoutCantidad,
             expedicionDeProductoCliente: clienteCompleto,
+            expedicionDeProductoFecha: fecha,
             expedicionDeProductoProductos: productosSinDuplicados,
             expedicionDeProductoLotes: lotesCompletosConCantidadRestada,
             expedicionDeProductoUsuario: window.localStorage.getItem('user'),
           }
-          console.log(updateFormData);
-          console.log(listaDetalleCantidaLote);
 
           const data = {
             expedicionDeProducto: updateFormData,
             listaCantidad: listaDetalleCantidaLote,
           }
-
-          console.log(data);
 
           const check = checkError(updateFormData.expedicionDeProductoFecha, updateFormData.expedicionDeProductoCliente, updateFormData.expedicionDeProductoDocumento);
 
@@ -374,7 +364,7 @@ const AgregarExpedicionDeProducto = () => {
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 7000);
+            }, 3000);
           } else {
             const checkD = checkDoc(updateFormData.expedicionDeProductoDocumento);
             if (checkD === false) {
@@ -382,7 +372,7 @@ const AgregarExpedicionDeProducto = () => {
               setShowAlertError(true);
               setTimeout(() => {
                 setShowAlertError(false);
-              }, 7000);
+              }, 2500);
             } else {
               axios.post('/agregar-expedicion-de-producto', data, {
                 headers: {
@@ -395,28 +385,25 @@ const AgregarExpedicionDeProducto = () => {
                     setShowAlertSuccess(true);
                     setTimeout(() => {
                       setShowAlertSuccess(false);
-                    }, 5000);
+                    }, 2500);
                   } else {
-                    updateErrorAlert('No se logro agregar la expedición de producto, revise los datos ingresados.')
+                    updateErrorAlert('No se logró agregar la expedición de producto, revise los datos ingresados.')
                     setShowAlertError(true);
                     setTimeout(() => {
                       setShowAlertError(false);
-                    }, 5000);
+                    }, 2500);
                   }
                 })
                 .catch(error => {
                   if (error.request.status === 401) {
-                    setShowAlertWarning(true);
-                    setTimeout(() => {
-                      setShowAlertWarning(false);
-                    }, 5000);
+                    setCheckToken(true);
                   }
                   else if (error.request.status === 500) {
-                    updateErrorAlert('No se logro agregar la expedición de producto, revise los datos ingresados.');
+                    updateErrorAlert('No se logró agregar la expedición de producto, revise los datos ingresados.');
                     setShowAlertError(true);
                     setTimeout(() => {
                       setShowAlertError(false);
-                    }, 5000);
+                    }, 2500);
                   }
                 })
             }
@@ -426,16 +413,20 @@ const AgregarExpedicionDeProducto = () => {
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 3000);
         }
       } else {
         updateErrorAlert(`No se pueden repetir los lotes.`);
         setShowAlertError(true);
         setTimeout(() => {
           setShowAlertError(false);
-        }, 5000);
+        }, 2500);
       }
     }
+  }
+
+  const redirect = () => {
+    navigate('/listar-expedicion-de-producto')
   }
 
   return (
@@ -448,14 +439,12 @@ const AgregarExpedicionDeProducto = () => {
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
               <Typography component='h1' variant='h4'>Agregar Expedición de Producto</Typography>
               <div>
-                <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton className={blinking ? classes.blinkingButton : ''}>
-                    <HelpOutlineIcon fontSize="large" color="primary" />
-                  </IconButton>
-                </Button>
+                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
                 <Dialog
                   fullScreen={fullScreen}
-                  fullWidth='md'
+                  fullWidth
                   maxWidth='md'
                   open={open}
                   onClose={handleClose}
@@ -472,19 +461,19 @@ const AgregarExpedicionDeProducto = () => {
                         Este formulario cuenta con 4 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se vende el lote/lotes.
+                            <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se vendio el lote/lotes.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Lote y Cantidad</span>: en este campo se divide en 2, en el primero llamado lote donde se selecciona el lote que se va a vender
-                            y el segundo es cantidad, en el cual se ingresa la cantidad que se le va a vender, a su vez,
+                            <span className={classes.liTitleBlue}>Lote y Cantidad</span>: Este campo se divide en 2, en el primero llamado lote donde se selecciona el lote que se vendió
+                            y el segundo es cantidad, en el cual se ingresa la cantidad que se vendió, a su vez
                             este campo cuenta con un icono de más a la derecha del campo de lote para añadir otros 2 campos también denominados lote y cantidad, en caso de que se quiera vender mas de un lote,
                             cuando añades más campos de lote y cantidad, del que ya está predeterminado, el icono de más cambia por una X por si deseas eliminar los nuevos campos generados.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Cliente</span>: en este campo se selecciona el cliente o la empresa a la que se le va a vender el/los lote/lotes.
+                            <span className={classes.liTitleBlue}>Cliente</span>: En este campo se debe seleccionar al cliente o a la empresa que se le va a vender el/los lote/lotes.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Documento</span>: en este campo se ingresa el documento de la venta.
+                            <span className={classes.liTitleBlue}>Documento</span>: En este campo se debe ingresar el documento de la venta.
                           </li>
                         </ul>
                       </span>
@@ -492,12 +481,21 @@ const AgregarExpedicionDeProducto = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                        <br />
+                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                        <br />
+                        - Una vez se registre la expedición de producto, no se le redirigirá al listar. Se determinó así por si está buscando registrar otra expedición de producto.
+                        <br />
+                        - Cuando la cantidad restante del lote llegue a 0 se eliminará lógicamente.
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -525,6 +523,7 @@ const AgregarExpedicionDeProducto = () => {
       <FormularioReutilizable
         fields={formFields}
         onSubmit={handleFormSubmit}
+        handleRedirect={redirect}
         selectOptions={{
           expedicionDeProductoLote: loteSelect,
           expedicionDeProductoCliente: clienteSelect,

@@ -4,19 +4,11 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,6 +52,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarControlDeReposicionDeCloro() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [responsable, setResponsable] = useState([]);
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
@@ -73,19 +68,20 @@ function ListarControlDeReposicionDeCloro() {
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+  const [checkToken, setCheckToken] = useState(false);
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el control de reposición de cloro con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el control de reposición de cloro con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
     title: 'Error', body: 'No se logró eliminar el control de reposición de cloro, recargue la pagina.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -98,31 +94,23 @@ function ListarControlDeReposicionDeCloro() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -138,16 +126,37 @@ function ListarControlDeReposicionDeCloro() {
           }
         });
 
-        const data = response.data.map((controlDeReposicionDeCloro) => ({
-          ...controlDeReposicionDeCloro,
-          Id: controlDeReposicionDeCloro.controlDeReposicionDeCloroId,
+        const dataL = response.data.map((control, index) => {
+          if (index < 30) {
+            return {
+              ...control,
+              Id: control.controlDeReposicionDeCloroId,
+            }
+          }
+        });
+        const dataLast30 = dataL.filter((data) => data !== undefined);
+        const data = response.data.map((control) => ({
+          ...control,
+          Id: control.controlDeReposicionDeCloroId,
         }));
         const ResponsableData = ResponsableResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data)
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
+        setButtonName('Listar Todos')
+        setDeleteItem(false)
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -155,7 +164,8 @@ function ListarControlDeReposicionDeCloro() {
   }, [deleteItem]);
 
   const tableHeadCells = [
-    { id: 'controlDeReposicionDeCloroFecha', numeric: false, disablePadding: true, label: 'Fecha' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'controlDeReposicionDeCloroFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'controlDeReposicionDeCloroCantidadDeAgua', numeric: false, disablePadding: false, label: 'Cantidad de Agua' },
     { id: 'controlDeReposicionDeCloroCantidadDeCloroAdicionado', numeric: false, disablePadding: false, label: 'Cloro Adicionado' },
     { id: 'controlDeReposicionDeCloroObservaciones', numeric: false, disablePadding: false, label: 'Observaciones' },
@@ -189,7 +199,7 @@ function ListarControlDeReposicionDeCloro() {
   const mapData = (item, key) => {
     if (key === 'controlDeReposicionDeCloroFecha') {
       if (item.controlDeReposicionDeCloroFecha) {
-        const fecha = new Date(item.controlDeReposicionDeCloroFecha); // Convertir fecha a objeto Date
+        const fecha = new Date(item.controlDeReposicionDeCloroFecha);
         return format(fecha, 'dd/MM/yyyy');
       } else {
         return '';
@@ -215,7 +225,7 @@ function ListarControlDeReposicionDeCloro() {
       (!filtros.cantidad || lowerCaseItem.controlDeReposicionDeCloroCantidadDeAgua.startsWith(filtros.cantidad)) &&
       (!filtros.adicionado || lowerCaseItem.controlDeReposicionDeCloroCantidadDeCloroAdicionado.startsWith(filtros.adicionado)) &&
       (!filtros.observaciones || lowerCaseItem.controlDeReposicionDeCloroObservaciones.includes(filtros.observaciones)) &&
-      (!filtros.responsable || lowerCaseItem.controlDeReposicionDeCloroResponsable.startsWith(filtros.responsable))
+      (!filtros.responsable || lowerCaseItem.controlDeReposicionDeCloroResponsable === filtros.responsable)
     ) {
       return true;
     }
@@ -241,32 +251,29 @@ function ListarControlDeReposicionDeCloro() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
           updateErrorAlert('No se logró eliminar el control de reposición de cloro, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
           updateErrorAlert('No se logró eliminar el control de reposición de cloro, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
   }
@@ -294,13 +301,27 @@ function ListarControlDeReposicionDeCloro() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/control-de-reposicion-de-cloro')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Control De Reposición De Cloro</Typography>
+          <Typography component='h1' variant='h5'>Listar de Control De Reposición De Cloro</Typography>
           <div className={classes.info}>
             <Button color="primary" onClick={handleClickOpen}>
               <IconButton className={blinking ? classes.blinkingButton : ''}>
@@ -319,7 +340,7 @@ function ListarControlDeReposicionDeCloro() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los controles de reposición de cloro que fueron registrados.
+                    En esta página se encarga de listar los controles de reposición de cloro que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -335,13 +356,13 @@ function ListarControlDeReposicionDeCloro() {
                         se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Cantidad de Agua</span>: En este campo se puede ingresar la cantidad de agua por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Cantidad de Agua</span>: En este campo se puede ingresar la cantidad de agua por el cual se quiere filtrar la lista y mostrar los registros que empiecen o sean iguales a ese número.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Cloro Adicionado</span>: En este campo se puede ingresar el cloro adicionado por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Cloro Adicionado</span>: En este campo se puede ingresar el cloro adicionado por el cual se quiere filtrar la lista y mostrar los registros que empiecen o sean iguales a ese número.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra y se listarán las observaciones que tienen esa palabra.
+                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra o frase y se listarán los registros que incluyan esa palabra o frase en observaciones.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se listará los registros asociados a ese responsable.
@@ -354,13 +375,16 @@ function ListarControlDeReposicionDeCloro() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró o se añadió el cloro al agua.
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Cantidad de Agua</span>: En esta columna se muestran la cantidad de agua a la que se le añadió cloro.
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha en el que se registró el control de reposición de cloro.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Cloro Adicionado</span>: En esta columna se muestran la cantidad de cloro que se añadió al agua.
+                        <span className={classes.liTitleRed}>Cantidad de Agua</span>: En esta columna se muestra la cantidad de agua a la que se le añadió cloro.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Cloro Adicionado</span>: En esta columna se muestra la cantidad de cloro que se le añadió al agua.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones o detalles que se encontraron cuando se añadio el cloro al agua.
@@ -369,10 +393,21 @@ function ListarControlDeReposicionDeCloro() {
                         <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el control de reposición de cloro.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -401,7 +436,10 @@ function ListarControlDeReposicionDeCloro() {
         data={filteredData}
         dataKey="listarControlDeReposicionDeCloro"
         tableHeadCells={tableHeadCells}
-        title="Control De Reposición De Cloro"
+        title="Lista de Controles de Reposición de Cloro"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditControl}

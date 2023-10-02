@@ -4,19 +4,11 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,6 +52,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
@@ -69,6 +64,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -76,17 +72,38 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el estado de las alarmas con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el estado de las alarmas con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
     title: 'Error', body: 'No se logró eliminar el estado de las alarmas, recargue la pagina.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/')
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+
+      const tokenExpiration = payload.exp * 1000;
+      const currentTime = Date.now();
+
+      if (tokenExpiration < currentTime) {
+        setShowAlertWarning(true);
+        setTimeout(() => {
+          setShowAlertWarning(false);
+          navigate('/')
+        }, 2000);
+      }
+    }
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,51 +119,42 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
           }
         });
 
+        const dataL = response.data.map((control, index) => {
+          if (index < 30) {
+            return {
+              ...control,
+              Id: control.controlDeAlarmaLuminicaYSonaraDeCloroId,
+            }
+          }
+        });
+        const dataLast30 = dataL.filter((dataL) => dataL !== undefined);
         const data = response.data.map((control) => ({
           ...control,
           Id: control.controlDeAlarmaLuminicaYSonaraDeCloroId,
-        }));
+        }))
         const ResponsableData = ResponsableResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
+        setButtonName('Listar Todos')
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
     fetchData();
     setDeleteItem(false);
   }, [deleteItem]);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
-    } else {
-      const tokenParts = token.split('.');
-      const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
-
-      const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
-      const currentTime = Date.now();
-      console.log(currentTime)
-
-      if (tokenExpiration < currentTime) {
-        setShowAlertWarning(true);
-        setTimeout(() => {
-          setShowAlertWarning(false);
-          navigate('/')
-        }, 3000);
-      }
-    }
-  }, []);
 
   const updateErrorAlert = (newBody) => {
     setAlertError((prevAlert) => ({
@@ -156,6 +164,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
   };
 
   const tableHeadCells = [
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
     { id: 'controlDeAlarmaLuminicaYSonoraDeCloroFechaHora', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica', numeric: false, disablePadding: false, label: 'Alarma Lumínca' },
     { id: 'controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora', numeric: false, disablePadding: false, label: 'Alarma Sonora' },
@@ -223,17 +232,13 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
       controlDeAlarmaLuminicaYSonoraDeCloroResponsable: item.controlDeAlarmaLuminicaYSonoraDeCloroResponsable ? item.controlDeAlarmaLuminicaYSonoraDeCloroResponsable.usuarioNombre.toLowerCase() : '',
     };
 
-    console.log(lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroResponsable);
-    console.log("bbb" + filtros.responsable);
-    console.log(lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora);
-    console.log("aaaaa " + filtros['fecha-desde']);
     if (
       (!filtros['fecha-desde'] || fechaFromat >= filtros['fecha-desde']) &&
       (!filtros['fecha-hasta'] || fechaFromat <= filtros['fecha-hasta']) &&
       (!filtros.luminica || (filtros.luminica === 'funciona' && item.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica) || (filtros.luminica === 'no funciona' && !item.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica)) &&
       (!filtros.sonora || (filtros.sonora === 'funciona' && item.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora) || (filtros.sonora === 'no funciona' && !item.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora)) &&
       (!filtros.observaciones || lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroObservaciones.includes(filtros.observaciones)) &&
-      (!filtros.responsable || lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroResponsable.startsWith(filtros.responsable))
+      (!filtros.responsable || lowerCaseItem.controlDeAlarmaLuminicaYSonoraDeCloroResponsable === filtros.responsable)
     ) {
       return true;
     }
@@ -259,32 +264,29 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
           updateErrorAlert('No se logró eliminar el estado de las alarmas, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 3000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
           updateErrorAlert('No se logró eliminar el estado de las alarmas, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 3000);
         }
       })
   }
@@ -312,22 +314,34 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/control-de-alarma-luminica-y-sonora-de-cloro')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Control de Alarma Lumínica y Sonora De Cloro</Typography>
+          <Typography component='h1' variant='h5'>Listar de Control de Alarma Lumínica y Sonora De Cloro</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -337,7 +351,7 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los contoles de alarma lumínica y sonora de cloro que fueron registrados.
+                    Esta página se encarga de listar los contoles de alarma lumínica y sonora de cloro que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -348,21 +362,21 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
                     <ul>
                       <li>
                         <span className={classes.liTitleBlue}>Desde Fecha y Hasta Fecha</span>: Estos campos son utilizados para filtrar los registros entre un rango de fechas,
-                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros, se mostraran en la lista, mientras que las demás no.
-                        También es posible dejar uno de los 2 campos vacío y rellenar el otro, por ejemplo si ingresas una fecha en el campo de Desde Fecha y el Hasta Fecha se deja vacío,
+                        todas las fechas de los registros que estén comprendidas entre las 2 fechas ingresadas en los filtros, se mostrarán en la lista, mientras que las demás no.
+                        También es posible dejar uno de los 2 campos vacío y rellenar el otro, por ejemplo si ingresas una fecha en el campo de Desde Fecha y el campo Hasta Fecha se deja vacío,
                         se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Alarma Lumínica</span>: En este campo se puede seleccionar el estado de la alarma por el cual quiere listar. Hay 2 tipos: "Funcionando" y "No Funcionando".
+                        <span className={classes.liTitleBlue}>Alarma Lumínica</span>: En este campo se puede seleccionar el estado de la alarma lumínica por el cual se quiere filtrar la lista. Hay 2 tipos: "Funcionando" y "No Funcionando".
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Alarma Sonora</span>: Como en el campo de Alarma Lumínica, en Alarma Sonora se puede seleccionar el estado de la alarma por el cual quiere listar. Hay 2 tipos: "Funcionando" y "No Funcionando".
+                        <span className={classes.liTitleBlue}>Alarma Sonora</span>: En este campo se puede seleccionar el estado de la alarma sonora por el cual se quiere filtrar la lista. Hay 2 tipos: "Funcionando" y "No Funcionando".
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra y se listarán las observaciones que tienen esa palabra.
+                        <span className={classes.liTitleBlue}>Observaciones</span>: En este campo se puede ingresar una palabra o frase y se listarán los registros que incluyan esa palabra o frase en observaciones.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se listará los registros asociados a ese responsable.
+                        <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se listarán los registros asociados a ese responsable.
                       </li>
                     </ul>
                   </span>
@@ -372,7 +386,10 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró el estado de las alarmas.
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha en la que se registró el estado de las alarmas.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Alarma Lumínca</span>: En esta columna se muestra el estado de la alarma lumínica.
@@ -381,16 +398,29 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
                         <span className={classes.liTitleRed}>Alarma Sonora</span>: En esta columna se muestra el estado de la alarma sonora.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestra las observaciones que se encontraron cuando se registró el estado de las alarmas.
+                        <span className={classes.liTitleRed}>Observaciones</span>: En esta columna se muestran las observaciones que se encontraron cuando se registró el estado de las alarmas.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el estado de las alarmas.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span style={{ fontWeight: 'bold' }}>
+                    Aclaraciones y Recomendaciones:
+                  </span>
+                  <span>
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -419,7 +449,11 @@ function ListarControlDeAlarmaLuminicaYSonoraDeCloro() {
         data={filteredData}
         dataKey="controlDeAlarmaLuminicaYSonoraDeCloro"
         tableHeadCells={tableHeadCells}
-        title="Listar Control De Alarma Lumínica Y Sonora De Cloro"
+        title="Lista de Controles de Alarma Lumínica y Sonora de Cloro"
+        titleButton="Control de Alarmas"
+        titleListButton={buttonName}
+        listButton={listRefresh}
+        linkButton={redirect}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditControl}

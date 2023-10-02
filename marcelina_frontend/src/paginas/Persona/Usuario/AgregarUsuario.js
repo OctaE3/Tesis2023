@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -65,20 +57,20 @@ const AgregarUsuario = () => {
     const text = "Este campo es Obligatorio";
 
     const formFields = [
-        { name: 'usuarioNombre', label: 'Nombre', type: 'text', obligatorio: true, pattern: "^[A-Za-z\\s]{0,50}$", color: 'primary' },
-        { name: 'usuarioContrasenia', label: 'Contraseña', type: 'text', obligatorio: true, pattern: "^[A-Za-z\\s]{0,150}$", color: 'primary' },
+        { name: 'usuarioNombre', label: 'Nombre', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9]{0,50}$", color: 'primary' },
+        { name: 'usuarioContrasenia', label: 'Contraseña', type: 'text', obligatorio: true, pattern: "^[a-zA-Z0-9@.\_-]{0,150}$", color: 'primary' },
     ];
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Usuario registrado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro registrar el Usuario, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró registrar el Usuario, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const classes = useStyles();
@@ -87,6 +79,7 @@ const AgregarUsuario = () => {
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -105,31 +98,24 @@ const AgregarUsuario = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
+            setCheckToken(false)
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerUsuarios = () => {
@@ -139,10 +125,28 @@ const AgregarUsuario = () => {
                 }
             })
                 .then(response => {
-                    setUsuarios(response.data);
+                    const users = response.data;
+                    const nomUser = window.localStorage.getItem('user');
+                    const usuarioMaestro = users.find((user) => user.usuarioNombre.toString() === nomUser.toString());
+                    if (usuarioMaestro) {
+                        if (usuarioMaestro.usuarioId !== 1) {
+                            navigate('/listar-usuarios');
+                        }
+                    } else {
+                        navigate('/listar-usuarios');
+                    }
+                    setUsuarios(users);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los usuarios, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -199,7 +203,6 @@ const AgregarUsuario = () => {
 
     const handleFormSubmit = (formData) => {
         const data = formData;
-        console.log(data);
         const check = checkErrorUsuario(data.usuarioNombre, data.usuarioContrasenia);
         const checkUser = checkUsuario(data);
 
@@ -208,14 +211,14 @@ const AgregarUsuario = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             if (checkUser === false) {
                 updateErrorAlert(`El Usuario ingresado ya existe, no se puede repetir un nombre de usuario ya ingresado.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 2500);
             } else {
                 axios.post('/agregar-usuario', data, {
                     headers: {
@@ -228,32 +231,33 @@ const AgregarUsuario = () => {
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
-                            }, 5000);
+                            }, 2500);
                         } else {
-                            updateErrorAlert('No se logro registrar, revise los datos ingresados.');
+                            updateErrorAlert('No se logró registrar, revise los datos ingresados.');
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
                     .catch(error => {
                         if (error.request.status === 401) {
-                            setShowAlertWarning(true);
-                            setTimeout(() => {
-                                setShowAlertWarning(false);
-                            }, 5000);
+                            setCheckToken(true);
                         }
                         else if (error.request.status === 500) {
-                            updateErrorAlert('No se logro registrar, revise los datos ingresados.');
+                            updateErrorAlert('No se logró registrar, revise los datos ingresados.');
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
             }
         }
+    }
+
+    const redirect = () => {
+        navigate('/listar-usuarios')
     }
 
     return (
@@ -266,14 +270,11 @@ const AgregarUsuario = () => {
                         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
                             <Typography component='h1' variant='h4'>Agregar Usuario</Typography>
                             <div>
-                                <Button color="primary" onClick={handleClickOpen}>
-                                    <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                        <HelpOutlineIcon fontSize="large" color="primary" />
-                                    </IconButton>
-                                </Button>
+                                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                    <HelpOutlineIcon fontSize="large" color="primary" />
+                                </IconButton>
                                 <Dialog
                                     fullScreen={fullScreen}
-                                    fullWidth='md'
                                     maxWidth='md'
                                     open={open}
                                     onClose={handleClose}
@@ -290,10 +291,12 @@ const AgregarUsuario = () => {
                                                 Este formulario cuenta con 2 campos:
                                                 <ul>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre de usuario y no se permite ingresar una que ya esta registrado.
+                                                        <span className={classes.liTitleBlue}>Nombre</span>: En este campo se debe ingresar el nombre del usuario y no se permite ingresar un nombre que ya esté registrado,
+                                                        este campo acepta letras y números, a su vez cuenta con una longitud máxima de 50 caracteres.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Contraseña</span>: en este campo se debe ingresar la contraseña del usuario.
+                                                        <span className={classes.liTitleBlue}>Contraseña</span>: En este campo se debe ingresar una contraseña para el usuario,
+                                                        este campo acepta letras, números, arroba, guion, guion bajo y punto, a su vez cuenta con una longitud máxima de 150 caracteres.
                                                     </li>
                                                 </ul>
                                             </span>
@@ -301,12 +304,21 @@ const AgregarUsuario = () => {
                                                 Campos obligatorios y no obligatorios:
                                                 <ul>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                        <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                        <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                     </li>
                                                 </ul>
+                                            </span>
+                                            <span>
+                                                Aclaraciones:
+                                                <br />
+                                                - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                                                <br />
+                                                - Una vez registre el usuario, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro usuario.
+                                                <br />
+                                                - Se recomienda usar los caracteres permitidos como punto, coma, arroba, guiones, para que la contraseña sea mas robusta.
                                             </span>
                                         </DialogContentText>
                                     </DialogContent>
@@ -331,7 +343,7 @@ const AgregarUsuario = () => {
                     </Grid>
                 </Box>
             </Container>
-            <FormularioReutilizable fields={formFields} onSubmit={handleFormSubmit} />
+            <FormularioReutilizable fields={formFields} onSubmit={handleFormSubmit} handleRedirect={redirect} />
         </Grid>
     )
 }

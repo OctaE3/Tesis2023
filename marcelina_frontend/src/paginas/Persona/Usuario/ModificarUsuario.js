@@ -1,21 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -37,6 +28,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -89,11 +83,13 @@ const ModificarUsuario = () => {
     const classes = useStyles();
     const { id } = useParams();
     const [usuario, setUsuario] = useState({});
+    const [pass, setPass] = useState('');
     const [usuarios, setUsuarios] = useState([]);
 
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -103,16 +99,16 @@ const ModificarUsuario = () => {
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Usuario modificada con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el usuario, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el usuario, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -133,31 +129,23 @@ const ModificarUsuario = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerUsuarios = () => {
@@ -169,14 +157,38 @@ const ModificarUsuario = () => {
                 .then(response => {
                     const usuariosData = response.data;
                     const usuarioEncontrada = usuariosData.find((user) => user.usuarioId.toString() === id.toString());
+                    const nomUser = window.localStorage.getItem('user');
+                    const usuarioMaestro = usuariosData.find((user) => user.usuarioNombre.toString() === nomUser.toString());
+                    if (usuarioMaestro) {
+                        if (usuarioMaestro.usuarioId !== 1) {
+                            navigate('/listar-usuarios');
+                        }
+                    } else {
+                        navigate('/listar-usuarios');
+                    }
                     if (!usuarioEncontrada) {
                         navigate('/listar-usuarios');
                     }
-                    setUsuarios(usuariosData);
-                    setUsuario(usuarioEncontrada);
+                    const users = usuariosData.filter(user => user.usuarioId.toString() !== id.toString())
+                    setPass(usuarioEncontrada.usuarioContrasenia);
+                    setUsuarios(users);
+                    setUsuario(({
+                        usuarioId: usuarioEncontrada.usuarioId,
+                        usuarioNombre: usuarioEncontrada.usuarioNombre,
+                        usuarioContrasenia: '',
+                    }));
                 })
                 .catch(error => {
-                    console.error(error);
+                    console.error(error)
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -201,7 +213,7 @@ const ModificarUsuario = () => {
     const handleChange = event => {
         const { name, value } = event.target;
         if (name === 'usuarioNombre') {
-            const regex = new RegExp("^[A-Za-z\\s]{0,50}$");
+            const regex = new RegExp("^[A-Za-z0-9]{0,50}$");
             if (regex.test(value)) {
                 setUsuario(prevState => ({
                     ...prevState,
@@ -209,7 +221,7 @@ const ModificarUsuario = () => {
                 }));
             }
         } else {
-            const regex = new RegExp("^[A-Za-z\\s]{0,150}$");
+            const regex = new RegExp("^[a-zA-Z0-9@.\_-]{0,150}$");
             if (regex.test(value)) {
                 setUsuario(prevState => ({
                     ...prevState,
@@ -223,7 +235,7 @@ const ModificarUsuario = () => {
         if (nombre === undefined || nombre === null || nombre === '') {
             return false;
         }
-        else if (pass === undefined || pass === null || pass === '') {
+        else if (pass === undefined || pass === null) {
             return false;
         }
         return true;
@@ -235,9 +247,6 @@ const ModificarUsuario = () => {
             if (user.usuarioNombre.toString() === data.usuarioNombre.toString()) {
                 resp = false;
             }
-            else if (user.usuarioNombre.toString() === data.usuarioNombre.toString() && user.usuarioContrasenia.toString() === data.usuarioContrasenia.toString()) {
-                resp = false;
-            }
 
             if (resp === false) { return }
         })
@@ -245,26 +254,32 @@ const ModificarUsuario = () => {
     }
 
     const handleFormSubmit = () => {
-        const data = usuario;
-        console.log(data);
+        let data = usuario;
         const checkErrorUser = checkErrorUsuario(data.usuarioNombre, data.usuarioContrasenia);
         const checkUser = checkUsuario(data);
+
+        if (data.usuarioContrasenia === '') {
+            data = {
+                ...usuario,
+                usuarioContrasenia: pass,
+            }
+        }
 
         if (checkErrorUser === false) {
             updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             if (checkUser === false) {
                 updateErrorAlert(`El Usuario ingresado ya existe, no se puede repetir un nombre de usuario ya ingresado.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 3000);
             } else {
-                axios.post(`/modificar-localidad/${data.localidadId}`, data, {
+                axios.put(`/modificar-usuario/${data.usuarioId}`, data, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
                         "Content-Type": "application/json"
@@ -276,33 +291,35 @@ const ModificarUsuario = () => {
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
                                 navigate('/listar-usuarios');
-                            }, 3000)
+                            }, 2500)
                         } else {
-                            updateErrorAlert('No se logro modificar la localidad, revise los datos ingresados.');
+                            updateErrorAlert('No se logró modificar el usuario, revise los datos ingresados.');
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
                     .catch(error => {
+                        console.error(error)
                         if (error.request.status === 401) {
-                            setShowAlertWarning(true);
-                            setTimeout(() => {
-                                setShowAlertWarning(false);
-                            }, 5000);
+                            setCheckToken(true);
                         }
                         else if (error.request.status === 500) {
-                            updateErrorAlert('No se logro modificar la localidad, revise los datos ingresados.');
+                            updateErrorAlert('No se logró modificar la usuario, revise los datos ingresados.');
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
             }
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-usuarios')
+    }
 
     return (
         <div>
@@ -316,14 +333,12 @@ const ModificarUsuario = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Usuario</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -333,29 +348,34 @@ const ModificarUsuario = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los usuarios, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar un usuario, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        <br />
+                                                        <br />
+                                                        Funcionamiento:
+                                                        <br />
+                                                        Si solo quieres modificar el nombre de usuario, solo tienes que cambiarlo y presionar el botón de modificar,
+                                                        si buscar cambiar la contraseña, escribe la nueva contraseña en el campo correspondiente y presiona el botón de modificar y
+                                                        en caso de querer modificar ambos, ingresas el nuevo nombre de usuario y contraseña y presionas el botón de modificar.
                                                     </span>
                                                     <br />
-                                                    <span>
-                                                        Este formulario cuenta con 2 campos:
-                                                        <ul>
-                                                            <li>
-                                                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre de usuario y no se permite ingresar una que ya esta registrado.
-                                                            </li>
-                                                            <li>
-                                                                <span className={classes.liTitleBlue}>Contraseña</span>: en este campo se debe ingresar la contraseña del usuario.
-                                                            </li>
-                                                        </ul>
-                                                    </span>
+                                                    <br />
                                                     <span>
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones:
+                                                        <ul>
+                                                            <li>En caso de ingresar una nueva contraseña, se recomienda usar los distinos caracteres permitidos para crear una contraseña robusta.</li>
+                                                            <li>No se permite ingresar un usuario que ya este registrado.</li>
+                                                            <li>En caso de no querer cambiar la contraseña, deje el campo vacío como viene por defecto.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -424,7 +444,8 @@ const ModificarUsuario = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

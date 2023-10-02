@@ -36,7 +36,7 @@ public class ProvedorDelAuntenticadorDeUsuario {
 
     public String createToken(String usuarioNombre) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + 3600000); 
+        Date validity = new Date(now.getTime() + 28800000); 
 
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         return JWT.create()

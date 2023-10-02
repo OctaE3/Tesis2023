@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
+import axios from 'axios'
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -64,7 +56,7 @@ const useStyles = makeStyles(theme => ({
 const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
 
     const formFieldsModal = [
-        { name: 'carneNombre', label: 'Nombre', type: 'text', color: 'primary', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,50}$" },
+        { name: 'carneNombre', label: 'Nombre', type: 'text', color: 'primary', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$" },
         { name: 'carneTipo', label: 'Tipo *', type: 'select', color: 'primary' },
         { name: 'carneCorte', label: 'Corte *', type: 'select', color: 'primary' },
         { name: 'carneCategoria', label: 'Categoria *', type: 'select', color: 'primary' },
@@ -77,31 +69,32 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
         { name: 'recepcionDeMateriasPrimasCarnicasProductos', label: 'Productos *', type: 'selectorMultiple', alta: 'si', altaCampos: formFieldsModal, color: 'primary' },
         { name: 'recepcionDeMateriasPrimasCarnicasPaseSanitario', label: 'Pase Sanitario', type: 'text', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,15}$" },
         { name: 'recepcionDeMateriasPrimasCarnicasTemperatura', label: 'Temperatura', type: 'text', adornment: 'si', unit: '°C', color: 'primary', obligatorio: true, pattern: "^-?[0-9]{0,10}$" },
-        { name: 'recepcionDeMateriasPrimasCarnicasMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3', color: 'secondary', pattern: "^[A-Za-z0-9\\s,.]{0,250}$" },
+        { name: 'recepcionDeMateriasPrimasCarnicasMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', multi: '3', color: 'secondary', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$" },
     ];
 
-    const [alertSuccess, setAlertSuccess] = useState({
-        title: 'Correcto', body: 'Recepcion de materia primas carnicas agregada con éxito!', severity: 'success', type: 'description'
+    const [alertSuccess] = useState({
+        title: 'Correcto', body: 'Recepción de materia primas cárnicas agregada con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro agregar la recepcion de materia primas carnicas, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró agregar la recepción de materia primas cárnicas, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const [proveedores, setProveedores] = useState([]);
     const [proveedoresSelect, setProveedoresSelect] = useState('');
-    const [carneTipoSelect, setCarneTipoSelect] = useState([
+    const [checkToken, setCheckToken] = useState(false);
+    const [carneTipoSelect] = useState([
         { value: 'Porcino', label: 'Porcino' },
         { value: 'Bovino', label: 'Bovino' },
         { value: 'Sangre', label: 'Sangre' },
         { value: 'Tripas', label: 'Tripas' },
         { value: 'Higado', label: 'Higado' },
     ]);
-    const [carneCortePorcino, setCarneCortePorcino] = useState([
+    const [carneCortePorcino] = useState([
         { value: 'Carcasa', label: 'Carcasa' },
         { value: 'Media res', label: 'Media res' },
         { value: 'Cortes c/h', label: 'Cortes c/h' },
@@ -109,7 +102,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
         { value: 'Menudencias', label: 'Menudencias' },
         { value: 'Subproductos', label: 'Subproductos' },
     ]);
-    const [carneCorteBovino, setCarneCorteBovino] = useState([
+    const [carneCorteBovino] = useState([
         { value: 'Media res', label: 'Media res' },
         { value: 'Delantero', label: 'Delantero' },
         { value: 'Trasero', label: 'Trasero' },
@@ -118,16 +111,16 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
         { value: 'Menudencias', label: 'Menudencias' },
         { value: 'Subproductos', label: 'Subproductos' },
     ]);
-    const [carneCorteSangre, setCarneCorteSangre] = useState([
+    const [carneCorteSangre] = useState([
         { value: 'Sangre', label: 'Sangre' },
     ]);
-    const [carneCorteTripas, setCarneCorteTripas] = useState([
+    const [carneCorteTripas] = useState([
         { value: 'Tripas', label: 'Tripas' },
     ]);
-    const [carneCorteHigado, setCarneCorteHigado] = useState([
+    const [carneCorteHigado] = useState([
         { value: 'Higado', label: 'Higado' },
     ]);
-    const [carneCategoria, setCarneCategoria] = useState([
+    const [carneCategoria] = useState([
         { value: 'CarneSH', label: 'Carne S/H' },
         { value: 'CarneCH', label: 'Carne C/H' },
         { value: 'Grasa', label: 'Grasa' },
@@ -157,31 +150,24 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
+            setCheckToken(false)
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerProveedores = () => {
@@ -200,7 +186,15 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los proveedores, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -273,10 +267,9 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
     }
 
     const handleFormSubmit = (formData) => {
-        console.log(formData);
         const { carnesAgregadas, ...formDataWithoutCarnesAgregadas } = formData;
 
-        const listaCarne = formData.carnesAgregadas;
+        const listaCarne = formData.carnesAgregadas ? formData.carnesAgregadas : [];
 
         const carnes = listaCarne.map(carne => ({
             ...carne,
@@ -287,8 +280,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                             carne.carneCategoria,
             carnePaseSanitario: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasPaseSanitario,
             carneFecha: formDataWithoutCarnesAgregadas.recepcionDeMateriasPrimasCarnicasFecha,
-        }));
-
+        }));;
         const checkMul = checkMultiple(carnes);
 
         if (checkMul === false) {
@@ -296,10 +288,8 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 4000);
         } else {
-            console.log(carnes);
-
             const proveedorSeleccionadaObj = proveedores.filter((proveedor) => proveedor.proveedorId.toString() === formData.recepcionDeMateriasPrimasCarnicasProveedor)[0];
 
             const materiasPrimasConProveedor = {
@@ -321,7 +311,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 5000);
+                }, 4000);
             }
             else {
                 axios.post('/agregar-recepcion-de-materias-primas-carnicas', data, {
@@ -334,32 +324,33 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
-                            }, 5000);
+                            }, 2500);
                         } else {
-                            updateErrorAlert('No se logro registrar la recepcion de materia primas carnicas, revise los datos ingresados.')
+                            updateErrorAlert('No se logró registrar la recepción de materia primas cárnicas, revise los datos ingresados.')
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
                     .catch(error => {
                         if (error.request.status === 401) {
-                            setShowAlertWarning(true);
-                            setTimeout(() => {
-                                setShowAlertWarning(false);
-                            }, 5000);
+                            setCheckToken(true);
                         }
                         else if (error.request.status === 500) {
-                            updateErrorAlert('No se logro registrar la recepcion de materia primas carnicas, revise los datos ingresados.');
+                            updateErrorAlert('No se logró registrar la recepción de materia primas cárnicas, revise los datos ingresados.');
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
             }
         }
+    }
+
+    const redirect = () => {
+        navigate('/listar-recepcion-de-materias-primas-carnicas')
     }
 
     return (
@@ -372,16 +363,14 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2} ></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-                                    <Typography component='h1' variant='h4'>Control de Recepcion de Materias Primas Carnicas</Typography>
+                                    <Typography component='h1' variant='h4'>Control de Recepción de Materias Primas Cárnicas</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -391,39 +380,44 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los productos carnicos que recibe large chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes registrar los productos cárnicos que recibidos, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 6 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se recibio la carne.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se recibio la carne.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Proveedor</span>: en este campo se debe seleccionar el proveedor al que se le compro la carne.
+                                                                <span className={classes.liTitleBlue}>Proveedor</span>: En este campo se debe seleccionar el proveedor al que se le compró la carne.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Productos</span>: en este campo se ingresan los productos cárnicos que reciben, los productos se ingresan a través de un formulario,
+                                                                <span className={classes.liTitleBlue}>Productos</span>: En este campo se ingresan los productos cárnicos que se recibieron los productos se ingresan a través de un formulario,
                                                                 para abrir el formulario hay que darle click al icono de más a la derecha del campo.
                                                                 El formulario de carne cuenta con 5 campos:
                                                                 <ul>
-                                                                    <li><span className={classes.liTitleBlue}>Nombre</span>: en este campo se ingresa el nombre de la carne o producto cárnico que se recibio</li>
-                                                                    <li><span className={classes.liTitleBlue}>Tipo</span>: en este campo se selecciona el tipo de producto que se recibio, hay 5 tipos Bovino, Porcino, Higado, Tripa y Sangre</li>
-                                                                    <li><span className={classes.liTitleBlue}>Corte</span>: en este campo se selecciona el grupo en el que entra el producto recibido</li>
-                                                                    <li><span className={classes.liTitleBlue}>Categoria</span>: este campo solo esta disponible para los productos Bovinos y Porcinos,
+                                                                    <li><span className={classes.liTitleBlue}>Nombre</span>: En este campo se debe ingresar el nombre de la carne o producto cárnico que se recibió, 
+                                                                    este campo acepta palabras minúsculas, mayúsculas y también números, cuenta con una longitud máxima de 50 caracteres.</li>
+                                                                    <li><span className={classes.liTitleBlue}>Tipo</span>: En este campo se debe seleccionar el tipo de producto que se recibió, hay 5 tipos Bovino, Porcino, Higado, Tripa y Sangre</li>
+                                                                    <li><span className={classes.liTitleBlue}>Corte</span>: En este campo se debe seleccionar el grupo en el que entra el producto recibido</li>
+                                                                    <li><span className={classes.liTitleBlue}>Categoria</span>: Este campo solo esta disponible para los productos Bovinos y Porcinos,
                                                                         y lo que se busca en este campo es especificar si la carne recibida es con hueso o sin hueso</li>
-                                                                    <li><span className={classes.liTitleBlue}>Cantidad</span>: en este campo se ingresa la cantidad recibida del producto</li>
+                                                                    <li><span className={classes.liTitleBlue}>Cantidad</span>: En este campo se debe ingresar la cantidad recibida del producto, 
+                                                                    este campo solo acepta números y cuenta con una longitud máxima de 10 caracteres.</li>
                                                                 </ul>
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Pase Sanitario</span>: en este campo se ingresa el número del pase sanitario.
+                                                                <span className={classes.liTitleBlue}>Pase Sanitario</span>: En este campo se debe ingresar el número del pase sanitario,
+                                                                este campo solo acepta números y cuenta con una longitud máxima de 15 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Temperatura</span>: en este campo se ingresa la temperatura en la que se recibio la carne.
+                                                                <span className={classes.liTitleBlue}>Temperatura</span>: En este campo se debe ingresar la temperatura en la que se recibió la carne, 
+                                                                este campo acepta números y cuenta con una longitud máxima de 10 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: en este campo se puede dar los motivos o los detalles de por que se rechazó el producto cárnico recibido.
+                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: En este campo se deben ingresar los motivos o los detalles de por que se rechazó el producto cárnico recibido, 
+                                                                este campo acepta palabras minúsculas, mayúsculas y también números, cuenta con una longitud máxima de 250 caracteres.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -431,12 +425,23 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
                                                         </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones:
+                                                        <br />
+                                                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                                                        <br />
+                                                        - Una vez registre la recepción de materias primas cárnicos, no se le redirigirá al listar. Se determinó así por si está buscando registrar otra recepción de materias primas cárnicos.
+                                                        <br />
+                                                        - Las Carnes agregadas se registrarán automaticamente y se les asignará el pase sanitario que las identifica.
+                                                        <br />
+                                                        - Se recomienda agregar las carnes con todos los datos completos, en caso de no ser así tendrá que eliminarla e ingresarla nuevamente.
                                                     </span>
                                                 </DialogContentText>
                                             </DialogContent>
@@ -464,6 +469,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                     <FormularioReutilizable
                         fields={formFields}
                         onSubmit={handleFormSubmit}
+                        handleRedirect={redirect}
                         selectOptions={{
                             recepcionDeMateriasPrimasCarnicasProveedor: proveedoresSelect,
                             carneTipo: carneTipoSelect,

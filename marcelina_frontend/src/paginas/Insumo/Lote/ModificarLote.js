@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
@@ -21,8 +21,6 @@ const useStyles = makeStyles(theme => ({
     },
     select: {
         width: '100%',
-        marginBottom: theme.spacing(0.5),
-        marginTop: theme.spacing(0.5),
         '& .MuiOutlinedInput-notchedOutline': {
             borderColor: 'blue',
         },
@@ -83,51 +81,15 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-const ModificarCarne = () => {
+const ModificarLote = () => {
 
     const classes = useStyles();
     const { id } = useParams();
-    const [control, setControl] = useState({});
-    const [carneDesactivado, setCarneDesactivado] = useState(false);
-    const [opciones, setOpciones] = useState([]);
-    const carneTipoSelect = [
-        { value: 'Porcino', label: 'Porcino' },
-        { value: 'Bovino', label: 'Bovino' },
-        { value: 'Sangre', label: 'Sangre' },
-        { value: 'Tripas', label: 'Tripas' },
-        { value: 'Higado', label: 'Higado' },
-    ];
-    const carneCortePorcino = [
-        { value: 'Carcasa', label: 'Carcasa' },
-        { value: 'Media res', label: 'Media res' },
-        { value: 'Cortes c/h', label: 'Cortes c/h' },
-        { value: 'Cortes s/h', label: 'Cortes s/h' },
-        { value: 'Menudencias', label: 'Menudencias' },
-        { value: 'Subproductos', label: 'Subproductos' },
-    ];
-    const carneCorteBovino = [
-        { value: 'Media res', label: 'Media res' },
-        { value: 'Delantero', label: 'Delantero' },
-        { value: 'Trasero', label: 'Trasero' },
-        { value: 'Cortes c/h', label: 'Cortes c/h' },
-        { value: 'Cortes s/h', label: 'Cortes s/h' },
-        { value: 'Menudencias', label: 'Menudencias' },
-        { value: 'Subproductos', label: 'Subproductos' },
-    ];
-    const carneCorteSangre = [
-        { value: 'Sangre', label: 'Sangre' },
-    ];
-    const carneCorteTripas = [
-        { value: 'Tripas', label: 'Tripas' },
-    ];
-    const carneCorteHigado = [
-        { value: 'Higado', label: 'Higado' },
-    ];
-    const carneCategoria = [
-        { value: 'CarneSH', label: 'Carne S/H' },
-        { value: 'CarneCH', label: 'Carne C/H' },
-        { value: 'Grasa', label: 'Grasa' },
-    ];
+    const [lote, setLote] = useState({});
+    const [loteProducto, setLoteProducto] = useState({});
+    const [productos, setProductos] = useState([]);
+    const [productosSelect, setProductosSelect] = useState([]);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
@@ -136,18 +98,17 @@ const ModificarCarne = () => {
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
-    const [checkToken, setCheckToken] = useState(false);
 
     const [blinking, setBlinking] = useState(true);
 
     const navigate = useNavigate();
 
     const [alertSuccess] = useState({
-        title: 'Correcto', body: 'Carne modificada con éxito!', severity: 'success', type: 'description'
+        title: 'Correcto', body: 'Lote modificado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logró modificar la carne, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el lote, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
     const [alertWarning] = useState({
@@ -191,31 +152,23 @@ const ModificarCarne = () => {
     }, [checkToken]);
 
     useEffect(() => {
-        const obtenerControles = () => {
-            axios.get('/listar-carnes', {
+        const obtenerLotes = () => {
+            axios.get('/listar-lotes', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             })
                 .then(response => {
-                    const controlesData = response.data;
-                    const controlEncontrado = controlesData.find((control) => control.carneId.toString() === id.toString());
-                    if (!controlEncontrado) {
-                        navigate('/listar-carne')
+                    const lotesData = response.data;
+                    const loteEncontrada = lotesData.find((lote) => lote.loteId.toString() === id.toString());
+                    if (!loteEncontrada) {
+                        navigate('/listar-lote');
                     }
-                    const fechaControl = controlEncontrado.carneFecha;
-                    const fecha = new Date(fechaControl);
-                    const fechaFormateada = fecha.toISOString().split('T')[0];
-
-                    const controlConFechaParseada = {
-                        ...controlEncontrado,
-                        carneCategoria: control.carneTipo === "Sangre" ? "Seleccionar" :
-                            control.carneTipo === "Higado" ? "Seleccionar" :
-                                control.carneTipo === "Tripas" ? "Seleccionar" :
-                                    controlEncontrado.carneCategoria,
-                        carneFecha: fechaFormateada,
-                    }
-                    setControl(controlConFechaParseada);
+                    setLoteProducto({
+                        value: loteEncontrada.loteProducto.productoId,
+                        label: `${loteEncontrada.loteProducto.productoNombre} - ${loteEncontrada.loteProducto.productoCodigo}`,
+                    });
+                    setLote(loteEncontrada);
                 })
                 .catch(error => {
                     if (error.request.status === 401) {
@@ -230,28 +183,38 @@ const ModificarCarne = () => {
                     }
                 });
         };
+        const obtenerProductos = () => {
+            axios.get('/listar-productos', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(response => {
+                    const productos = response.data;
+                    setProductos(productos)
+                    setProductosSelect(
+                        productos.map((prod) => ({
+                            value: prod.productoId,
+                            label: `${prod.productoNombre} - ${prod.productoCodigo}`
+                        }))
+                    );
+                })
+                .catch(error => {
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos de los productos, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
+                });
+        };
 
-        obtenerControles();
+        obtenerProductos();
+        obtenerLotes();
     }, []);
-
-    useEffect(() => {
-        if (control.carneTipo === 'Porcino') {
-            setOpciones(carneCortePorcino);
-            setCarneDesactivado(false);
-        } else if (control.carneTipo === 'Bovino') {
-            setOpciones(carneCorteBovino);
-            setCarneDesactivado(false);
-        } else if (control.carneTipo === 'Sangre') {
-            setOpciones(carneCorteSangre);
-            setCarneDesactivado(true);
-        } else if (control.carneTipo === 'Higado') {
-            setOpciones(carneCorteHigado);
-            setCarneDesactivado(true);
-        } else if (control.carneTipo === 'Tripas') {
-            setOpciones(carneCorteTripas);
-            setCarneDesactivado(true);
-        }
-    }, [control.carneTipo]);
 
     useEffect(() => {
         const blinkInterval = setInterval(() => {
@@ -270,76 +233,41 @@ const ModificarCarne = () => {
 
     const handleChange = event => {
         const { name, value } = event.target;
-        if (name === "carneNombre") {
-            const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$");
-            if (regex.test(value)) {
-                setControl(prevState => ({
-                    ...prevState,
-                    [name]: value,
-                }));
-            }
-        }
-        else if (name === "carneCantidad") {
-            const regex = new RegExp("^[0-9]{0,10}$");
-            if (regex.test(value)) {
-                setControl(prevState => ({
-                    ...prevState,
-                    [name]: value,
-                }));
-            }
-        } else {
-            setControl(prevState => ({
+        const pattern = "^[0-9]{0,8}$";
+        const regex = new RegExp(pattern);
+        if (regex.test(value)) {
+            setLote(prevState => ({
                 ...prevState,
                 [name]: value,
             }));
         }
     }
 
-    const checkError = (nombre, cantidad, tipo, corte, categoria) => {
-        if (nombre === undefined || nombre === null || nombre === '') {
+    const checkErrorLote = (producto, cantidad) => {
+        if (producto === undefined || producto === null || producto === 'Seleccionar') {
             return false;
         }
-        else if (cantidad === undefined || cantidad === null || cantidad === '' || parseInt(cantidad) < 0) {
-            return false;
-        }
-        else if (tipo === undefined || tipo === null || tipo === "Seleccionar") {
-            return false;
-        }
-        else if (corte === undefined || corte === null || corte === "Seleccionar") {
-            return false;
-        }
-        else if (categoria === undefined || categoria === null || categoria === "Seleccionar") {
+        else if (cantidad === undefined || cantidad === null || cantidad === '') {
             return false;
         }
         return true;
     }
 
     const handleFormSubmit = () => {
+        const productoCompleto = productos.find((prod) => prod.productoId.toString() === loteProducto.value.toString());
         const data = {
-            ...control,
-            carneCategoria:
-                control.carneTipo === "Sangre" ? "Sangre" :
-                    control.carneTipo === "Higado" ? "Higado" :
-                        control.carneTipo === "Tripas" ? "Tripas" :
-                            control.carneCategoria,
+            ...lote,
+            loteProducto: productoCompleto,
         };
-
-        const nombre = data.carneNombre.toString();
-        const cantidad = data.carneCantidad.toString();
-        const tipo = data.carneTipo;
-        const corte = data.carneCorte;
-        const categoria = data.carneCategoria;
-
-        const check = checkError(nombre, cantidad, tipo, corte, categoria);
-
-        if (check === false) {
+        const checkLote = checkErrorLote(data.loteProducto, data.loteCantidad);
+        if (checkLote === false) {
             updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
             }, 2500);
         } else {
-            axios.put(`/modificar-carne/${id}`, data, {
+            axios.put(`/modificar-lote/${data.loteId}`, data, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     "Content-Type": "application/json"
@@ -350,10 +278,10 @@ const ModificarCarne = () => {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
-                            navigate('/listar-carne');
+                            navigate('/listar-lote');
                         }, 2500)
                     } else {
-                        updateErrorAlert('No se logró modificar la carne, revise los datos ingresados.')
+                        updateErrorAlert('No se logró modificar el lote, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
@@ -365,7 +293,7 @@ const ModificarCarne = () => {
                         setCheckToken(true);
                     }
                     else if (error.request.status === 500) {
-                        updateErrorAlert('No se logró modificar la carne, revise los datos ingresados.');
+                        updateErrorAlert('No se logró modificar el lote, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
@@ -376,7 +304,7 @@ const ModificarCarne = () => {
     };
 
     const redirect = () => {
-        navigate('/listar-carne')
+        navigate('/listar-lote')
     }
 
     return (
@@ -389,7 +317,7 @@ const ModificarCarne = () => {
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2}></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
-                                    <Typography component='h1' variant='h4'>Modificar Carne</Typography>
+                                    <Typography component='h1' variant='h4'>Modificar Lote</Typography>
                                     <div>
                                         <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
                                             <HelpOutlineIcon fontSize="large" color="primary" />
@@ -406,18 +334,20 @@ const ModificarCarne = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes modificar las carne registradas en la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar un lote, asegúrate de completar los campos necesarios para registrar la modificación.
                                                     </span>
                                                     <br />
+                                                    <br />
                                                     <span>
-                                                        Este formulario cuenta con 5 campos:
+                                                        Este formulario cuenta con 2 campos:
                                                         <ul>
-                                                            <li><span className={classes.liTitleBlue}>Nombre</span>: En este campo se ingresa el nombre de la carne o producto cárnico que se recibio</li>
-                                                            <li><span className={classes.liTitleBlue}>Tipo</span>: En este campo se selecciona el tipo de producto que se recibio, hay 5 tipos Bovino, Porcino, Higado, Tripa y Sangre</li>
-                                                            <li><span className={classes.liTitleBlue}>Corte</span>: En este campo se selecciona el grupo en el que entra el producto recibido</li>
-                                                            <li><span className={classes.liTitleBlue}>Categoria</span>: En este campo solo esta disponible para los productos Bovinos y Porcinos,
-                                                                y lo que se busca en este campo es especificar si la carne recibida es con hueso o sin hueso</li>
-                                                            <li><span className={classes.liTitleBlue}>Cantidad</span>: En este campo se ingresa la cantidad recibida del producto</li>
+                                                            <li>
+                                                                <span className={classes.liTitleBlue}>Producto</span>: En este campo se debe seleccionar el producto que compone al lote.
+                                                            </li>
+                                                            <li>
+                                                                <span className={classes.liTitleBlue}>Cantidad</span>: En este campo se debe ingresar la cantidad producida del lote, 
+                                                                este campo solo acepta números y cuenta con una longitud máxima de 8 caracteres.
+                                                            </li>
                                                         </ul>
                                                     </span>
                                                     <span>
@@ -436,7 +366,8 @@ const ModificarCarne = () => {
                                                         <ul>
                                                             <li>Solo modifique los campos que necesite.</li>
                                                             <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
-                                                            <li>Si una carne eliminada tiene un cantidad mayor a 0, se volverá a añadir.</li>
+                                                            <li>No se puede modificar el código del lote.</li>
+                                                            
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -464,87 +395,23 @@ const ModificarCarne = () => {
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8}>
                                     <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            autoFocus
-                                            className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true, }}
-                                            color="primary"
-                                            margin="normal"
-                                            variant="outlined"
-                                            label="Nombre"
-                                            type="text"
-                                            name="carneNombre"
-                                            value={control.carneNombre}
-                                            onChange={handleChange}
-                                        />
-                                    </Grid>
-                                    <Grid item lg={12} md={12} sm={12} xs={12}>
                                         <FormControl variant="outlined" className={classes.formControl}>
-                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-carneTipo-native-simple`}>Tipo</InputLabel>
+                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-loteProducto-native-simple`}>Producto *</InputLabel>
                                             <Select
                                                 className={classes.select}
                                                 native
-                                                value={control.carneTipo}
-                                                name="carneTipo"
-                                                label="Tipo"
+                                                value={loteProducto.value}
+                                                label="Producto *"
                                                 inputProps={{
-                                                    name: "carneTipo",
-                                                    id: `outlined-carneTipo-native-simple`,
+                                                    name: "loteProducto",
+                                                    id: `outlined-loteProducto-native-simple`,
                                                 }}
-                                                onChange={handleChange}
+                                                onChange={(e) => setLoteProducto({
+                                                    value: e.target.value,
+                                                })}
                                             >
                                                 <option>Seleccionar</option>
-                                                {carneTipoSelect.map((option, ind) => (
-                                                    <option key={ind} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                    </Grid>
-                                    <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <FormControl variant="outlined" className={classes.formControl}>
-                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-carneCorte-native-simple`}>Corte</InputLabel>
-                                            <Select
-                                                className={classes.select}
-                                                native
-                                                value={control.carneCorte}
-                                                name="carneCorte"
-                                                label="Corte"
-                                                inputProps={{
-                                                    name: "carneCorte",
-                                                    id: `outlined-carneCorte-native-simple`,
-                                                }}
-                                                onChange={handleChange}
-                                            >
-                                                <option>Seleccionar</option>
-                                                {opciones.map((option, ind) => (
-                                                    <option key={ind} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                    </Grid>
-                                    <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <FormControl variant="outlined" className={classes.formControl}>
-                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-carneCategoria-native-simple`}>Categoría</InputLabel>
-                                            <Select
-                                                className={classes.select}
-                                                native
-                                                value={control.carneCategoria}
-                                                name="carneCategoria"
-                                                label="Categoria"
-                                                inputProps={{
-                                                    name: "carneCategoria",
-                                                    id: `outlined-carneCategoria-native-simple`,
-                                                }}
-                                                disabled={carneDesactivado}
-                                                onChange={handleChange}
-                                            >
-                                                <option>Seleccionar</option>
-                                                {carneCategoria.map((option, ind) => (
+                                                {productosSelect.map((option, ind) => (
                                                     <option key={ind} value={option.value}>
                                                         {option.label}
                                                     </option>
@@ -557,14 +424,15 @@ const ModificarCarne = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true, }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
+                                            required={true}
                                             label="Cantidad"
-                                            type="number"
-                                            name="carneCantidad"
-                                            value={control.carneCantidad}
+                                            type="text"
+                                            name="loteCantidad"
+                                            value={lote.loteCantidad}
                                             onChange={handleChange}
                                         />
                                     </Grid>
@@ -587,4 +455,4 @@ const ModificarCarne = () => {
     );
 };
 
-export default ModificarCarne;
+export default ModificarLote;

@@ -4,20 +4,12 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -61,6 +53,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarResumenDeTrazabilidad() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
@@ -75,6 +70,7 @@ function ListarResumenDeTrazabilidad() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -82,16 +78,16 @@ function ListarResumenDeTrazabilidad() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
+  const [alertSuccess] = useState({
     title: 'Correcto', body: 'Resumen de trazabilidad eliminado con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro eliminar el resumen de trazabilidad, revise los datos ingresados.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar el resumen de trazabilidad, revise los datos ingresados.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -104,31 +100,23 @@ function ListarResumenDeTrazabilidad() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -170,10 +158,19 @@ function ListarResumenDeTrazabilidad() {
         });
 
 
-        const data = response.data.map((recepcionDeMateriasPrimasCarnicas) => ({
-          ...recepcionDeMateriasPrimasCarnicas,
-          Id: recepcionDeMateriasPrimasCarnicas.recepcionDeMateriasPrimasCarnicas,
-        }));
+        const dataL = response.data.map((resumen, index) => {
+          if (index < 30) {
+            return {
+              ...resumen,
+              Id: resumen.resumenDeTrazabilidadId,
+            }
+          }
+        });
+        const dataLast30 = dataL.filter((data) => data !== undefined);
+        const data = response.data.map((resumen) => ({
+          ...resumen,
+          Id: resumen.resumenDeTrazabilidadId,
+        }))
         const ResponsableData = ResponsableResponse.data;
         const InsumoData = InsumoResponse.data;
         const ProductoData = ProductoResponse.data;
@@ -181,15 +178,27 @@ function ListarResumenDeTrazabilidad() {
         const LoteData = loteResponse.data;
         const ClienteData = clienteResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
         setProducto(ProductoData.map((producto) => producto.productoNombre));
         setCarne(CarneData.map((carne) => carne.carneNombre));
         setInsumo(InsumoData.map((insumo) => insumo.insumoNombre));
         setLotes(LoteData.map((lote) => lote.loteCodigo));
         setClientes(ClienteData.map((cliente) => cliente.clienteNombre));
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -198,6 +207,7 @@ function ListarResumenDeTrazabilidad() {
   }, [deleteItem]);
 
   const tableHeadCells = [
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
     { id: 'resumenDeTrazabilidadFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'resumenDeTrazabilidadLote', numeric: false, disablePadding: false, label: 'Lote' },
     { id: 'resumenDeTrazabilidadProducto', numeric: false, disablePadding: false, label: 'Producto' },
@@ -306,11 +316,11 @@ function ListarResumenDeTrazabilidad() {
       (!filtros['fecha-hasta'] || lowerCaseItem.resumenDeTrazabilidadFecha <= new Date(filtros['fecha-hasta'])) &&
       (!filtros.lote || lowerCaseItem.resumenDeTrazabilidadLote.startsWith(filtros.lote)) &&
       (!filtros.producto || lowerCaseItem.resumenDeTrazabilidadProducto.startsWith(filtros.producto)) &&
-      (!filtros.cantidad || lowerCaseItem.resumenDeTrazabilidadCantidadProducida.toString().startsWith(filtros.cantidad)) &&
+      (!filtros.cantidad || lowerCaseItem.resumenDeTrazabilidadCantidadProducida.toString() === filtros.cantidad) &&
       (!filtros.carne || lowerCaseItem.resumenDeTrazabilidadMatPrimaCarnica.some(carne => carne.carneNombre.toLowerCase().includes(filtros.carne))) &&
       (!filtros.aditivo || lowerCaseItem.resumenDeTrazabilidadMatPrimaNoCarnica.some(aditivo => aditivo.insumoNombre.toLowerCase().includes(filtros.aditivo))) &&
       (!filtros.cliente || lowerCaseItem.resumenDeTrazabilidadDestino.some(cliente => cliente.clienteNombre.toLowerCase().includes(filtros.cliente))) &&
-      (!filtros.responsable || lowerCaseItem.resumenDeTrazabilidadResponsable.startsWith(filtros.responsable))
+      (!filtros.responsable || lowerCaseItem.resumenDeTrazabilidadResponsable === filtros.responsable)
     ) {
       return true;
     }
@@ -341,32 +351,29 @@ function ListarResumenDeTrazabilidad() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2500);
         } else {
-          updateErrorAlert('No se logro eliminar el resumen de trazabilidad, revise los datos ingresados.')
+          updateErrorAlert('No se logró eliminar el resumen de trazabilidad, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logro eliminar el resumen de trazabilidad, revise los datos ingresados.')
+          updateErrorAlert('No se logró eliminar el resumen de trazabilidad, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
   }
@@ -394,22 +401,34 @@ function ListarResumenDeTrazabilidad() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/resumen-de-trazabilidad')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Resumen De Trazabilidad</Typography>
+          <Typography component='h1' variant='h5'>Listar de Resumen de Trazabilidad</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -419,7 +438,7 @@ function ListarResumenDeTrazabilidad() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los resumenes de trazabilidad que fueron registradas.
+                    En esta página se encarga de listar los resumenes de trazabilidad que fueron registradas y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -463,6 +482,9 @@ function ListarResumenDeTrazabilidad() {
                   <span>
                     <ul>
                       <li>
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
+                      </li>
+                      <li>
                         <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha y la hora en la que se registró el resumen de trazabilidad.
                       </li>
                       <li>
@@ -487,10 +509,22 @@ function ListarResumenDeTrazabilidad() {
                         <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registro el resumen de trazabilidad.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>No se recomienda eliminar los registros, ya que se cuenta con una depuración</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -519,8 +553,11 @@ function ListarResumenDeTrazabilidad() {
         data={filteredData}
         dataKey="listarResumenDeTrazabilidad"
         tableHeadCells={tableHeadCells}
-        title="Resumen De Trazabilidad"
+        title="Lista de Resumenes de Trazabilidad"
+        linkButton={redirect}
         dataMapper={mapData}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         columnRenderers={columnRenderers}
         onEditButton={handleEditTraz}
         onDeleteButton={handleDeleteTraz}

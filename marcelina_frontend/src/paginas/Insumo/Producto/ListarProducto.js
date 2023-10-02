@@ -4,19 +4,10 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
-
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,6 +51,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarProducto() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [deleteItem, setDeleteItem] = useState(false);
@@ -72,19 +66,21 @@ function ListarProducto() {
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+  const [checkToken, setCheckToken] = useState(false);
+
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el producto con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el producto con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logró eliminar el producto, recargue la pagina.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar el producto, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -97,49 +93,74 @@ function ListarProducto() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const localidadResponse = await axios.get('/listar-productos', {
+        const productoResponse = await axios.get('/listar-productos', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
 
-        const localidadData = localidadResponse.data.map((prod) => ({
-          ...prod,
-          Id: prod.productoId,  
-        }));
+        const productoDataL = productoResponse.data.map((prod, index) => {
+          if (index < 30) {
+            if (prod.productoEliminado === false) {
+              return {
+                ...prod,
+                Id: prod.productoId,
+              }
+            }
+          }
+        });
+        const dataLast30 = productoDataL.filter((data) => data !== undefined);
+        const data = productoResponse.data.map((prod) => {
+          if (prod.productoEliminado === true) {
+            return {
+              ...prod,
+              Id: prod.productoId,
+              isDelete: 'Yes',
+            }
+          } else {
+            return {
+              ...prod,
+              Id: prod.productoId,
+            }
+          }
+        });
 
-        setData(localidadData);
+        setData(dataLast30);
+        setData30(dataLast30)
+        setDataAll(data)
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -152,8 +173,9 @@ function ListarProducto() {
   };
 
   const tableHeadCells = [
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
     { id: 'productoCodigo', numeric: false, disablePadding: false, label: 'Código' },
-    { id: 'productoNombre', numeric: false, disablePadding: true, label: 'Nombre' },
+    { id: 'productoNombre', numeric: false, disablePadding: false, label: 'Nombre' },
   ];
 
   const filters = [
@@ -177,7 +199,7 @@ function ListarProducto() {
 
     if (
       (!filtros.codigo || lowerCaseItem.productoCodigo.toString().startsWith(filtros.codigo)) &&
-      (!filtros.nombre || lowerCaseItem.productoNombre.startsWith(filtros.nombre))
+      (!filtros.nombre || lowerCaseItem.productoNombre === filtros.nombre)
     ) {
       return true;
     }
@@ -199,32 +221,29 @@ function ListarProducto() {
     })
       .then(response => {
         if (response.status === 200) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
-          updateErrorAlert('No se logró eliminar el producto, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el producto, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logró eliminar el producto, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el producto, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -252,22 +271,34 @@ function ListarProducto() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/producto')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Productos</Typography>
+          <Typography component='h1' variant='h5'>Listar de Productos</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -277,7 +308,7 @@ function ListarProducto() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los productos que fueron registrados.
+                    En esta página se encarga de listar los productos que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -287,7 +318,7 @@ function ListarProducto() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleBlue}>Código</span>: En este campo se puede ingresar el código por el cual se identifica el producto y filtrar la lista por ese código.
+                        <span className={classes.liTitleBlue}>Código</span>: En este campo se puede ingresar el código por el cual se identifica el producto, al listar se mostrarán todos los registros que comiencen o tengan ese código.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Nombre</span>: En este campo se puede ingresar el nombre del producto y filtrar la lista por el nombre.
@@ -300,16 +331,32 @@ function ListarProducto() {
                   <span>
                     <ul>
                       <li>
+                        <span className={classes.liTitleRed}>Código</span>: En esta columna se muestra el identificador del registro.
+                      </li>
+                      <li>
                         <span className={classes.liTitleRed}>Código</span>: En esta columna se muestra el código por el cual se identifica el producto.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Nombre</span>: En esta columna se muestra el nombre del producto.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>No se recomienda eliminar registros de la lista, a menos que sea necesario.</li>
+                      <li>Se tiene que tener en cuenta que los productos se eliminarán lógicamente.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -338,7 +385,11 @@ function ListarProducto() {
         data={filteredData}
         dataKey="listaProductos"
         tableHeadCells={tableHeadCells}
-        title="Productos"
+        title="Lista de Productos"
+        titleButton="Producto"
+        linkButton={redirect}
+        listButton={listRefresh}
+        titleListButton={buttonName}
         dataMapper={mapData}
         columnRenderers={""}
         onEditButton={handleEditProducto}

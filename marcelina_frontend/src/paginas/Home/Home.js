@@ -72,10 +72,10 @@ const useStyles = makeStyles(theme => ({
     height: '100%',
     opacity: 0.5, // Ajusta el valor de opacidad según tus preferencias (0.0 - 1.0)
   },
-  titleimg:{
+  titleimg: {
     width: '35%',
   },
-  gridLogo:{
+  gridLogo: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center'
@@ -86,19 +86,24 @@ const Home = () => {
   const classes = useStyles();
 
   const navigate = useNavigate();
+  const [registrado, setRegistrado] = useState(false);
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
   const [showAlertInfo, setShowAlertInfo] = useState(false);
-  
-  const [alertSuccess, setAlertSuccess] = useState({
+  var nombresMeses = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+
+  const [alertSuccess] = useState({
     title: 'Correcto', body: 'Se registró el anual de insumos cárnicos con éxito!', severity: 'success', type: 'description'
   });
-  const [alertError, setAlertError] = useState({
-    title: 'Correcto', body: 'No se logro registrar el anual de insumos cárnicos, ocurrio un error inesperado.', severity: 'success', type: 'description'
+  const [alertError] = useState({
+    title: 'Correcto', body: 'No se logró registrar el anual de insumos cárnicos, ocurrio un error inesperado.', severity: 'success', type: 'description'
   });
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión, para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión, para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
   const [alertInfo, setAlertInfo] = useState({
     title: 'Notificación', body: '', severity: 'info', type: 'actions'
@@ -112,47 +117,85 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const fecha = new Date();
-    console.log(window.localStorage.getItem('token'));
-    if (fecha.getDate() === 1) {
-      axios.post('/agregar-anual-de-insumos-carnicos-automatico', null, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/')
+    } else {
+      const tokenParts = token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+
+      const tokenExpiration = payload.exp * 1000;
+      const currentTime = Date.now();
+
+      if (tokenExpiration < currentTime) {
+        navigate('/')
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    axios.get('/listar-ultimo-anual', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+      .then(response => {
+        const lastAnual = response.data;
+        var fecha = new Date();
+        const mes = nombresMeses[fecha.getMonth()];
+        if (lastAnual.anualDeInsumosCarnicosMes.toLowerCase() === mes.toLowerCase()) {
+          setRegistrado(false);
+        } else {
+          setRegistrado(true);
         }
       })
-        .then(response => {
-          if (response.status === 201) {
-            setShowAlertSuccess(true);
-            setTimeout(() => {
-              setShowAlertSuccess(false);
-            }, 3000);
-          } else {
-            setShowAlertError(true);
-            setTimeout(() => {
-              setShowAlertError(false);
-            }, 3000);
+      .catch(error => {
+
+      })
+  }, []);
+
+  useEffect(() => {
+    const fecha = new Date();
+    if (fecha.getDate() === 1) {
+      if (registrado === true) {
+        axios.post('/agregar-anual-de-insumos-carnicos-automatico', null, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         })
-        .catch(error => {
-          if (error.request.status === 401) {
-            setShowAlertWarning(true);
-            setTimeout(() => {
-              setShowAlertWarning(false);
-              navigate('/')
-            }, 3000);
-          } 
-          else if (error.request.status === 500) {
-            setShowAlertError(true);
-            setTimeout(() => {
-              setShowAlertError(false);
-            }, 3000);
-          }
-        })
+          .then(response => {
+            if (response.status === 201) {
+              setShowAlertSuccess(true);
+              setTimeout(() => {
+                setShowAlertSuccess(false);
+              }, 3000);
+            } else {
+              setShowAlertError(true);
+              setTimeout(() => {
+                setShowAlertError(false);
+              }, 3000);
+            }
+          })
+          .catch(error => {
+            if (error.request.status === 401) {
+              setShowAlertWarning(true);
+              setTimeout(() => {
+                setShowAlertWarning(false);
+                navigate('/')
+              }, 3000);
+            }
+            else if (error.request.status === 500) {
+              setShowAlertError(true);
+              setTimeout(() => {
+                setShowAlertError(false);
+              }, 3000);
+            }
+          })
+      }
     } else { }
 
     const primerDiaProximoMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 1);
     const diferenciaDias = differenceInDays(primerDiaProximoMes, fecha);
-    console.log(diferenciaDias)
     if (diferenciaDias <= 5 && diferenciaDias > 1) {
       updateInfoAlert(`El anual de insumos cárnicos se registrará automáticamente dentro de ${diferenciaDias} días`);
       setShowAlertInfo(true);
@@ -161,31 +204,7 @@ const Home = () => {
       updateInfoAlert(`El anual de insumos cárnicos se registrará automáticamente dentro de ${diferenciaDias} día`);
       setShowAlertInfo(true);
     }
-  }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.log('Token no existe, puto')
-    } else {
-      const tokenParts = token.split('.');
-      const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
-
-      const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
-      const currentTime = Date.now();
-      console.log(currentTime)
-
-      if (tokenExpiration < currentTime) {
-        setShowAlertWarning(true);
-        setTimeout(() => {
-          setShowAlertWarning(false);
-          navigate('/')
-        }, 3000);
-      }
-    }
-  }, []);
+  }, [registrado]);
 
   return (
     <div>
@@ -204,8 +223,8 @@ const Home = () => {
           </Grid>
           <Grid container spacing={0} justifyContent='center' alignContent='center'>
             <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
-            <Grid item lg={8} md={8} sm={8} xs={8}  className={classes.gridLogo}>
-              <img className={classes.titleimg} src={LogoT}/>
+            <Grid item lg={8} md={8} sm={8} xs={8} className={classes.gridLogo}>
+              <img className={classes.titleimg} src={LogoT} />
             </Grid>
             <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
           </Grid>
@@ -223,11 +242,28 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Diaria de producción
+                    Recepcion de materaias primas carnicas
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
-                    Planilla de produccion diaria
+                    <br />
+                    Planilla de recepción de materias primas cárnicas
+                  </Typography>
+                </CardContent>
+                <CardActions className={classes.cardActions}>
+                  <Button size="small" component={Link} to="/recepcion-de-materias-primas-carnicas">Añadir</Button>
+                  <Button size="small" component={Link} to="/listar-recepcion-de-materias-primas-carnicas"> Ver</Button>
+                </CardActions>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
+              <Card className={classes.card} variant="outlined">
+                <CardContent className={classes.cardCont}>
+                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
+                    Diaria de producción
+                  </Typography>
+                  <Typography className={classes.content} variant="body2" component="p">
+                    <br />
+                    Planilla de producción diaria
                   </Typography>
                 </CardContent>
                 <CardActions className={classes.cardActions}>
@@ -240,11 +276,11 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Expedicion de productos
+                    Expedicion de productos
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
-                    Planilla de expedicion de productos
+                    <br />
+                    Planilla de expedicin de productos
                   </Typography>
                 </CardContent>
                 <CardActions className={classes.cardActions}>
@@ -257,10 +293,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Resumen de trazabilidad
+                    Resumen de trazabilidad
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de resumen de trazabilidad
                   </Typography>
                 </CardContent>
@@ -270,39 +306,22 @@ const Home = () => {
                 </CardActions>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
-              <Card className={classes.card} variant="outlined">
-                <CardContent className={classes.cardCont}>
-                  <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Recepcion de materaias primas carnicas
-                  </Typography>
-                  <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
-                    Planilla de recepcion de materias primas carnicas
-                  </Typography>
-                </CardContent>
-                <CardActions className={classes.cardActions}>
-                  <Button size="small" component={Link} to="/recepcion-de-materias-primas-carnicas">Añadir</Button>
-                  <Button size="small"component={Link} to="/listar-recepcion-de-materias-primas-carnicas"> Ver</Button>
-                </CardActions>
-              </Card>
-            </Grid>
           </Grid>
           <Grid container justifyContent='center' alignContent='center'>
             <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Monitoreo de SSOP operativo
+                    Control de temperatura de esterilizadores
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
-                    Planilla de monitoreo de SSOP operativo
+                    <br />
+                    Planilla de control de temperatura de esterilizadores
                   </Typography>
                 </CardContent>
                 <CardActions className={classes.cardActions}>
-                  <Button size="small" component={Link} to="/monitoreo-de-ssop-operativo">Añadir</Button>
-                  <Button size="small" component={Link} to="/listar-monitoreo-de-ssop-operativo">Ver</Button>
+                  <Button size="small" component={Link} to="/control-de-temperatura-de-esterilizadores">Añadir</Button>
+                  <Button size="small" component={Link} to="/listar-control-de-temperatura-de-esterilizadores">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
@@ -310,16 +329,16 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Monitoreo de SSOP pre-operativo
+                    Control de temperatura en camaras
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
-                    Planilla de monitoreo de SSOP pre-operativo
+                    <br />
+                    Planilla de control de temperatura en camaras
                   </Typography>
                 </CardContent>
                 <CardActions className={classes.cardActions}>
-                  <Button size="small" component={Link} to="/monitoreo-de-ssop-pre-operativo">Añadir</Button>
-                  <Button size="small" component={Link} to="/listar-monitoreo-de-ssop-pre-operativo">Ver</Button>
+                  <Button size="small" component={Link} to="/control-de-temperatura-en-camaras">Añadir</Button>
+                  <Button size="small" component={Link} to="/listar-control-de-temperatura-en-camaras">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
@@ -327,10 +346,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de nitritos
+                    Control de nitritos
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de control de nitritos
                   </Typography>
                 </CardContent>
@@ -344,10 +363,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de nitratos
+                    Control de nitratos
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de control de nitratos
                   </Typography>
                 </CardContent>
@@ -363,10 +382,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de alarma luminica y sonora de cloro
+                    Control de alarma luminica y sonora de cloro
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de control de alarma luminica y sonora de cloro
                   </Typography>
                 </CardContent>
@@ -380,10 +399,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de cloro libre
+                    Control de cloro libre
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de control de cloro libre
                   </Typography>
                 </CardContent>
@@ -397,10 +416,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de limpieza y desinfeccion de depositos de agua y cañerias
+                    Control de limpieza y desinfeccion de depositos de agua y cañerias
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de control de limpieza y desinfeccion de depositos de agua y cañerias
                   </Typography>
                 </CardContent>
@@ -414,10 +433,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de reposicion de cloro
+                    Control de reposicion de cloro
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de control de reposicion de cloro
                   </Typography>
                 </CardContent>
@@ -433,16 +452,16 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de temperatura de esterilizadores
+                    Monitoreo de SSOP operativo
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
-                    Planilla de control de temperatura de esterilizadores
+                    <br />
+                    Planilla de monitoreo de SSOP operativo
                   </Typography>
                 </CardContent>
                 <CardActions className={classes.cardActions}>
-                  <Button size="small" component={Link} to="/control-de-temperatura-de-esterilizadores">Añadir</Button>
-                  <Button size="small" component={Link} to="/listar-control-de-temperatura-de-esterilizadores">Ver</Button>
+                  <Button size="small" component={Link} to="/monitoreo-de-ssop-operativo">Añadir</Button>
+                  <Button size="small" component={Link} to="/listar-monitoreo-de-ssop-operativo">Ver</Button>
                 </CardActions>
               </Card>
             </Grid>
@@ -450,27 +469,27 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de temperatura en camaras
+                    Monitoreo de SSOP pre-operativo
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
-                    Planilla de control de temperatura en camaras
+                    <br />
+                    Planilla de monitoreo de SSOP pre-operativo
                   </Typography>
                 </CardContent>
                 <CardActions className={classes.cardActions}>
-                  <Button size="small" component={Link} to="/control-de-temperatura-en-camaras">Añadir</Button>
-                  <Button size="small" component={Link} to="/listar-control-de-temperatura-en-camaras">Ver</Button>
+                  <Button size="small" component={Link} to="/monitoreo-de-ssop-pre-operativo">Añadir</Button>
+                  <Button size="small" component={Link} to="/listar-monitoreo-de-ssop-pre-operativo">Ver</Button>
                 </CardActions>
               </Card>
-            </Grid>
+            </Grid> 
             <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de mejoras en instalaciones
+                    Control de mejoras en instalaciones
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de mejoras en instalaciones
                   </Typography>
                 </CardContent>
@@ -484,10 +503,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Control de productos quimicos
+                    Control de productos quimicos
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de control de productos quimicos
                   </Typography>
                 </CardContent>
@@ -503,10 +522,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Proveedores
+                    Proveedores
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de proveedores
                   </Typography>
                 </CardContent>
@@ -520,10 +539,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Clientes
+                    Clientes
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de clientes
                   </Typography>
                 </CardContent>
@@ -537,10 +556,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Productos
+                    Productos
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de productos
                   </Typography>
                 </CardContent>
@@ -554,10 +573,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Carnes
+                    Carnes
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de carnes
                   </Typography>
                 </CardContent>
@@ -568,14 +587,14 @@ const Home = () => {
             </Grid>
           </Grid>
           <Grid container justifyContent='center' alignContent='center'>
-          <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
+            <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Insumos
+                    Insumos
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de control de insumos
                   </Typography>
                 </CardContent>
@@ -589,10 +608,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Localidades
+                    Localidades
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de localidades
                   </Typography>
                 </CardContent>
@@ -606,10 +625,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Usuarios
+                    Usuarios
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla de usuarios
                   </Typography>
                 </CardContent>
@@ -623,10 +642,10 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                  Anual de insumos carnicos
+                    Anual de insumos carnicos
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
-                    <br/>
+                    <br />
                     Planilla anual de insumos carnicos
                   </Typography>
                 </CardContent>

@@ -8,7 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-@Entity(name = "localidadades")
+@Entity(name = "localidades")
 public class Localidad implements Serializable {
     
     @Id

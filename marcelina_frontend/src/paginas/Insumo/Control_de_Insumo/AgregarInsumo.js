@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -62,44 +54,42 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AgregarInsumo = () => {
-    const text = "Este campo es Obligatorio";
-
     const formFields = [
-        { name: 'insumoNombre', label: 'Nombre', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,50}$", color: 'primary' },
+        { name: 'insumoNombre', label: 'Nombre', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$", color: 'primary' },
         { name: 'insumoFecha', label: 'Fecha', type: 'date', format: 'yyyy-MM-dd', color: 'primary' },
         { name: 'insumoProveedor', label: 'Proveedor *', type: 'selector', color: 'primary' },
         { name: 'insumoTipo', label: 'Tipo *', type: 'selector', color: 'primary' },
-        { name: 'insumoCantidad', label: 'Cantidad', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", color: 'primary' },
+        { name: 'insumoCantidad', label: 'Cantidad', type: 'text', obligatorio: true, pattern: "^[0-9]{0,5}$", color: 'primary' },
         { name: 'insumoUnidad', label: 'Unidad *', type: 'selector', color: 'primary' },
         { name: 'insumoNroLote', label: 'Lote', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9]{0,20}$", color: 'primary' },
-        { name: 'insumoMotivoDeRechazo', label: 'Motivo de rechazó', type: 'text', multi: '3', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", color: 'secondary' },
+        { name: 'insumoMotivoDeRechazo', label: 'Motivo de rechazó', type: 'text', multi: '3', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", color: 'secondary' },
         { name: 'insumoFechaVencimiento', label: 'Fecha Vencimiento', type: 'date', format: 'yyyy-MM-dd', color: 'primary' },
     ];
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Insumo agregado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro agregar el Insumo, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró agregar el Insumo, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const classes = useStyles();
-    const [insumo, setInsumo] = useState({});
     const [proveedores, setProveedores] = useState([]);
     const [insumoProveedoresSelect, setInsumoProveedoresSelect] = useState([]);
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
-    const [insumoTipoSelect, setInsumoTipoSelect] = useState([
+    const [checkToken, setCheckToken] = useState(false);
+    const [insumoTipoSelect] = useState([
         { value: 'Aditivo', label: 'Aditivo' },
         { value: 'Otros', label: 'Otros' }
     ]);
-    const [insumoUnidadSelect, setInsumoUnidadSelect] = useState([
+    const [insumoUnidadSelect] = useState([
         { value: 'Kg', label: 'Kg' },
         { value: 'Metros', label: 'Metros' },
         { value: 'Litros', label: 'Litros' },
@@ -131,31 +121,24 @@ const AgregarInsumo = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
+            setCheckToken(false)
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerProveedores = () => {
@@ -174,7 +157,15 @@ const AgregarInsumo = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                      } else {
+                        updateErrorAlert('No se logró cargar las proveedores, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                          setShowAlertError(false);
+                        }, 2000);
+                      }
                 });
         };
 
@@ -237,8 +228,6 @@ const AgregarInsumo = () => {
             insumoResponsable: window.localStorage.getItem('user'),
         };
 
-        console.log(insumoConProveedor);
-
         const check = checkError(insumoConProveedor.insumoNombre, insumoConProveedor.insumoFecha,
             insumoConProveedor.insumoCantidad, insumoConProveedor.insumoNroLote, insumoConProveedor.insumoFechaVencimiento);
 
@@ -249,53 +238,61 @@ const AgregarInsumo = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             if (checkSelect === false) {
                 updateErrorAlert(`Revise los datos seleccionados en el selector de Proveedor, Tipo y Unidad, no se permite dejar seleccionada la opción "Seleccionar"`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 3000);
             } else {
-                axios.post('/agregar-control-de-insumos', insumoConProveedor, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                })
-                    .then(response => {
-                        if (response.status === 201) {
-                            setShowAlertSuccess(true);
-                            setTimeout(() => {
-                                setShowAlertSuccess(false);
-                            }, 5000);
-                        } else {
-                            updateErrorAlert(`No se logro agregar el Insumo, revise los datos ingresados.`);
-                            setShowAlertError(true);
-                            setTimeout(() => {
-                                setShowAlertError(false);
-                            }, 5000);
+                if (insumoConProveedor.insumoFechaVencimiento <= insumoConProveedor.insumoFecha) {
+                    updateErrorAlert(`La fecha de vencimiento no puede ser menor o igual a la fecha de llegada del insumo`);
+                    setShowAlertError(true);
+                    setTimeout(() => {
+                        setShowAlertError(false);
+                    }, 3000);
+                } else {
+                    axios.post('/agregar-control-de-insumos', insumoConProveedor, {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
                         }
                     })
-                    .catch(error => {
-                        if (error.request.status === 401) {
-                            setShowAlertWarning(true);
-                            setTimeout(() => {
-                                setShowAlertWarning(false);
-                            }, 5000);
-                        }
-                        else if (error.request.status === 500) {
-                            updateErrorAlert(`No se logro agregar el Insumo, revise los datos ingresados.`);
-                            setShowAlertError(true);
-                            setTimeout(() => {
-                                setShowAlertError(false);
-                            }, 5000);
-                        }
-                    })
+                        .then(response => {
+                            if (response.status === 201) {
+                                setShowAlertSuccess(true);
+                                setTimeout(() => {
+                                    setShowAlertSuccess(false);
+                                }, 2500);
+                            } else {
+                                updateErrorAlert(`No se logró agregar el Insumo, revise los datos ingresados.`);
+                                setShowAlertError(true);
+                                setTimeout(() => {
+                                    setShowAlertError(false);
+                                }, 2500);
+                            }
+                        })
+                        .catch(error => {
+                            if (error.request.status === 401) {
+                                setCheckToken(true);
+                            }
+                            else if (error.request.status === 500) {
+                                updateErrorAlert(`No se logró agregar el Insumo, revise los datos ingresados.`);
+                                setShowAlertError(true);
+                                setTimeout(() => {
+                                    setShowAlertError(false);
+                                }, 2500);
+                            }
+                        })
+                }
             }
         }
     }
 
+    const redirect = () => {
+        navigate('/listar-control-de-insumos')
+    }
 
     return (
         <div>
@@ -309,14 +306,12 @@ const AgregarInsumo = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
                                     <Typography component='h1' variant='h4'>Agregar Insumo</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -326,39 +321,42 @@ const AgregarInsumo = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los insumos que recibe la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes registrar los insumos que reciben, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 9 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre del insumo que se recibió.
+                                                                <span className={classes.liTitleBlue}>Nombre</span>: En este campo se debe ingresar el nombre del insumo que se recibió,
+                                                                este campo solo acepta palabras y números, este campo cuenta con una longitud máxima de 50 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en la que se recibió el insumo.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se recibió el insumo.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Proveedor</span>: en este campo se tendrá que seleccionar el proveedor al cual se le compró el insumo/producto.
+                                                                <span className={classes.liTitleBlue}>Proveedor</span>: En este campo se selecciona el proveedor al cual se le compró el insumo/producto.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitle}>Tipo</span>: en este campo se podrá seleccionar el tipo de insumo que se recibe, hay 2 tipos,
+                                                                <span className={classes.liTitle}>Tipo</span>: En este campo se debe seleccionar el tipo de insumo que se recibe, hay 2 tipos,
                                                                 Aditivo que se refiere a los aditivos utilizados para la producción de los chacinados y Otros que se refiere a los productos de envasado, cuerdas, etc.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Cantidad</span>: en este campo se registrará la cantidad que se recibió del insumo.
+                                                                <span className={classes.liTitleBlue}>Cantidad</span>: En este campo se debe ingresar la cantidad que se recibió del insumo, este campo solo acepta números y cuenta con una longitud máxima de 5 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Unidad</span>: en este campo se registrará la unidad correspondiente al insumo.
+                                                                <span className={classes.liTitleBlue}>Unidad</span>: En este campo se debe seleccionar la unidad correspondiente al insumo.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Lote</span>: en este campo se registrará el código de lote del insumo recibido.
+                                                                <span className={classes.liTitleBlue}>Lote</span>: En este campo se debe ingresar el código de lote del insumo recibido,
+                                                                este campo solo acepta palabras y números, este campo cuenta con una longitud máxima de 20 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Motivo de rechazó</span>: en este campo se puede ingresar el motivo por el cual se rechazó el producto/insumo recibido.
+                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: En este campo se puede ingresar el motivo por el cual se rechazó el producto/insumo,
+                                                                este campo acepta palabras minúsculas, mayúsculas y también números, el campo cuenta con una longitud máxima de 250 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha Vencimiento</span>: en este campo se registrará la fecha de vencimiento del producto/insumo.
+                                                                <span className={classes.liTitleBlue}>Fecha Vencimiento</span>: En este campo se debe ingresar la fecha de vencimiento del producto/insumo.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -366,12 +364,19 @@ const AgregarInsumo = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
                                                         </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones:
+                                                        <br />
+                                                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                                                        <br />
+                                                        - Una vez registre el control el insumo, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro insumo.
                                                     </span>
                                                 </DialogContentText>
                                             </DialogContent>
@@ -399,6 +404,7 @@ const AgregarInsumo = () => {
                     <FormularioReutilizable
                         fields={formFields}
                         onSubmit={handleFormSubmit}
+                        handleRedirect={redirect}
                         selectOptions={{
                             insumoProveedor: insumoProveedoresSelect,
                             insumoTipo: insumoTipoSelect,

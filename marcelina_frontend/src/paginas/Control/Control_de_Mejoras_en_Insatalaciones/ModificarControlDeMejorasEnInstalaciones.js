@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useParams } from 'react-router-dom';
@@ -8,14 +8,6 @@ import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -37,6 +29,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     auto: {
         marginTop: theme.spacing(2),
@@ -101,21 +96,22 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+    const [checkToken, setCheckToken] = useState(false);
 
     const [blinking, setBlinking] = useState(true);
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
-        title: 'Correcto', body: 'Se logro modificar el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description'
+    const [alertSuccess] = useState({
+        title: 'Correcto', body: 'Se logró modificar el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el control de mejoras en instalaciones, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el control de mejoras en instalaciones, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -136,31 +132,23 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -183,10 +171,17 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                         controlDeMejorasEnInstalacionesFecha: fechaFormateada,
                     }
                     setControl(controlConFecha);
-                    console.log(controlConFecha)
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -209,15 +204,15 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
     }, []);
 
     const handleChange = event => {
-        const { name, value, id, type } = event.target;
-        if (type === "date") {
+        const { name, value } = event.target;
+        if (name === "controlDeMejorasEnInstalacionesFecha") {
             setControl(prevState => ({
                 ...prevState,
                 [name]: value,
             }));
         } else {
             if (name === "controlDeMejorasEnInstalacionesSector") {
-                const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,50}$");
+                const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,50}$");
                 if (regex.test(value)) {
                     setControl(prevState => ({
                         ...prevState,
@@ -225,7 +220,7 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                     }));
                 }
             } else {
-                const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+                const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$");
                 if (regex.test(value)) {
                     setControl(prevState => ({
                         ...prevState,
@@ -266,7 +261,6 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
             ...control,
             controlDeMejorasEnInstalacionesFecha: fechaPars === '' ? fechaControl : fechaPars,
         };
-        console.log(data);
 
         const fechaData = data.controlDeMejorasEnInstalacionesFecha;
         const sector = data.controlDeMejorasEnInstalacionesSector;
@@ -280,7 +274,7 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 3000);
         } else {
             axios.put(`/modificar-control-de-mejoras-en-instalaciones/${id}`, data, {
                 headers: {
@@ -294,32 +288,33 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                         setTimeout(() => {
                             setShowAlertSuccess(false);
                             navigate('/listar-control-de-mejoras-en-instalaciones');
-                        }, 3000);
+                        }, 2000);
                     } else {
-                        updateErrorAlert('No se logro modificar el control de mejoras en instalaciones, revise los datos ingresados.');
+                        updateErrorAlert('No se logró modificar el control de mejoras en instalaciones, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 3000);
                     }
                 })
                 .catch(error => {
                     if (error.request.status === 401) {
-                        setShowAlertWarning(true);
-                        setTimeout(() => {
-                            setShowAlertWarning(false);
-                        }, 5000);
+                        setCheckToken(true);
                     }
                     else if (error.request.status === 500) {
-                        updateErrorAlert('No se logro modificar el control de mejoras en instalaciones, revise los datos ingresados.');
+                        updateErrorAlert('No se logró modificar el control de mejoras en instalaciones, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 3000);
                     }
                 })
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-control-de-mejoras-en-instalaciones')
+    }
 
     return (
         <div>
@@ -333,14 +328,12 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Control de Mejoras en Instalaciones</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -350,23 +343,23 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar las mejoras que se realizan en las instalaciones, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar un control de mejoras en instalaciones, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 4 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en que se realizó de la mejora de la instalación.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En el campo 'Fecha', se debe registrar la fecha en la que se registró el control de limpieza y desinfección.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Sector</span>: en este campo se registrará en que sector se realizó la mejora.
+                                                                <span className={classes.liTitleBlue}>Sector</span>: En el campo 'Sector', se debe registrar el sector en el que se realizó la mejora.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Defecto</span>: en este campo se registrará el defecto que se encontró.
+                                                                <span className={classes.liTitleBlue}>Defecto</span>: En el campo 'Defecto', se debe registrar el defecto por el cual se realizó la mejora.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Mejora Realizada</span>: en este campo se pueden registrar la mejora que se realizó.
+                                                                <span className={classes.liTitleBlue}>Mejora Realizada</span>: En el campo 'Mejora Realizada', se debe registrar la mejora que se realizó en el sector.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -374,11 +367,18 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifique los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -410,12 +410,11 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="controlDeMejorasEnInstalacionesFecha"
                                             value={control.controlDeMejorasEnInstalacionesFecha}
@@ -427,13 +426,11 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Sector"
-                                            id="^[A-Za-z0-9\\s,.]{0,50}$"
-                                            defaultValue="Sector"
                                             type="text"
                                             name="controlDeMejorasEnInstalacionesSector"
                                             value={control.controlDeMejorasEnInstalacionesSector}
@@ -447,13 +444,11 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
-                                            defaultValue="Defecto"
                                             label="Defecto"
-                                            id="^[A-Za-z0-9\\s,.]{0,250}$"
                                             type="text"
                                             name="controlDeMejorasEnInstalacionesDefecto"
                                             value={control.controlDeMejorasEnInstalacionesDefecto}
@@ -467,13 +462,11 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
-                                            id="^[A-Za-z0-9\\s,.]{0,250}$"
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Mejora Realizada"
-                                            defaultValue="Mejora Realizada"
                                             type="text"
                                             name="controlDeMejorasEnInstalacionesMejoraRealizada"
                                             value={control.controlDeMejorasEnInstalacionesMejoraRealizada}
@@ -486,7 +479,8 @@ const ModificarControlDeMejorasEnInstalaciones = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

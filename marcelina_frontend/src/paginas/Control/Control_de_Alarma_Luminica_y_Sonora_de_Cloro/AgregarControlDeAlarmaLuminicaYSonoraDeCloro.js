@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -66,10 +58,10 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
     { name: 'controlDeAlarmaLuminicaYSonoraDeCloroFechaHora', label: 'Fecha y Hora', type: 'datetime-local', color: 'primary' },
     { name: 'controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica', label: 'Alarma Lumínica *', type: 'selector', color: 'primary' },
     { name: 'controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora', label: 'Alarma Sonora *', type: 'selector', color: 'primary' },
-    { name: 'controlDeAlarmaLuminicaYSonoraDeCloroObservaciones', label: 'Observaciones', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'secondary' },
+    { name: 'controlDeAlarmaLuminicaYSonoraDeCloroObservaciones', label: 'Observaciones', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", type: 'text', multi: '3', color: 'secondary' },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
+  const [alertSuccess] = useState({
     title: 'Correcto', body: 'Se registró el estado de las alarmas con éxito!', severity: 'success', type: 'description'
   });
 
@@ -77,20 +69,20 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
     title: 'Error', body: 'No se logró registrar el estado de las alarmas, revise los datos', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
-  const [controlDeAlarmas, setControlDeAlarmas] = useState({});
   const navigate = useNavigate();
-  const [selectAlarmas, setSelectAlarmas] = useState([
+  const [selectAlarmas] = useState([
     { value: true, label: 'Funciona' },
     { value: false, label: 'No Funciona' }
   ]);
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -116,31 +108,23 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
-
+      setCheckToken(false);
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -162,8 +146,6 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
       ...formData,
       controlDeAlarmaLuminicaYSonoraDeCloroResponsable: window.localStorage.getItem('user'),
     }
-    setControlDeAlarmas(controlDeAlarmasConResponsable);
-    console.log(controlDeAlarmasConResponsable);
 
     const alarmaLuminica = controlDeAlarmasConResponsable.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica;
     const alarmaSonora = controlDeAlarmasConResponsable.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora;
@@ -174,13 +156,13 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 3000);
     } else if (fechaHora === undefined || fechaHora === null || fechaHora === '') {
       updateErrorAlert(`Seleccione una fecha y hora, no deje el campo vacío.`);
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 3000);
     } else {
       axios.post('/agregar-control-de-alarma-luminica-y-sonora-de-cloro', controlDeAlarmasConResponsable, {
         headers: {
@@ -192,33 +174,34 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
           if (response.status === 201) {
             setShowAlertSuccess(true);
             setTimeout(() => {
+              navigate('/control-de-alarma-luminica-y-sonora-de-cloro')
               setShowAlertSuccess(false);
-            }, 5000);
-            formData = {};
+            }, 2000);
           } else {
             updateErrorAlert('No se logró registrar el estado de las alarmas, revise los datos');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
         .catch(error => {
           if (error.request.status === 401) {
-            setShowAlertWarning(true);
-            setTimeout(() => {
-              setShowAlertWarning(false);
-            }, 5000);
+            setCheckToken(true);
           }
           else if (error.request.status === 500) {
             updateErrorAlert('No se logró registrar el estado de las alarmas, revise los datos ingresados');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
     }
+  }
+
+  const redirect = () => {
+    navigate('/listar-control-de-alarma-luminica-y-sonora-de-cloro')
   }
 
   return (
@@ -229,16 +212,14 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
           <Grid container spacing={0}>
             <Grid item lg={2} md={2} ></Grid>
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-              <Typography component='h1' variant='h4'>Registrar estado de alarmas lumínicas y sonoras de cloro</Typography>
+              <Typography component='h1' variant='h4'>Registrar Control de Alarma Lumínica y Sonora de Cloro</Typography>
               <div>
-                <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton className={blinking ? classes.blinkingButton : ''}>
-                    <HelpOutlineIcon fontSize="large" color="primary" />
-                  </IconButton>
-                </Button>
+                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
                 <Dialog
                   fullScreen={fullScreen}
-                  fullWidth='md'
+                  fullWidth
                   maxWidth='md'
                   open={open}
                   onClose={handleClose}
@@ -248,23 +229,24 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                   <DialogContent>
                     <DialogContentText className={classes.text}>
                       <span>
-                        En esta página puedes registrar el estado de las alarmas lumínicas y sonoras de cloro de la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                        En esta página puedes registrar el estado de las alarmas lumínica y sonora de cloro, asegúrate de completar los campos necesarios para registrar el estado.
                       </span>
                       <br />
                       <span>
                         Este formulario cuenta con 4 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Fecha y Hora</span>: en este campo se debe registrar la fecha y la hora en que se registró el chequeo de las alarmas.
+                            <span className={classes.liTitleBlue}>Fecha y Hora</span>: En este campo se debe registrar fecha y la hora en la que se registró el chequeo de las alarmas.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Alarma Lumínica</span>: en este campo se registrará el estado de la alarma. Hay 2 tipos: "Funcionando" y "No Funcionando".
+                            <span className={classes.liTitleBlue}>Alarma Lumínica</span>: En este campo se debe registrar el estado de la alarma lumínica. Hay 2 tipos: "Funcionando" y "No Funcionando".
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Alarma Sonora</span>: en este campo se debe registrar el estado de la alarma. Hay 2 tipos: "Funcionando" y "No Funcionando".
+                            <span className={classes.liTitleBlue}>Alarma Sonora</span>: En este campo se debe registrar el estado de la alarma sonora. Hay 2 tipos: "Funcionando" y "No Funcionando".
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de revisar las alarmas.
+                            <span className={classes.liTitleRed}>Observaciones</span>: En este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de revisar las alarmas, 
+                            este campo acepta palabras minúsculas, mayúsculas y también números, cuenta con una longitud máxima de 250 caracteres.
                           </li>
                         </ul>
                       </span>
@@ -272,12 +254,21 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                          <br />
+                          - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                          <br />
+                          - No se acepta el valor Seleccionar en los campos de alarma lumínica y alarma sonora.
+                          <br />
+                          - Una vez registre el estado de las alarmas, no se le redirigirá al listar. Se determinó así por si está buscando registrar el estado de las alarmas más de una vez.                  
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -305,6 +296,7 @@ const AgregarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
       <FormularioReutilizanle
         fields={formFields}
         onSubmit={handleFormSubmit}
+        handleRedirect={redirect}
         selectOptions={{
           controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica: selectAlarmas,
           controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora: selectAlarmas,

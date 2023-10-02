@@ -1,24 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from '@material-ui/icons/Close';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { tr } from 'date-fns/locale';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -43,6 +33,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -100,6 +93,7 @@ const ModificarCliente = () => {
     const [localidades, setLocalidades] = useState({});
     const [localidadesSelect, setLocalidadesSelect] = useState([]);
     const [telefonos, setTelefonos] = useState([]);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
@@ -113,16 +107,16 @@ const ModificarCliente = () => {
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Proveedor registrado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro registrar el proveedor, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró registrar el proveedor, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -143,31 +137,23 @@ const ModificarCliente = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
 
     useEffect(() => {
@@ -196,7 +182,16 @@ const ModificarCliente = () => {
                     });
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            redirect();
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -242,7 +237,7 @@ const ModificarCliente = () => {
     const handleChange = event => {
         const { name, value } = event.target;
         if (name === "proveedorNombre") {
-            const regex = new RegExp("^[A-Za-z0-9\\s]{0,50}$");
+            const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$");
             if (regex.test(value)) {
                 setProveedor(prevState => ({
                     ...prevState,
@@ -268,7 +263,6 @@ const ModificarCliente = () => {
                 }));
             }
         }
-        console.log(proveedor);
     }
 
     const handleChangeTelefono = (index, telefono) => {
@@ -292,7 +286,6 @@ const ModificarCliente = () => {
         nuevosTelefonos.splice(index, 1);
 
         setTelefonos(nuevosTelefonos);
-        console.log(nuevosTelefonos);
     };
 
     const checkTelefono = (telefonos) => {
@@ -343,18 +336,19 @@ const ModificarCliente = () => {
             proveedores.forEach(proveedor => {
                 if (proveedor.proveedorId.toString() === id.toString()) { }
                 else {
-                    emailProveedores.push(proveedor.proveedorEmail);
+                    if (proveedor.proveedorEmail !== undefined && proveedor.proveedorEmail !== null && proveedor.proveedorEmail !== '') {
+                        emailProveedores.push(proveedor.proveedorEmail);
+                    }
                 }
             })
 
             const emailEncontrado = emailProveedores.includes(email);
-            console.log(emailEncontrado);
             return emailEncontrado;
         }
     }
 
     const checkError = (nombre, rut, email, localidad) => {
-        if (nombre === undefined || nombre === null || nombre.trim() === '') {
+        if (nombre === undefined || nombre === null || nombre === '') {
             return false;
         }
 
@@ -366,7 +360,7 @@ const ModificarCliente = () => {
         }
 
         if (email) {
-            if (email === undefined || email === null || email.trim() === '') { return false }
+            if (email === undefined || email === null || email === '') { return false }
             else {
                 if (!email.includes(".") && !email.includes("@")) {
                     return false;
@@ -374,7 +368,7 @@ const ModificarCliente = () => {
             }
         }
 
-        if (localidad === undefined || localidad === null) {
+        if (localidad === undefined || localidad === null || localidad === 'Seleccionar') {
             return false;
         }
 
@@ -383,18 +377,15 @@ const ModificarCliente = () => {
 
     const checkErrorTelefono = (telefonos) => {
         let resp = true;
-        console.log(telefonos)
         if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
             return false;
         } else {
-            const regex = /^\d{9}$/;
+            const regex = /^\d{8,9}$/;
             telefonos.forEach((tel) => {
                 if (regex.test(tel)) {
                     const primerNum = tel[0];
                     const longitud = tel.length;
-                    console.log(primerNum)
-                    console.log(longitud)
-                    if (parseInt(primerNum) === 0 && longitud === 9) { }
+                    if (parseInt(primerNum) === 0 && longitud === 9 || (parseInt(primerNum) === 4 && longitud === 8)) { }
                     else { resp = false }
                 }
                 else { resp = false }
@@ -404,10 +395,7 @@ const ModificarCliente = () => {
     }
 
     const handleFormSubmit = () => {
-        const localidadValue = proveedorLocalidad === "Seleccionar" ? "Seleccionar" : proveedorLocalidad.value;
-        console.log(localidadValue);
-        const localidadCompleta = localidades.find((localidad) => localidad.localidadId.toString() === localidadValue.toString());
-        console.log(localidadCompleta)
+        const localidadCompleta = localidades.find((localidad) => localidad.localidadId.toString() === proveedorLocalidad.value.toString());
         const telefonosStrings = [];
         telefonos.forEach((telefono) => {
             telefonosStrings.push(telefono.tel);
@@ -423,26 +411,20 @@ const ModificarCliente = () => {
         const email = data.proveedorEmail;
         const localidad = data.proveedorLocalidad;
 
-
         const check = checkError(nombre, rut, email, localidad);
-        console.log(check)
 
         if (check === false) {
             updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             if (localidadCompleta !== undefined || proveedorLocalidad !== "Seleccionar") {
                 const telefonoCheck = checkTelefono(data.proveedorContacto);
                 const rutCheck = checkRut(data.proveedorRUT);
                 const emailCheck = checkEmail(data.proveedorEmail);
                 const telefonoCheckError = checkErrorTelefono(data.proveedorContacto);
-                console.log(telefonoCheck)
-                console.log(rutCheck)
-                console.log(emailCheck)
-                console.log(telefonoCheckError)
                 if (email) {
                     const regex = /^(([^<>()[\]\.,;:\s@"]+(\.[^<>()[\]\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
                     if (regex.test(email)) {
@@ -451,10 +433,9 @@ const ModificarCliente = () => {
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 7000);
+                            }, 3000);
                         } else {
                             if (telefonoCheck === false && rutCheck === false && emailCheck === false) {
-                                console.log(data)
                                 axios.put(`/modificar-proveedor/${id}`, data, {
                                     headers: {
                                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -469,26 +450,23 @@ const ModificarCliente = () => {
                                                 navigate('/listar-proveedor');
                                             }, 3000)
                                         } else {
-                                            updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.')
+                                            updateErrorAlert('No se logró modificar el proveedor, revise los datos ingresados.')
                                             setShowAlertError(true);
                                             setTimeout(() => {
                                                 setShowAlertError(false);
-                                            }, 5000);
+                                            }, 2500);
                                         }
                                     })
                                     .catch(error => {
                                         if (error.request.status === 401) {
-                                            setShowAlertWarning(true);
-                                            setTimeout(() => {
-                                                setShowAlertWarning(false);
-                                            }, 5000);
+                                            setCheckToken(true);
                                         }
                                         else if (error.request.status === 500) {
-                                            updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.');
+                                            updateErrorAlert('No se logró modificar el proveedor, revise los datos ingresados.');
                                             setShowAlertError(true);
                                             setTimeout(() => {
                                                 setShowAlertError(false);
-                                            }, 5000);
+                                            }, 2500);
                                         }
                                     })
                             } else {
@@ -496,7 +474,7 @@ const ModificarCliente = () => {
                                 setShowAlertError(true);
                                 setTimeout(() => {
                                     setShowAlertError(false);
-                                }, 7000);
+                                }, 3000);
                             }
                         }
                     } else {
@@ -504,7 +482,7 @@ const ModificarCliente = () => {
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 7000);
+                        }, 2000);
                     }
                 } else {
                     if (telefonoCheckError === false) {
@@ -512,15 +490,14 @@ const ModificarCliente = () => {
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 7000);
+                        }, 3000);
                     } else {
                         if (telefonoCheck === false && rutCheck === false) {
-                            console.log(data)
                             const dataMod = {
                                 ...data,
                                 proveedorEmail: null,
                             }
-                            axios.put(`/modificar-proveedor/${id}`, data, {
+                            axios.put(`/modificar-proveedor/${id}`, dataMod, {
                                 headers: {
                                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                                     "Content-Type": "application/json"
@@ -532,28 +509,25 @@ const ModificarCliente = () => {
                                         setTimeout(() => {
                                             setShowAlertSuccess(false);
                                             navigate('/listar-proveedor');
-                                        }, 3000)
+                                        }, 2500)
                                     } else {
-                                        updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.')
+                                        updateErrorAlert('No se logró modificar el proveedor, revise los datos ingresados.')
                                         setShowAlertError(true);
                                         setTimeout(() => {
                                             setShowAlertError(false);
-                                        }, 5000);
+                                        }, 2500);
                                     }
                                 })
                                 .catch(error => {
                                     if (error.request.status === 401) {
-                                        setShowAlertWarning(true);
-                                        setTimeout(() => {
-                                            setShowAlertWarning(false);
-                                        }, 5000);
+                                        setCheckToken(true);
                                     }
                                     else if (error.request.status === 500) {
-                                        updateErrorAlert('No se logro modificar el proveedor, revise los datos ingresados.');
+                                        updateErrorAlert('No se logró modificar el proveedor, revise los datos ingresados.');
                                         setShowAlertError(true);
                                         setTimeout(() => {
                                             setShowAlertError(false);
-                                        }, 5000);
+                                        }, 2500);
                                     }
                                 })
                         } else {
@@ -561,7 +535,7 @@ const ModificarCliente = () => {
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 7000);
+                            }, 3000);
                         }
                     }
                 }
@@ -575,6 +549,10 @@ const ModificarCliente = () => {
         }
     };
 
+    const redirect = () => {
+        navigate('/listar-proveedor')
+    }
+
     return (
         <div>
             <CssBaseline>
@@ -587,14 +565,12 @@ const ModificarCliente = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Proveedor</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -604,28 +580,35 @@ const ModificarCliente = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los clientes, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puede modificar un proveedor, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 5 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre de la empresa o del cliente.
+                                                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre de la empresa o del proveedor,
+                                                                este campo solo acepta palabras y números, a su vez cuenta con una longitud máxima de 40 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Email</span>: en este campo se debe ingresar el mail proporcionado por el cliente.
+                                                                <span className={classes.liTitleBlue}>RUT</span>: en este campo se debe ingresar el código RUT por el cual se identifica el proveedor,
+                                                                este campo solo acepta números, a su vez cuenta con una longitud máxima de 12 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Contacto</span>: en este campo se ingresa el número de teléfono del cliente,
+                                                                <span className={classes.liTitleBlue}>Email</span>: en este campo se debe ingresar el mail del proveedor,
+                                                                este campo solo acepta palabras, números, arroba y punto, a su vez cuenta con un máximo de 50 caracteres..
+                                                            </li>
+                                                            <li>
+                                                                <span className={classes.liTitleBlue}>Contacto</span>: en este campo se ingresa el número de teléfono del proveedor,
                                                                 en caso de que tenga mas de un teléfono, se puede agregar mas al darle click al icono de mas a la derecha del campo
-                                                                y si desea eliminar el campo, consta en darle click a la X a la derecha del campo generado.
+                                                                y si desea eliminar el campo, consta en darle click a la X a la derecha del campo generado, los campos de teléfono aceptan solo números y
+                                                                cuentan con una longitud máxima de 9 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios del cliente.
+                                                                <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios del proveedor.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Localidad</span>: en este campo se puede seleccionar la localidad en donde esta ubicado el cliente o su empresa,
+                                                                <span className={classes.liTitleBlue}>Localidad</span>: en este campo se puede seleccionar la localidad en donde esta ubicado el proveedor o su empresa,
                                                                 en caso de querer añadir una localidad nueva, es posible dandole al icono de más a la derecha del campo.
                                                             </li>
                                                         </ul>
@@ -634,11 +617,20 @@ const ModificarCliente = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifiqué los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
+                                                            <li>En el campo de teléfono también se acepta números de teléfono fijo, en caso de que quiera agregar un teléfono fijo ingréselo todo junto.</li>
+                                                            <li>En el modificar también se pueden agregar o sacar teléfonos.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -670,12 +662,11 @@ const ModificarCliente = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Nombre"
-                                            defaultValue="Nombre"
                                             type="text"
                                             name="proveedorNombre"
                                             value={proveedor.proveedorNombre}
@@ -687,12 +678,11 @@ const ModificarCliente = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="RUT"
-                                            defaultValue="RUT"
                                             type="text"
                                             name="proveedorRUT"
                                             value={proveedor.proveedorRUT}
@@ -704,12 +694,11 @@ const ModificarCliente = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            InputLabelProps={{ className: classes.customLabelRed, shrink: true }}
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Email"
-                                            defaultValue="Email"
                                             type="email"
                                             name="proveedorEmail"
                                             value={proveedor.proveedorEmail}
@@ -733,7 +722,7 @@ const ModificarCliente = () => {
                                                 fullWidth
                                                 autoFocus
                                                 className={classes.customOutlinedBlue}
-                                                InputLabelProps={{ className: classes.customLabelBlue }}
+                                                InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                                 color="primary"
                                                 margin="normal"
                                                 variant="outlined"
@@ -778,7 +767,9 @@ const ModificarCliente = () => {
                                                 name: "proveedorLocalidad",
                                                 id: `outlined-localidad-native-simple`,
                                             }}
-                                            onChange={(e) => setProveedorLocalidad(e.target.value)}
+                                            onChange={(e) => setProveedorLocalidad({
+                                                value: e.targer.value
+                                            })}
                                         >
                                             <option>Seleccionar</option>
                                             {localidadesSelect.map((option, ind) => (
@@ -794,7 +785,8 @@ const ModificarCliente = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

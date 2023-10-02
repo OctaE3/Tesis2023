@@ -9,12 +9,14 @@ import com.chacineria.marcelina.entidad.trazabilidad.PMonitoreo_de_SSOP_Operativ
 import com.chacineria.marcelina.entidad.trazabilidad.PMonitoreo_de_SSOP_PreOperativo;
 import com.chacineria.marcelina.entidad.trazabilidad.PResumen_de_Trazabilidad;
 import com.chacineria.marcelina.repositorio.persona.UsuarioRepositorio;
+import com.chacineria.marcelina.repositorio.trazabilidad.PAnual_de_Insumos_CarnicosRepositorio;
 import com.chacineria.marcelina.servicio.trazabilidad.PAnual_de_Insumos_CarnicosServicioImpl;
 import com.chacineria.marcelina.servicio.trazabilidad.PExpedicion_de_ProductoServicioImpl;
 import com.chacineria.marcelina.servicio.trazabilidad.PMonitoreo_de_SSOP_OperativoServicioImpl;
 import com.chacineria.marcelina.servicio.trazabilidad.PMonitoreo_de_SSOP_PreOperativoServicioImpl;
 import com.chacineria.marcelina.servicio.trazabilidad.PResumen_de_TrazabilidadServicioImpl;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -46,13 +48,22 @@ public class Controladora_Trazabilidad {
 
         @Autowired
         private PAnual_de_Insumos_CarnicosServicioImpl anualDeInsumosCarnicosServicioImpl;
+        
+        @Autowired
+        private PAnual_de_Insumos_CarnicosRepositorio anualDeInsumosCarnicosRepositorio;
 
         @GetMapping("/listar-anual-de-insumos-carnicos")
         public List<PAnual_de_Insumos_Carnicos> listadoAnualDeInsumosCarnicos() {
                 List<PAnual_de_Insumos_Carnicos> anualDeInsumosCarnicos = StreamSupport
                                 .stream(anualDeInsumosCarnicosServicioImpl.findAll().spliterator(), false)
                                 .collect(Collectors.toList());
+                Collections.reverse(anualDeInsumosCarnicos);
                 return anualDeInsumosCarnicos;
+        }
+
+        @GetMapping("/listar-ultimo-anual")
+        public PAnual_de_Insumos_Carnicos listadoUltimoAnualDeInsumosCarnicos() {
+                return anualDeInsumosCarnicosRepositorio.findLastAnualDeInsumosCarnicos();
         }
 
         @GetMapping("/buscar-anual-de-insumos-carnicos/{anualDeInsumosCarnicosId}")
@@ -141,6 +152,7 @@ public class Controladora_Trazabilidad {
                                         .stream(expedicionDeProductoServicioImpl.findAll().spliterator(), false)
                                         .collect(Collectors.toList());
 
+                        Collections.reverse(expedicionDeProducto);
                         return ResponseEntity.ok(expedicionDeProducto);
                 } catch (Exception e) {
                         return ResponseEntity.notFound().build();
@@ -252,6 +264,7 @@ public class Controladora_Trazabilidad {
                 List<PMonitoreo_de_SSOP_Operativo> monitoreoDeSSOPOperativo = StreamSupport
                                 .stream(monitoreoDeSSOPOperativoServicioImpl.findAll().spliterator(), false)
                                 .collect(Collectors.toList());
+                Collections.reverse(monitoreoDeSSOPOperativo);
                 return monitoreoDeSSOPOperativo;
         }
 
@@ -350,6 +363,7 @@ public class Controladora_Trazabilidad {
                 List<PMonitoreo_de_SSOP_PreOperativo> monitoreoDeSSOPPreOperativo = StreamSupport
                                 .stream(monitoreoDeSSOPPreOperativoServicioImpl.findAll().spliterator(), false)
                                 .collect(Collectors.toList());
+                Collections.reverse(monitoreoDeSSOPPreOperativo);
                 return monitoreoDeSSOPPreOperativo;
         }
 
@@ -450,6 +464,7 @@ public class Controladora_Trazabilidad {
                 List<PResumen_de_Trazabilidad> resumenDeTrazabilidad = StreamSupport
                                 .stream(resumenDeTrazabilidadServicioImpl.findAll().spliterator(), false)
                                 .collect(Collectors.toList());
+                Collections.reverse(resumenDeTrazabilidad);
                 return resumenDeTrazabilidad;
         }
 

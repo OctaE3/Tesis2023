@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -65,33 +57,33 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
 
   const formFields = [
     { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', label: 'Depositos *', type: 'selector', multiple: 'si', color: 'primary' },
-    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias', label: 'Cañerias', type: 'text', pattern: "^[A-Za-z0-9\\s]{0,30}$", obligatorio: true, color: 'primary' },
-    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones', label: 'Observaciones', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'secondary' },
+    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito', label: 'Depósitos *', type: 'selector', multiple: 'si', color: 'primary' },
+    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasCanierias', label: 'Cañerías', type: 'text', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,30}$", obligatorio: true, color: 'primary' },
+    { name: 'controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasObservaciones', label: 'Observaciones', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\s,.]{0,250}$", type: 'text', multi: '3', color: 'secondary' },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se registro el control de limpieza y desinfeccion de depositos de agua y cañerías con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se registró el control de limpieza y desinfección con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro regristrar el control de limpieza y desinfeccion de depositos de agua y cañerías, revise los datos ingresados', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró regristrar el control de limpieza y desinfección, revise los datos ingresados', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
-  const [controlDeLimpieza, setControlDeLimpieza] = useState({});
-  const [depositoSelect, setDepositoSelect] = useState([
-    { value: '1', label: 'Deposito de Agua 1' },
-    { value: '2', label: 'Deposito de Agua 2' },
-    { value: '3', label: 'Deposito de Agua 3' },
+  const [depositoSelect] = useState([
+    { value: '1', label: 'Depósito de Agua 1' },
+    { value: '2', label: 'Depósito de Agua 2' },
+    { value: '3', label: 'Depósito de Agua 3' },
   ]);
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -118,31 +110,23 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -160,7 +144,7 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
   };
 
   const checkError = (fecha, depositos, canierias) => {
-    if (fecha === undefined || fecha === null || fecha === '') {
+    if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
       return false;
     }
     else if (depositos.length === 0 || depositos === undefined || depositos === null) {
@@ -201,9 +185,8 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 5000);
+      }, 3000);
     } else {
-      console.log(controlDeLimpiezaConResponsable);
       axios.post('/agregar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-canierias', controlDeLimpiezaConResponsable, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -215,13 +198,14 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
-            }, 5000);
+              navigate('/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias')
+            }, 2500);
           } else {
-            updateErrorAlert('No se logro regristrar el control de limpieza y desinfeccion de depositos de agua y canierias, revise los datos ingresados.');
+            updateErrorAlert('No se logró regristrar el control de limpieza y desinfección, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
         .catch(error => {
@@ -229,17 +213,21 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
             setShowAlertWarning(true);
             setTimeout(() => {
               setShowAlertWarning(false);
-            }, 5000);
+            }, 3000);
           }
           else if (error.request.status === 500) {
-            updateErrorAlert('No se logro regristrar el control de limpieza y desinfeccion de depositos de agua y canierias, revise los datos ingresados.');
+            updateErrorAlert('No se logró regristrar el control de limpieza y desinfección, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
     }
+  }
+
+  const redirect = () => {
+    navigate('/listar-control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias')
   }
 
   return (
@@ -250,16 +238,14 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
           <Grid container spacing={0}>
             <Grid item lg={2} md={2} ></Grid>
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-              <Typography component='h1' variant='h4'>Registrar Control de Limpieza y Desinfeccion de Depositos de Agua y Canierias</Typography>
+              <Typography component='h1' variant='h4'>Registrar Control de Limpieza y Desinfeccion de Depósitos de Agua y Cañerías</Typography>
               <div>
-                <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton className={blinking ? classes.blinkingButton : ''}>
-                    <HelpOutlineIcon fontSize="large" color="primary" />
-                  </IconButton>
-                </Button>
+                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
                 <Dialog
                   fullScreen={fullScreen}
-                  fullWidth='md'
+                  fullWidth
                   maxWidth='md'
                   open={open}
                   onClose={handleClose}
@@ -269,23 +255,24 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
                   <DialogContent>
                     <DialogContentText className={classes.text}>
                       <span>
-                        En esta página puedes registrar la cantidad de cloro medido en el agua y de qué grifo, asegúrate de completar los campos necesarios para registrar el estado.
+                        En esta página puedes registrar los depósitos y cañerías que se limpiaron y desinfectaron, asegúrate de completar los campos necesarios para registrar el estado.
                       </span>
                       <br />
                       <span>
                         Este formulario cuenta con 4 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en que se registró la limpieza y desinfección de los depósitos y cañerías.
+                            <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe registrar la fecha en la que se registró la limpieza y desinfección de los depósitos y cañerías.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Depósitos</span>: en este campo se registrará los depósitos que limpiaron y desinfectaron.
+                            <span className={classes.liTitleBlue}>Depósitos</span>: En este campo se debe seleccionar los depósitos que limpiaron y desinfectaron.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Cañerías</span>: en este campo se registrará las cañerías que se limpiaron y desinfectaron.
+                            <span className={classes.liTitleBlue}>Cañerías</span>: En este campo se debe ingresar las cañerías que se limpiaron y desinfectaron, este campo acepta palabras minúsculas, mayúsculas y también números, el campo cuenta con una longitud máxima de 30 caracteres.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de limpiar los depósitos y cañerías.
+                            <span className={classes.liTitleRed}>Observaciones</span>: En este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de limpiar los depósitos y cañerías,
+                            este campo acepta palabras minúsculas, mayúsculas y también números, el campo cuenta con una longitud máxima de 250 caracteres.
                           </li>
                         </ul>
                       </span>
@@ -293,12 +280,21 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Campos con contorno azul</span>: los campos con contorno azul son obligatorio, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                        <br />
+                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                        <br />
+                        - El campo de cañerías siempre se debe ingresar la palabra Todas, ya que siempre se limpian todas la cañerías.
+                        <br />
+                        - Una vez registre el control de limpieza y desinfección, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro control de limpieza y desinfección.
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -326,6 +322,7 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
       <FormularioReutilizanle
         fields={formFields}
         onSubmit={handleFormSubmit}
+        handleRedirect={redirect}
         selectOptions={{ controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: depositoSelect }}
       />
     </Grid>

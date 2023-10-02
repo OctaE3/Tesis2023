@@ -22,6 +22,10 @@ const useStyles = makeStyles((theme) => ({
         transition: 'opacity 0.5s ease-in-out',
         width: '100%',
     },
+    alertSuccesBgColor: {
+        backgroundColor: 'ForestGreen',
+        color: 'white',
+    }
 }));
 
 const AlertasReutilizable = ({ alert, isVisible, open, setOpen }) => {
@@ -33,7 +37,7 @@ const AlertasReutilizable = ({ alert, isVisible, open, setOpen }) => {
             {alert && alert.type === 'description' && (
                 <Fade in={isVisible} timeout={500} key={alert.id}>
                     <div className={classes.root}>
-                        <Alert severity={alert.severity}>
+                        <Alert className={alert.severity === 'success' ? classes.alertSuccesBgColor : ''} severity={alert.severity}>
                             <AlertTitle>{alert.title}</AlertTitle>
                             {alert.body}
                         </Alert>

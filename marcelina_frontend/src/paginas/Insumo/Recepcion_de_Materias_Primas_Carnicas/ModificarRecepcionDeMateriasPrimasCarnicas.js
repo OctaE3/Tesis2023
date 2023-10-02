@@ -48,6 +48,9 @@ const useStyles = makeStyles(theme => ({
         marginTop: 5,
         marginBottom: 10,
     },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
+    },
     table: {
         minWidth: '100%',
     },
@@ -121,6 +124,7 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -131,15 +135,15 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
     const navigate = useNavigate();
 
     const [alertSuccess, setAlertSuccess] = useState({
-        title: 'Correcto', body: 'Recepcion de materia primas carnicas modificada con éxito!', severity: 'success', type: 'description'
+        title: 'Correcto', body: 'Recepción de materia primas cárnicas modificada con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar la recepcion de materia primas carnicas, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar la recepción de materia primas cárnicas, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
     const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -160,31 +164,23 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -200,7 +196,6 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                         navigate('/listar-recepcion-de-materias-primas-carnicas')
                     }
                     setControles(controlesData);
-                    console.log(controlEncontrado)
 
                     const carnes = controlEncontrado.recepcionDeMateriasPrimasCarnicasProductos;
                     setRecepcionCarnes(
@@ -226,11 +221,19 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                         ...controlEncontrado,
                         recepcionDeMateriasPrimasCarnicasFecha: fechaFormateada,
                     }
-                    console.log(controlConFechaParseada);
                     setControl(controlConFechaParseada);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            redirect();
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -251,7 +254,15 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
 
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los proveedores, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -295,7 +306,7 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
             }
         }
         else if (name === "recepcionDeMateriasPrimasCarnicasMotivoDeRechazo") {
-            const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+            const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$");
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -327,14 +338,12 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
     }
 
     const handleFormSubmit = () => {
-        const proveedorSeleccionadaObj = proveedores.find((proveedor) => proveedor.proveedorId.toString() === recepcionProveedor.toString());
-        console.log(recepcionProveedor);
+        const proveedorSeleccionadaObj = proveedores.find((proveedor) => proveedor.proveedorId.toString() === recepcionProveedor.value.toString());
+
         const data = {
             ...control,
             recepcionDeMateriasPrimasCarnicasProveedor: proveedorSeleccionadaObj,
         };
-        console.log(data);
-
         const check = checkError(data.recepcionDeMateriasPrimasCarnicasFecha, data.recepcionDeMateriasPrimasCarnicasProveedor,
             data.recepcionDeMateriasPrimasCarnicasPaseSanitario, data.recepcionDeMateriasPrimasCarnicasTemperatura);
 
@@ -343,7 +352,7 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 5000);
+            }, 3000);
         } else {
             const fecha = new Date(data.recepcionDeMateriasPrimasCarnicasFecha);
             fecha.setDate(fecha.getDate() + 2);
@@ -352,7 +361,15 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                 ...data,
                 recepcionDeMateriasPrimasCarnicasFecha: fechaPars,
             }
-            axios.put(`/modificar-recepcion-de-materias-primas-carnicas/${id}`, dataA, {
+            const dataCarnes = dataA.recepcionDeMateriasPrimasCarnicasProductos;
+            dataCarnes.forEach(carne => {
+                carne.carnePaseSanitario = dataA.recepcionDeMateriasPrimasCarnicasPaseSanitario;
+            })
+            const dataConCarneAct = {
+                ...dataA,
+                recepcionDeMateriasPrimasCarnicasProductos: dataCarnes,
+            }
+            axios.put(`/modificar-recepcion-de-materias-primas-carnicas/${id}`, dataConCarneAct, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     "Content-Type": "application/json"
@@ -364,32 +381,33 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                         setTimeout(() => {
                             setShowAlertSuccess(false);
                             navigate('/listar-recepcion-de-materias-primas-carnicas');
-                        }, 3000)
+                        }, 2500)
                     } else {
-                        updateErrorAlert('No se logro modificar la recepcion de materia primas carnicas, revise los datos ingresados.')
+                        updateErrorAlert('No se logró modificar la recepción de materia primas cárnicas, revise los datos ingresados.')
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
                 .catch(error => {
                     if (error.request.status === 401) {
-                        setShowAlertWarning(true);
-                        setTimeout(() => {
-                            setShowAlertWarning(false);
-                        }, 5000);
+                        setCheckToken(true);
                     }
                     else if (error.request.status === 500) {
-                        updateErrorAlert('No se logro modificar la recepcion de materia primas carnicas, revise los datos ingresados.');
+                        updateErrorAlert('No se logró modificar la recepción de materia primas cárnicas, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-recepcion-de-materias-primas-carnicas')
+    }
 
     return (
         <div>
@@ -401,16 +419,14 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2}></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
-                                    <Typography component='h1' variant='h4'>Modificar Recepcion de Materias Primas Carnicas</Typography>
+                                    <Typography component='h1' variant='h4'>Modificar Recepción de Materias Primas Cárnicas</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -420,39 +436,42 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los productos carnicos que recibe large chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar una recepción de materias primas cárnicas, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 6 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se recibio la carne.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se recibió la carne.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Proveedor</span>: en este campo se debe seleccionar el proveedor al que se le compro la carne.
+                                                                <span className={classes.liTitleBlue}>Proveedor</span>: En este campo se debe seleccionar el proveedor al que se le compro la carne.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Productos</span>: en este campo se muestran por medio de una tabla los productos carnicos recibidos,
-                                                                donde se muestran sus datos, en caso de querer modificar las carnes, es posible a traves del modificar de carne. En caso de modificar el pase santitario,
-                                                                se le asignara el nuevo pase sanitario a las carnes vinculadas.
+                                                                <span className={classes.liTitleBlue}>Productos</span>: En este campo se muestran por medio de una tabla los productos carnicos recibidos,
+                                                                donde se muestran sus datos, en caso de querer modificar las carnes, es posible a través del modificar de carne. En caso de modificar el pase santitario,
+                                                                se le asignará el nuevo pase sanitario a las carnes vinculadas.
                                                                 La tabla cuenta con 5 columnas:
                                                                 <ul>
-                                                                    <li><span className={classes.liTitleBlue}>Nombre</span>: en esta columna se muestra el nombre de la carne o producto cárnico que se recibio.</li>
-                                                                    <li><span className={classes.liTitleBlue}>Tipo</span>: en este columna se muestra el tipo de producto que se recibio, hay 5 tipos Bovino, Porcino, Higado, Tripa y Sangre.</li>
-                                                                    <li><span className={classes.liTitleBlue}>Corte</span>: en este columna se muestra el grupo en el que entra el producto recibido.</li>
-                                                                    <li><span className={classes.liTitleBlue}>Categoria</span>: en este columna se muestra se muestra la categoria de la carne.</li>
-                                                                    <li><span className={classes.liTitleBlue}>Cantidad</span>: en este columna se muestra la cantidad recibida del producto carnico.</li>
+                                                                    <li><span className={classes.liTitleBlue}>Nombre</span>: En esta columna se muestra el nombre de la carne o producto cárnico que se recibió</li>
+                                                                    <li><span className={classes.liTitleBlue}>Tipo</span>: En este columna se muestra el tipo de producto que se recibió, hay 5 tipos Bovino, Porcino, Higado, Tripa y Sangre.</li>
+                                                                    <li><span className={classes.liTitleBlue}>Corte</span>: En este columna se muestra el grupo en el que entra el producto recibido.</li>
+                                                                    <li><span className={classes.liTitleBlue}>Categoría</span>: En este columna se muestra la categoría de la carne.</li>
+                                                                    <li><span className={classes.liTitleBlue}>Cantidad</span>: En este columna se muestra la cantidad recibida del producto cárnico.</li>
                                                                 </ul>
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Pase Sanitario</span>: en este campo se ingresa el número del pase sanitario.
+                                                                <span className={classes.liTitleBlue}>Pase Sanitario</span>: En este campo se debe ingresar el número del pase sanitario,
+                                                                este campo solo acepta números y cuenta con una longitud máxima de 15 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Temperatura</span>: en este campo se ingresa la temperatura en la que se recibio la carne.
+                                                                <span className={classes.liTitleBlue}>Temperatura</span>: En este campo se debe ingresar la temperatura en la que se recibió la carne,
+                                                                este campo acepta números y cuenta con una longitud máxima de 10 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: en este campo se puede dar los motivos o los detalles de por que se rechazó el producto cárnico recibido.
+                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: En este campo se pueden dar los motivos o los detalles de por que se rechazó el producto cárnico recibido,
+                                                                este campo acepta palabras minúsculas, mayúsculas y también números, cuenta con una longitud máxima de 250 caracteres.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -460,11 +479,20 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifiqué los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
+                                                            <li>No se puede modificar las carnes recibidas, en caso de querer modificar una carne, utilice el modificar de carne.</li>
+                                                            <li>Si se modifica el pase sanitario, también se modificará en las carnes.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -496,12 +524,11 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="recepcionDeMateriasPrimasCarnicasFecha"
                                             value={control.recepcionDeMateriasPrimasCarnicasFecha}
@@ -521,7 +548,9 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                                                     name: "recepcionDeMateriasPrimasCarnicasProveedor",
                                                     id: `outlined-recepcionDeMateriasPrimasCarnicasProveedor-native-simple`,
                                                 }}
-                                                onChange={(e) => setRecepcionProveedor(e.target.value)}
+                                                onChange={(e) => setRecepcionProveedor({
+                                                    value: e.targer.value
+                                                })}
                                             >
                                                 <option>Seleccionar</option>
                                                 {proveedorSelect.map((option, ind) => (
@@ -541,7 +570,7 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                                                         <TableCell>Nombre</TableCell>
                                                         <TableCell align="right">Tipo</TableCell>
                                                         <TableCell align="right">Corte</TableCell>
-                                                        <TableCell align="right">Categoria</TableCell>
+                                                        <TableCell align="right">Categoría</TableCell>
                                                         <TableCell align="right">Cantidad</TableCell>
                                                     </TableRow>
                                                 </TableHead>
@@ -566,12 +595,11 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Pase Sanitario"
-                                            defaultValue="Pase Sanitario"
                                             type="text"
                                             name="recepcionDeMateriasPrimasCarnicasPaseSanitario"
                                             value={control.recepcionDeMateriasPrimasCarnicasPaseSanitario}
@@ -583,12 +611,11 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Temperatura"
-                                            defaultValue={0}
                                             type="text"
                                             name="recepcionDeMateriasPrimasCarnicasTemperatura"
                                             value={control.recepcionDeMateriasPrimasCarnicasTemperatura}
@@ -602,12 +629,11 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            InputLabelProps={{ className: classes.customLabelRed, shrink: true }}
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Motivo de rechazo"
-                                            defaultValue="Motivo de rechazo"
                                             type="text"
                                             name="recepcionDeMateriasPrimasCarnicasMotivoDeRechazo"
                                             value={
@@ -624,7 +650,8 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -63,20 +55,20 @@ const useStyles = makeStyles(theme => ({
 
 const AgregarProducto = () => {
   const formFields = [
-    { name: 'productoNombre', label: 'Nombre', type: 'text', color: 'primary', obligatorio: true, pattern: "^[A-Za-z\\s]{0,50}$" },
+    { name: 'productoNombre', label: 'Nombre', type: 'text', color: 'primary', obligatorio: true, pattern: "^[A-Za-zÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$" },
     { name: 'productoCodigo', label: 'Código', type: 'text', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,10}$" },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
+  const [alertSuccess] = useState({
     title: 'Correcto', body: 'Producto registrado con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro registrar el producto, revise los datos ingresados.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró registrar el producto, revise los datos ingresados.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
@@ -85,6 +77,7 @@ const AgregarProducto = () => {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -103,31 +96,24 @@ const AgregarProducto = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
+      setCheckToken(false)
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const obtenerProductos = () => {
@@ -145,7 +131,15 @@ const AgregarProducto = () => {
           );
         })
         .catch(error => {
-          console.error(error);
+          if (error.request.status === 401) {
+            setCheckToken(true);
+          } else {
+            updateErrorAlert('No se logró cargar los datos de los productos, recargue la página.')
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 2000);
+          }
         });
     };
 
@@ -175,8 +169,6 @@ const AgregarProducto = () => {
   };
 
   const checkError = (nombre, codigo) => {
-    console.log(nombre)
-    console.log(codigo)
     if (nombre === undefined || nombre === null || nombre === '') {
       return false;
     }
@@ -187,25 +179,22 @@ const AgregarProducto = () => {
   }
 
   const checkCod = (prod) => {
-    console.log(prod);
     let resp = false;
     productos.forEach((producto) => {
-      if (producto.productoCodigo.toString() === prod.productoCodigo.toString()) {
+      if (producto.productoCodigo.toString() === prod.productoCodigo || producto.productoNombre === prod.productoNombre) {
         resp = true;
       } else {
-        if (producto.productoCodigo.toString() === prod.productoCodigo.toString() && producto.productoNombre.toString() === prod.productoNombre.toString()) {
+        if (producto.productoCodigo.toString() === prod.productoCodigo && producto.productoNombre === prod.productoNombre) {
           resp = true;
         }
       }
       if (resp) { return }
     })
-    console.log(resp);
     return resp;
   }
 
   const handleFormSubmit = (formData) => {
     const data = formData;
-    console.log(data);
 
     const check = checkError(data.productoNombre, data.productoCodigo);
     const checkC = checkCod(data);
@@ -215,9 +204,11 @@ const AgregarProducto = () => {
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 2500);
     } else {
       if (checkC === false) {
+        formData = {};
+        console.log(formData);
         axios.post('/agregar-producto', data, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -229,28 +220,25 @@ const AgregarProducto = () => {
               setShowAlertSuccess(true);
               setTimeout(() => {
                 setShowAlertSuccess(false);
-              }, 5000);
+              }, 2500);
             } else {
-              updateErrorAlert('No se logro registrar el producto, revise los datos ingresados.')
+              updateErrorAlert('No se logró registrar el producto, revise los datos ingresados.')
               setShowAlertError(true);
               setTimeout(() => {
                 setShowAlertError(false);
-              }, 5000);
+              }, 2500);
             }
           })
           .catch(error => {
             if (error.request.status === 401) {
-              setShowAlertWarning(true);
-              setTimeout(() => {
-                setShowAlertWarning(false);
-              }, 5000);
+              setCheckToken(true);
             }
             else if (error.request.status === 500) {
-              updateErrorAlert('No se logro registrar el producto, revise los datos ingresados.');
+              updateErrorAlert('No se logró registrar el producto, revise los datos ingresados.');
               setShowAlertError(true);
               setTimeout(() => {
                 setShowAlertError(false);
-              }, 5000);
+              }, 2500);
             }
           })
       } else {
@@ -258,9 +246,13 @@ const AgregarProducto = () => {
         setShowAlertError(true);
         setTimeout(() => {
           setShowAlertError(false);
-        }, 7000);
+        }, 2500);
       }
     }
+  }
+
+  const redirect = () => {
+    navigate('/listar-producto')
   }
 
   return (
@@ -273,14 +265,12 @@ const AgregarProducto = () => {
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
               <Typography component='h1' variant='h4'>Agregar Producto</Typography>
               <div>
-                <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton className={blinking ? classes.blinkingButton : ''}>
-                    <HelpOutlineIcon fontSize="large" color="primary" />
-                  </IconButton>
-                </Button>
+                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
                 <Dialog
                   fullScreen={fullScreen}
-                  fullWidth='md'
+                  fullWidth
                   maxWidth='md'
                   open={open}
                   onClose={handleClose}
@@ -297,10 +287,12 @@ const AgregarProducto = () => {
                         Este formulario cuenta con 2 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre del producto.
+                            <span className={classes.liTitleBlue}>Nombre</span>: En este campo se debe ingresar el nombre del producto,
+                            este campo solo acepta palabras mayúsculas y minúsculas, a su vez cuenta con una longitud máxima de 50 caracteres.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Código</span>: en este campo se ingresa el código que identifica el producto.
+                            <span className={classes.liTitleBlue}>Código</span>: En este campo se debe ingresa el código que identifica el producto,
+                            este campo solo acepta números y cuenta con una longitud máxima de 10 caracteres.
                           </li>
                         </ul>
                       </span>
@@ -314,6 +306,24 @@ const AgregarProducto = () => {
                             <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Campos obligatorios y no obligatorios:
+                        <ul>
+                          <li>
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                          </li>
+                          <li>
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                          </li>
+                        </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                        <br />
+                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                        <br />
+                        - Una vez registre el producto, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro producto.
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -340,6 +350,7 @@ const AgregarProducto = () => {
       </Container>
       <FormularioReutilizable
         fields={formFields}
+        handleRedirect={redirect}
         onSubmit={handleFormSubmit} />
     </Grid>
   )

@@ -36,7 +36,7 @@ function ColumnaReutilizable({ contacts }) {
 
   return (
     <div className={classes.root}>
-      <FixedSizeList height={46} width={250} itemSize={46} itemCount={contacts.length}>
+      <FixedSizeList height={46} width={250} itemSize={46} itemCount={contacts.length} className={classes.pad}>
         {({ index, style }) => renderRow({ index, style, contacts })}
       </FixedSizeList>
     </div>

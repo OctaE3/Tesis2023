@@ -97,7 +97,7 @@ public class PAnual_de_Insumos_CarnicosServicioImpl implements PAnual_de_Insumos
         Boolean check = false;
 
         if (ultimoAnual != null) {
-            if (ultimoAnual.getAnualDeInsumosCarnicosMes().equals(mes)) {
+            if (ultimoAnual.getAnualDeInsumosCarnicosMes().toLowerCase() == mes.toLowerCase()) {
                 mensaje = "Ya se dio de Alta, el Anual de insumos carnicos del mes de " + mes;
             } else {
                 check = true;

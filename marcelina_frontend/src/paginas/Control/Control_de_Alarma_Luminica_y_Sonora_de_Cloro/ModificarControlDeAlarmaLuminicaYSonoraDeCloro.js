@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
+import moment from 'moment';
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -63,8 +56,10 @@ const useStyles = makeStyles(theme => ({
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -107,27 +102,27 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [control, setControl] = useState({});
-    const [controles, setControles] = useState([]);
     const opciones = [
         { value: true, label: 'Funciona' },
         { value: false, label: 'No Funciona' },
     ];
 
-    const [alertSuccess, setAlertSuccess] = useState({
-        title: 'Correcto', body: 'Se modifico el estado de las alarmas con éxito!', severity: 'success', type: 'description'
+    const [alertSuccess] = useState({
+        title: 'Correcto', body: 'Se modificó el estado de las alarmas con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
         title: 'Error', body: 'No se logró modificar el estado de las alarmas, revise los datos ingresados', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -151,6 +146,27 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
     };
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/')
+        } else {
+            const tokenParts = token.split('.');
+            const payload = JSON.parse(atob(tokenParts[1]));
+
+            const tokenExpiration = payload.exp * 1000;
+            const currentTime = Date.now();
+
+            if (tokenExpiration < currentTime) {
+                setShowAlertWarning(true);
+                setTimeout(() => {
+                    setShowAlertWarning(false);
+                    navigate('/')
+                }, 2000);
+            }
+        }
+    }, [checkToken]);
+
+    useEffect(() => {
         const obtenerControles = () => {
             axios.get('/listar-control-de-alarma-luminica-y-sonora-de-cloro', {
                 headers: {
@@ -170,11 +186,18 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                         ...controlEncontrado,
                         controlDeAlarmaLuminicaYSonoraDeCloroFechaHora: fechaParseada,
                     }
-                    console.log(controlConFechaParseada);
                     setControl(controlConFechaParseada);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -196,38 +219,9 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
         };
     }, []);
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
-        } else {
-            const tokenParts = token.split('.');
-            const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
-
-            const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
-            const currentTime = Date.now();
-            console.log(currentTime)
-
-            if (tokenExpiration < currentTime) {
-                setShowAlertWarning(true);
-                setTimeout(() => {
-                    setShowAlertWarning(false);
-                    navigate('/')
-                }, 3000);
-            }
-        }
-    }, []);
-
     const handleChange = event => {
         const { name, value } = event.target;
-        const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+        const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$");
         if (name === "controlDeAlarmaLuminicaYSonoraDeCloroObservaciones") {
             if (regex.test(value)) {
                 setControl(prevState => ({
@@ -244,36 +238,36 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
     }
 
     const handleFormSubmit = () => {
-        const fecha = control.controlDeCloroLibreFecha;
-        const formato = 'yyyy-MM-dd HH:mm';
-        const fechaHoraFormateada = parse(fecha, formato, new Date());
+        const fecha = control.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora;
+        const fechaFormateada = moment(fecha, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DDTHH:mm');
         const data = {
             ...control,
-            controlDeAlarmaLuminicaYSonoraDeCloroFechaHora: fechaHoraFormateada,
-            controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica: control.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica === "false" ? false : true,
-            controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora: control.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora === "false" ? false : true,
+            controlDeAlarmaLuminicaYSonoraDeCloroFechaHora: fechaFormateada,
         };
-        console.log(data);
-
         const alarmaL = data.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica;
         const alarmaS = data.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora;
         const fechaHora = data.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora;
 
-        if (alarmaL === "Seleccionar" || alarmaL === undefined || alarmaS === "Seleccionar" || alarmaS === undefined) {
+        if (alarmaL === "Seleccionar" || alarmaL === undefined || alarmaL === null || alarmaS === "Seleccionar" || alarmaS === undefined || alarmaS === null) {
             updateErrorAlert(`No se permite el valor de alarma "Seleccionar", seleccione una opción válida.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 3000);
         }
-        else if (fechaHora === undefined || fechaHora === null || fechaHora === '') {
+        else if (fechaHora === undefined || fechaHora === null || fechaHora === '' || fechaHora.toString() === 'Invalid Date' || fecha.toString() === 'Invalid date') {
             updateErrorAlert(`Seleccione una fecha y hora, no deje el campo vacío.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 3000);
         } else {
-            axios.put(`/modificar-control-de-alarma-luminica-y-sonora-de-cloro/${id}`, data, {
+            const controlData = {
+                ...data,
+                controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica: control.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaLuminica === "false" ? false : true,
+                controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora: control.controlDeAlarmaLuminicaYSonoraDeCloroAlarmaSonora === "false" ? false : true,
+            }
+            axios.put(`/modificar-control-de-alarma-luminica-y-sonora-de-cloro/${id}`, controlData, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     "Content-Type": "application/json"
@@ -285,33 +279,33 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                         setTimeout(() => {
                             setShowAlertSuccess(false);
                             navigate('/listar-control-de-alarma-luminica-y-sonora-de-cloro');
-                        }, 3000);
+                        }, 2000);
                     } else {
                         updateErrorAlert('No se logró modificar el estado de las alarmas, revise los datos ingresados');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 3000);
                     }
                 })
                 .catch(error => {
-                    console.log(error);
                     if (error.request.status === 401) {
-                        setShowAlertWarning(true);
-                        setTimeout(() => {
-                            setShowAlertWarning(false);
-                        }, 5000);
+                        setCheckToken(true);
                     }
                     else if (error.request.status === 500) {
                         updateErrorAlert('No se logró modificar el estado de las alarmas, revise los datos ingresados');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 3000);
                     }
                 })
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-control-de-alarma-luminica-y-sonora-de-cloro')
+    }
 
     return (
         <div>
@@ -325,14 +319,12 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Control De Alarma Luminica Y Sonora De Cloro</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -342,23 +334,24 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar el estado de las alarmas lumínicas y sonoras de cloro de la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar un registro de control alarmas lumínicas y sonoras de cloro.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 4 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha y Hora</span>: en este campo se debe registrar la fecha y la hora en que se registró el chequeo de las alarmas.
+                                                                <span className={classes.liTitleBlue}>Fecha y Hora</span>: En el campo 'Fecha y Hora', se muestra la fecha y hora en la que se registró el control de la alarma lumínica y sonora del cloro.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Alarma Lumínica</span>: en este campo se registrará el estado de la alarma. Hay 2 tipos: "Funcionando" y "No Funcionando".
+                                                                <span className={classes.liTitleBlue}>Alarma Lumínica</span>: En el campo 'Alarma Lumínca', se muestra el estado de la alarma lumínica.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Alarma Sonora</span>: en este campo se debe registrar el estado de la alarma. Hay 2 tipos: "Funcionando" y "No Funcionando".
+                                                                <span className={classes.liTitleBlue}>Alarma Sonora</span>: En el campo 'Alarma Sonora', se muestra el estado de la alarma sonora.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de revisar las alarmas.
+                                                                <span className={classes.liTitleRed}>Observaciones</span>: En el campo 'Observaciones', se muestran los detalles o observaciones que se encontraron al momento de revisar el estado de las alarmas,
+                                                                este campo acepta palabras minúsculas, mayúsculas y también números, cuenta con una longitud máxima de 250 caracteres.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -366,11 +359,18 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifique los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -406,11 +406,11 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                                             variant="outlined"
                                             color="primary"
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             label="Fecha y Hora"
                                             type="datetime-local"
                                             name="controlDeAlarmaLuminicaYSonoraDeCloroFechaHora"
-                                            value={control.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora ? control.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora : new Date()}
+                                            value={control.controlDeAlarmaLuminicaYSonoraDeCloroFechaHora}
                                             onChange={handleChange}
                                         />
                                     </Grid>
@@ -470,12 +470,11 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            InputLabelProps={{ className: classes.customLabelRed, shrink: true }}
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Observaciones"
-                                            defaultValue="Observaciones"
                                             type="text"
                                             name="controlDeAlarmaLuminicaYSonoraDeCloroObservaciones"
                                             value={
@@ -492,7 +491,8 @@ const ModificarControlDeAlarmaLuminicaYSonoraDeCloro = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

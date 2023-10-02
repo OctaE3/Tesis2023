@@ -4,20 +4,12 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -61,12 +53,16 @@ const useStyles = makeStyles(theme => ({
 
 function ListarRecepcionDeMateriasPrimasCarnicas() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
   const [proveedor, setProveedor] = useState([]);
   const [carne, setCarne] = useState([]);
   const [deleteItem, setDeleteItem] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
   const navigate = useNavigate();
 
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
@@ -79,16 +75,16 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino la recepción de materias primas carnicas con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó la recepción de materias primas carnicas con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logró eliminar la recepción de materias primas carnicas, recargue la pagina.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar la recepción de materias primas carnicas, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -101,31 +97,23 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -152,20 +140,41 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
         });
 
 
-        const data = response.data.map((recepcionDeMateriasPrimasCarnicas) => ({
-          ...recepcionDeMateriasPrimasCarnicas,
-          Id: recepcionDeMateriasPrimasCarnicas.recepcionDeMateriasPrimasCarnicas,
-        }));
+        const dataL = response.data.map((recepcion, index) => {
+          if (index < 30) {
+            return {
+              ...recepcion,
+              Id: recepcion.recepcionDeMateriasPrimasCarnicasId,
+            }
+          }
+        });
+        const dataLast30 = dataL.filter((data) => data !== undefined);
+        const data = response.data.map((recepcion) => ({
+          ...recepcion,
+          Id: recepcion.recepcionDeMateriasPrimasCarnicasId,
+        }))
         const ResponsableData = ResponsableResponse.data;
         const ProveedorData = ProveedorResponse.data;
         const CarneData = carneResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
         setProveedor(ProveedorData.map((proveedor) => proveedor.proveedorNombre));
         setCarne(CarneData.map((carne) => carne.carneNombre));
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -173,11 +182,12 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
   }, [deleteItem]);
 
   const tableHeadCells = [
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
     { id: 'recepcionDeMateriasPrimasCarnicasFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'recepcionDeMateriasPrimasCarnicasProveedor', numeric: false, disablePadding: false, label: 'Proveedor' },
     { id: 'recepcionDeMateriasPrimasCarnicasProductos', numeric: false, disablePadding: false, label: 'Carnes' },
     { id: 'recepcionDeMateriasPrimasCarnicasPaseSanitario', numeric: false, disablePadding: false, label: 'Pase sanitario' },
-    { id: 'recepcionDeMateriasPrimasCarnicasTemperatura', numeric: false, disablePadding: false, label: 'Temperatura' },
+    { id: 'recepcionDeMateriasPrimasCarnicasTemperatura', numeric: false, disablePadding: false, label: 'Temperatura(°C)' },
     { id: 'recepcionDeMateriasPrimasCarnicasMotivoDeRechazo', numeric: false, disablePadding: false, label: 'Motivo de rechazo' },
     { id: 'recepcionDeMateriasPrimasCarnicasResponsable', numeric: false, disablePadding: false, label: 'Responsable' },
   ];
@@ -185,9 +195,9 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
   const filters = [
     { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
     { id: 'proveedor', label: 'Proveedor', type: 'select', options: proveedor },
-    { id: 'producto', label: 'Carnes', type: 'select', options: carne },
+    { id: 'producto', label: 'Carnes', type: 'text' },
     { id: 'paseSanitario', label: 'Pase sanitario', type: 'text' },
-    { id: 'temperatura', label: 'Temperatura', type: 'text' },
+    { id: 'temperatura', label: 'Temperatura(°C)', type: 'text' },
     { id: 'motivoDeRechazo', label: 'Motivo de rechazo', type: 'text' },
     { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
   ];
@@ -232,7 +242,6 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
     } else if (key === 'recepcionDeMateriasPrimasCarnicasProductos') {
       if (item.recepcionDeMateriasPrimasCarnicasProductos && item.recepcionDeMateriasPrimasCarnicasProductos.length > 0) {
         const nombresProductos = item.recepcionDeMateriasPrimasCarnicasProductos.map(producto => `${producto.carneNombre} - ${producto.carneCorte}`);
-        console.log(nombresProductos)
         return nombresProductos;
       } else {
         return [];
@@ -259,9 +268,9 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
       (!filtros.proveedor || lowerCaseItem.recepcionDeMateriasPrimasCarnicasProveedor.startsWith(filtros.proveedor)) &&
       (!filtros.producto || lowerCaseItem.recepcionDeMateriasPrimasCarnicasProductos.some(producto => producto.carneNombre.toLowerCase().includes(filtros.producto))) &&
       (!filtros.paseSanitario || lowerCaseItem.recepcionDeMateriasPrimasCarnicasPaseSanitario.startsWith(filtros.paseSanitario)) &&
-      (!filtros.temperatura || lowerCaseItem.recepcionDeMateriasPrimasCarnicasTemperatura.toString().startsWith(filtros.temperatura)) &&
+      (!filtros.temperatura || lowerCaseItem.recepcionDeMateriasPrimasCarnicasTemperatura.toString() === filtros.temperatura) &&
       (!filtros.motivoDeRechazo || lowerCaseItem.recepcionDeMateriasPrimasCarnicasMotivoDeRechazo.includes(filtros.motivoDeRechazo)) &&
-      (!filtros.responsable || lowerCaseItem.recepcionDeMateriasPrimasCarnicasResponsable.startsWith(filtros.responsable))
+      (!filtros.responsable || lowerCaseItem.recepcionDeMateriasPrimasCarnicasResponsable === filtros.responsable)
     ) {
       return true;
     }
@@ -289,32 +298,29 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2500);
         } else {
-          updateErrorAlert('No se logró eliminar la recepción de materias primas carnicas, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar la recepción de materias primas cárnicas, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logró eliminar la recepción de materias primas carnicas, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar la recepción de materias primas cárnicas, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
   }
@@ -342,22 +348,34 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/recepcion-de-materias-primas-carnicas')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Recepción De Materias Primas Cárnicas</Typography>
+          <Typography component='h1' variant='h5'>Listar de Recepción de Materias Primas Cárnicas</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -367,7 +385,7 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar las recepciones de materias primas cárnicas que fueron registrados.
+                    En esta página se encarga de listar las recepciones de materias primas cárnicas que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -386,16 +404,16 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
                         <span className={classes.liTitleBlue}>Proveedor</span>: En este campo se puede seleccionar el proveedor del que se recibió las carnes y filtrar la lista.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Carnes</span>: En este campo se puede seleccionar una carne y se filtrara la lista por esa carne seleccionada.
+                        <span className={classes.liTitleBlue}>Carne</span>: En este campo se puede ingresar el nombre de una carne y se listarán todos los registros con ese nombre.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Pase sanitario</span>: En este campo se puede ingresar el pase sanitario y se filtrara la lista por ese pase sanitario.
+                        <span className={classes.liTitleBlue}>Pase sanitario</span>: En este campo se puede ingresar el pase sanitario y se filtrará la lista por ese pase sanitario.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Temperatura</span>: En este campo se puede ingresar la temperatura que tenía la carne cuando se recibió y filtrar la lista por esa temperatura.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Motivo de rechazo</span>: En este campo se puede ingresar una palabra y mostrará los registros en donde esta incluida esa palabra.
+                        <span className={classes.liTitleBlue}>Motivo de rechazo</span>: En este campo se puede ingresar una palabra o frase y mostrarán los registros en donde esté incluida esa palabra o frase.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede ingresar un responsable y se mostrarán todos los registros asociados a ese responsable.
@@ -408,7 +426,10 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha en el que se registró o se recibió la carne.
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha en el que se recibió la carne.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Proveedor</span>: En esta columna se muestra el proveedor del que se recibió la carne.
@@ -429,10 +450,23 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
                         <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró la recepción de materias primas cárnicas.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>No se recomienda eliminar registros de la lista, a menos que sea necesario.</li>
+                      <li>Se recomienda no eliminar los registros de recepción de materias primas cárnicas, ya que la lista cuenta con depuración.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -461,7 +495,11 @@ function ListarRecepcionDeMateriasPrimasCarnicas() {
         data={filteredData}
         dataKey="listarRecepcionDeMateriasPrimasCarnicas"
         tableHeadCells={tableHeadCells}
-        title="Recepción De Materias Primas Cárnicas"
+        title="Lista de Recepción de Materias Primas Cárnicas"
+        titleButton="Recepción de Materias Primas Cárnicas"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditRecepcion}
