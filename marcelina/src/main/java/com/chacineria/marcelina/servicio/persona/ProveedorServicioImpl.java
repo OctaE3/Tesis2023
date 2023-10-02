@@ -23,6 +23,12 @@ public class ProveedorServicioImpl implements ProveedorServicio{
 
     @Override
     @Transactional
+    public Iterable<Proveedor> findAll(){
+        return proveedorRepositorio.findAll();
+    }
+
+    @Override
+    @Transactional
     public Optional<Proveedor> findById(Long Id){
         return proveedorRepositorio.findById(Id);
     }

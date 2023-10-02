@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -69,21 +61,21 @@ const AgregarControlDeProductosQuimicos = () => {
     const formFields = [
         { name: 'controlDeProductosQuimicosFecha', label: 'Fecha', type: 'date', color: 'primary' },
         { name: 'controlDeProductosQuimicosProveedor', label: 'Proveedor *', type: 'selector', color: 'primary' },
-        { name: 'controlDeProductosQuimicosProductoQuimico', label: 'Producto Químico', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,50}$", color: 'primary' },
+        { name: 'controlDeProductosQuimicosProductoQuimico', label: 'Producto Químico', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$", color: 'primary' },
         { name: 'controlDeProductosQuimicosLote', label: 'Lote', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,15}$", color: 'primary' },
-        { name: 'controlDeProductosQuimicosMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
+        { name: 'controlDeProductosQuimicosMotivoDeRechazo', label: 'Motivo de rechazo', type: 'text', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", multi: '3', color: 'secondary' },
     ];
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Control de productos quimicos agregado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro agregar el control de productos quimicos, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró agregar el control de productos quimicos, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const [proveedores, setProveedores] = useState([]);
@@ -92,6 +84,7 @@ const AgregarControlDeProductosQuimicos = () => {
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const classes = useStyles();
     const navigate = useNavigate();
@@ -113,31 +106,24 @@ const AgregarControlDeProductosQuimicos = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
+            setCheckToken(false)
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerProveedores = () => {
@@ -156,7 +142,15 @@ const AgregarControlDeProductosQuimicos = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos de los proveedores, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -224,7 +218,7 @@ const AgregarControlDeProductosQuimicos = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         }
         else {
             if (check === false) {
@@ -232,7 +226,7 @@ const AgregarControlDeProductosQuimicos = () => {
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 2500);
             } else {
                 axios.post('/agregar-control-de-productos-quimicos', quimicosConProveedor, {
                     headers: {
@@ -244,32 +238,34 @@ const AgregarControlDeProductosQuimicos = () => {
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
-                            }, 5000);
+                            }, 2500);
+                            formData = {};
                         } else {
-                            updateErrorAlert('No se logro agregar el control de productos quimicos, revise los datos ingresados.')
+                            updateErrorAlert('No se logró agregar el control de productos quimicos, revise los datos ingresados.')
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
                     .catch(error => {
                         if (error.request.status === 401) {
-                            setShowAlertWarning(true);
-                            setTimeout(() => {
-                                setShowAlertWarning(false);
-                            }, 5000);
+                            setCheckToken(true);
                         }
                         else if (error.request.status === 500) {
-                            updateErrorAlert('No se logro agregar el control de productos quimicos, revise los datos ingresados.');
+                            updateErrorAlert('No se logró agregar el control de productos quimicos, revise los datos ingresados.');
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
             }
         }
+    }
+
+    const redirect = () => {
+        navigate('/listar-control-de-productos-quimicos')
     }
 
     return (
@@ -284,14 +280,12 @@ const AgregarControlDeProductosQuimicos = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
                                     <Typography component='h1' variant='h4'>Agregar Control de Productos Químicos</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -301,26 +295,26 @@ const AgregarControlDeProductosQuimicos = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los productos químicos que recibe la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes registrar los productos químicos que recibidos, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 5 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se recibe el producto químico.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se registro el control de productos químicos.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Proveedor</span>: en este campo se debe seleccionar el proveedor al que se le compra el producto químico.
+                                                                <span className={classes.liTitleBlue}>Proveedor</span>: En este campo se debe seleccionar el proveedor al que se le compro el producto químico.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Producto Químico</span>: en este campo se ingresa el producto químico que se recibe.
+                                                                <span className={classes.liTitleBlue}>Producto Químico</span>: En este campo se ingresa el producto químico que se recibió.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Lote</span>: este campo se ingresa el código del lote, del producto químico que se recibe.
+                                                                <span className={classes.liTitleBlue}>Lote</span>: En este campo se ingresa el código del lote del producto recibido.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: en este campo se puede ingresar el motivo por el cual se rechazó el producto químico recibido.
+                                                                <span className={classes.liTitleRed}>Motivo de rechazo</span>: En este campo se puede ingresar el motivo por el cual se rechazó el producto químico recibido.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -328,12 +322,19 @@ const AgregarControlDeProductosQuimicos = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
                                                         </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones:
+                                                        <br />
+                                                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                                                        <br />
+                                                        - Una vez registre el control de productos químicos, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro control de productos químicos.
                                                     </span>
                                                 </DialogContentText>
                                             </DialogContent>
@@ -361,6 +362,7 @@ const AgregarControlDeProductosQuimicos = () => {
                     <FormularioReutilizable
                         fields={formFields}
                         onSubmit={handleFormSubmit}
+                        handleRedirect={redirect}
                         selectOptions={{ controlDeProductosQuimicosProveedor: proveedoresSelect }}
                     />
                 </Grid>

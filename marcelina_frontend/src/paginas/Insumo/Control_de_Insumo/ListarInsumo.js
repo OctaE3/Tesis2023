@@ -4,19 +4,11 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,11 +52,15 @@ const useStyles = makeStyles(theme => ({
 
 function ListarInsumo() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
   const [proveedor, setProveedor] = useState([]);
   const [deleteItem, setDeleteItem] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
   const navigate = useNavigate();
 
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
@@ -77,16 +73,16 @@ function ListarInsumo() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el insumo con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el insumo con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logró eliminar el insumo, recargue la pagina.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar el insumo, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -99,31 +95,23 @@ function ListarInsumo() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -155,6 +143,13 @@ function ListarInsumo() {
               Id: data.insumoId,
               isExpired: 'Yes',
             };
+          } else if (diferenciaDias < 0 || data.insumoCantidad <= 0) {
+            return {
+              ...data,
+              Id: data.insumoId,
+              isDelete: 'Yes',
+              icl: 'Yes',
+            }
           } else {
             return {
               ...data,
@@ -162,14 +157,37 @@ function ListarInsumo() {
             };
           }
         });
+        const dataL = data.map((insumo, index) => {
+          const cantidad = insumo.insumoCantidad;
+          const fechaVencimiento = new Date(insumo.insumoFechaVencimiento);
+          const fechaActual = new Date();
+          if (index < 30) {
+            if (fechaVencimiento > fechaActual && cantidad > 0) {
+              return { ...insumo };
+            }
+          }
+        })
+        const dataLast30 = dataL.filter((data) => data !== undefined);
         const ResponsableData = ResponsableResponse.data;
         const ProveedorData = ProveedorResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
         setProveedor(ProveedorData.map((proveedor) => proveedor.proveedorNombre));
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -177,7 +195,8 @@ function ListarInsumo() {
   }, [deleteItem]);
 
   const tableHeadCells = [
-    { id: 'insumoNombre', numeric: false, disablePadding: true, label: 'Nombre' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'insumoNombre', numeric: false, disablePadding: false, label: 'Nombre' },
     { id: 'insumoFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'insumoProveedor', numeric: false, disablePadding: false, label: 'Proveedor' },
     { id: 'insumoTipo', numeric: false, disablePadding: false, label: 'Tipo' },
@@ -276,11 +295,11 @@ function ListarInsumo() {
       (!filtros['fecha-hasta'] || lowerCaseItem.insumoFecha <= new Date(filtros['fecha-hasta'])) &&
       (!filtros.proveedor || lowerCaseItem.insumoProveedor.startsWith(filtros.proveedor)) &&
       (!filtros.tipo || lowerCaseItem.insumoTipo.startsWith(filtros.tipo)) &&
-      (!filtros.cantidad || lowerCaseItem.insumoCantidad.toString().startsWith(filtros.cantidad)) &&
+      (!filtros.cantidad || lowerCaseItem.insumoCantidad.toString() === filtros.cantidad) &&
       (!filtros.unidad || lowerCaseItem.insumoUnidad.startsWith(filtros.unidad)) &&
       (!filtros.nroLote || lowerCaseItem.insumoNroLote.startsWith(filtros.nroLote)) &&
       (!filtros.motivoDeRechazo || lowerCaseItem.insumoMotivoDeRechazo.includes(filtros.motivoDeRechazo)) &&
-      (!filtros.responsable || lowerCaseItem.insumoResponsable.startsWith(filtros.responsable)) &&
+      (!filtros.responsable || lowerCaseItem.insumoResponsable === filtros.responsable) &&
       (!filtros['fechaVencimiento-desde'] || lowerCaseItem.insumoFechaVencimiento >= new Date(filtros['fechaVencimiento-desde'])) &&
       (!filtros['fechaVencimiento-hasta'] || lowerCaseItem.insumoFechaVencimiento <= new Date(filtros['fechaVencimiento-hasta']))
     ) {
@@ -309,32 +328,29 @@ function ListarInsumo() {
     })
       .then(response => {
         if (response.status === 200) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
-          updateErrorAlert('No se logró eliminar el insumo, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el insumo, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logró eliminar el insumo, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el insumo, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -362,6 +378,20 @@ function ListarInsumo() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/insumo')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
@@ -370,14 +400,12 @@ function ListarInsumo() {
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
           <Typography component='h1' variant='h5'>Lista de Insumos</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -387,7 +415,7 @@ function ListarInsumo() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los insumos que fueron registrados.
+                    En esta página se encarga de listar los insumos que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -397,7 +425,7 @@ function ListarInsumo() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleBlue}>Nombre</span>: En este campo se puede ingresar el nombre del insumo por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Nombre</span>: En este campo se puede ingresar el nombre del insumo por el cual se quiere filtrar la lista y se listarán todos los registros que empiecen o tengan ese nombre.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Desde Fecha y Hasta Fecha</span>: Estos campos son utilizados para filtrar los registros entre un rango de fechas,
@@ -406,22 +434,22 @@ function ListarInsumo() {
                         se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Proveedor</span>: En este campo se puede seleccionar el proveedor del insumo por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Proveedor</span>: En este campo se puede seleccionar el proveedor del insumo por el cual se quiere filtrar la lista y se listarán todos los registros que contengan ese proveedor.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Tipo</span>: En este campo se puede seleccionar el tipo del insumo por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Tipo</span>: En este campo se puede seleccionar el tipo del insumo por el cual se quiere filtrar la lista y se listarán todos los registros que contengan ese tipo.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Cantidad</span>: En este campo se puede ingresar la cantidad del insumo por la cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Cantidad</span>: En este campo se puede ingresar la cantidad del insumo por la cual se quiere filtrar la lista y se listarán todos los registros tengan esa cantidad.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Unidad</span>: En este campo se puede seleccionar la unidad de medida del insumo por la cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Unidad</span>: En este campo se puede seleccionar la unidad de medida del insumo por la cual se quiere filtrar la lista y se listarán todos los registros que contengan esa unidad.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Número Lote</span>: En este campo se puede ingresar el lote al que pertenece el insumo por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Número Lote</span>: En este campo se puede ingresar el lote al que pertenece el insumo por el cual se quiere filtrar la lista y se listarán todos los registros que empiecen o tengan ese lote.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Motivo de rechazo</span>: En este campo puedes ingresar una palabra y se listará todos los registros que tengan esa palabra incluida.
+                        <span className={classes.liTitleBlue}>Motivo de rechazo</span>: En este campo se puede ingresar una palabra o frase y se listarán los registros que incluyan esa palabra o frase en motivo de rechazo.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se filtrará la lista con los registros asociados a ese responsable.
@@ -435,14 +463,11 @@ function ListarInsumo() {
                   <span style={{ fontWeight: 'bold' }}>
                     Lista:
                   </span>
-                  <br />
-                  <br />
                   <span>
-                    Detalles: 
-                    Los registros que contengan una fecha de vencimiento con 3 días o menos de diferencia con la fecha actual, aparecerán de color rojo,
-                    esto es para señalizar que el insumo está por caducar, además una vez el insumo sea usado por completo(la cantidad sea 0) se eliminara de la lista, 
-                    para evitar la acumulación de registros.
                     <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
+                      </li>
                       <li>
                         <span className={classes.liTitleRed}>Nombre</span>: En esta columna se muestra el nombre del insumo.
                       </li>
@@ -465,7 +490,7 @@ function ListarInsumo() {
                         <span className={classes.liTitleRed}>Número Lote</span>: En esta columna se muestra el lote al que pertenece el insumo.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Motivo de rechazo</span>: En esta columna se muestra el porqué fue rechazo el insumo.
+                        <span className={classes.liTitleRed}>Motivo de rechazo</span>: En esta columna se muestra el porqué fue rechazado el insumo.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el insumo.
@@ -474,10 +499,24 @@ function ListarInsumo() {
                         <span className={classes.liTitleRed}>Fecha vencimeinto</span>: En esta columna se muestra la fecha en la que se vence el insumo.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>Los insumos con cantidad igual a 0, se eliminarán.</li>
+                      <li>Cuando se listen todos los registros, aparecerán registros de color azul, los registros de color azul significan que están eliminados, en caso de que ese insumo que está eliminada lo quiere volver a agregar, solo modifique la cantidad de ese insumo, para que sea superior a 0.</li>
+                      <li>Los registros de color rojo significa que el insumo esta por caducar.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -507,6 +546,10 @@ function ListarInsumo() {
         dataKey="insumo"
         tableHeadCells={tableHeadCells}
         title="Insumos"
+        titleButton="Insumo"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditInsumo}

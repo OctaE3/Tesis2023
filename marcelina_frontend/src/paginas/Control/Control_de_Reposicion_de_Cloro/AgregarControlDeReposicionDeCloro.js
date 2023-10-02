@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
@@ -8,14 +8,6 @@ import FormularioReutilizanle from '../../../components/Reutilizable/FormularioR
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -63,32 +55,30 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AgregarControlDeReposicionDeCloro = () => {
-  const text = "Este campo es Obligatorio";
-
   const formFields = [
     { name: 'controlDeReposicionDeCloroFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeReposicionDeCloroCantidadDeAgua', label: 'Cantidad de Agua', type: 'text', obligatorio: true, pattern: "^[0-9]{0,30}$", adornment: 'si', unit: 'L', color: 'primary' },
-    { name: 'controlDeReposicionDeCloroCantidadDeCloroAdicionado', label: 'Cloro Adicionado', type: 'text', obligatorio: true, pattern: "^[0-9]{0,30}$", adornment: 'si', unit: 'L', color: 'primary' },
-    { name: 'controlDeReposicionDeCloroObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
+    { name: 'controlDeReposicionDeCloroCantidadDeAgua', label: 'Cantidad de Agua', type: 'text', obligatorio: true, pattern: "^[0-9]{0,6}$", adornment: 'si', unit: 'L', color: 'primary' },
+    { name: 'controlDeReposicionDeCloroCantidadDeCloroAdicionado', label: 'Cloro Adicionado', type: 'text', obligatorio: true, pattern: "^[0-9]{0,6}$", adornment: 'si', unit: 'mL', color: 'primary' },
+    { name: 'controlDeReposicionDeCloroObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", multi: '3', color: 'secondary' },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se registro el control de resposicion de cloro con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se registró el control de resposición de cloro con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro regristrar el control de reposicion de cloro, revise los datos ingresados.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró regristrar el control de reposición de cloro, revise los datos ingresados.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
-  const [controlDeReposicion, setControlDeReposicion] = useState({});
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
   const navigate = useNavigate();
 
   const [open, setOpen] = React.useState(false);
@@ -100,31 +90,24 @@ const AgregarControlDeReposicionDeCloro = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
+      setCheckToken(false)
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -184,8 +167,6 @@ const AgregarControlDeReposicionDeCloro = () => {
       controlDeReposicionDeCloroResponsable: window.localStorage.getItem('user'),
     }
 
-    console.log(controlDeReposicionConResponsable);
-
     const fecha = controlDeReposicionConResponsable.controlDeReposicionDeCloroFecha;
     const agua = controlDeReposicionConResponsable.controlDeReposicionDeCloroCantidadDeAgua;
     const cloro = controlDeReposicionConResponsable.controlDeReposicionDeCloroCantidadDeCloroAdicionado;
@@ -197,7 +178,7 @@ const AgregarControlDeReposicionDeCloro = () => {
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 2500);
     } else {
       axios.post('/agregar-control-de-reposicion-de-cloro', controlDeReposicionConResponsable, {
         headers: {
@@ -210,31 +191,33 @@ const AgregarControlDeReposicionDeCloro = () => {
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
-            }, 5000);
+            }, 2500);
           } else {
-            updateErrorAlert('No se logro regristrar el control de reposicion de cloro, revise los datos ingresados.');
+            updateErrorAlert('No se logró regristrar el control de reposición de cloro, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
         .catch(error => {
           if (error.request.status === 401) {
-            setShowAlertWarning(true);
-            setTimeout(() => {
-              setShowAlertWarning(false);
-            }, 5000);
+            setCheckToken(true);
           }
           else if (error.request.status === 500) {
-            updateErrorAlert('No se logro regristrar el control de reposicion de cloro, revise los datos ingresados.');
+            updateErrorAlert('No se logró regristrar el control de reposición de cloro, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
     }
+    setCheckToken(true);
+  }
+
+  const redirect = () => {
+    navigate('/listar-control-de-reposicion-de-cloro')
   }
 
   return (
@@ -245,16 +228,14 @@ const AgregarControlDeReposicionDeCloro = () => {
           <Grid container spacing={0}>
             <Grid item lg={2} md={2} ></Grid>
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-              <Typography component='h1' variant='h4'>Control de Reposicion de Cloro</Typography>
+              <Typography component='h1' variant='h4'>Registrar Control de Reposición de Cloro</Typography>
               <div>
-                <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton className={blinking ? classes.blinkingButton : ''}>
-                    <HelpOutlineIcon fontSize="large" color="primary" />
-                  </IconButton>
-                </Button>
+                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
                 <Dialog
                   fullScreen={fullScreen}
-                  fullWidth='md'
+                  fullWidth
                   maxWidth='md'
                   open={open}
                   onClose={handleClose}
@@ -271,16 +252,19 @@ const AgregarControlDeReposicionDeCloro = () => {
                         Este formulario cuenta con 4 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha de cuando se adicionó el cloro al agua.
+                            <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe seleccionar la fecha en la que se realizó la reposicíon de cloro.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Cantidad de Agua</span>: en este campo se registrará la cantidad de agua a la que se le va a adicionar el cloro.
+                            <span className={classes.liTitleBlue}>Cantidad de Agua</span>: En este campo se debe ingresar la cantidad de agua a la que se le adicionó el cloro,
+                            este campo solo acepta números y cuenta con una longitud máxima de 6 caracteres.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Cantidad Adicionado</span>: en este campo se registrará la cantidad de cloro que se le adicionó al agua.
+                            <span className={classes.liTitleBlue}>Cantidad Adicionado</span>: En este campo se debe ingresar la cantidad de cloro que se le añadió al agua,
+                            este campo solo acepta números y cuenta con una longitud máxima de 6 caracteres.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de adicionar el cloro al agua.
+                            <span className={classes.liTitleRed}>Observaciones</span>: En este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de añadirle cloro al agua,
+                            este campo acepta palabras minúsculas, mayúsculas y también números, el campo cuenta con una longitud máxima de 250 caracteres.
                           </li>
                         </ul>
                       </span>
@@ -288,12 +272,19 @@ const AgregarControlDeReposicionDeCloro = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                        <br />
+                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                        <br />
+                        - Una vez registre el control de reposición de cloro, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro control de reposición de cloro.
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -321,6 +312,7 @@ const AgregarControlDeReposicionDeCloro = () => {
       <FormularioReutilizanle
         fields={formFields}
         onSubmit={handleFormSubmit}
+        handleRedirect={redirect}
       />
     </Grid>
   )

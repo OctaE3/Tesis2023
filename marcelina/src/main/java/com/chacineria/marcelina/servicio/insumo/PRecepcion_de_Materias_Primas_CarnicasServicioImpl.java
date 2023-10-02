@@ -43,13 +43,9 @@ public class PRecepcion_de_Materias_Primas_CarnicasServicioImpl implements PRece
     @Transactional
     public PRecepcion_de_Materias_Primas_Carnicas saveModificar(PRecepcion_de_Materias_Primas_Carnicas save){
         List<Carne> carnes = save.getRecepcionDeMateriasPrimasCarnicasProductos();
-        List<Carne> carnesActualizadas = new ArrayList<>();
         for (Carne carne : carnes) {
-            carne.setCarnePaseSanitario(save.getRecepcionDeMateriasPrimasCarnicasPaseSanitario());
-            carnesActualizadas.add(carne);
             carneRepositorio.save(carne);
         }
-        save.setRecepcionDeMateriasPrimasCarnicasProductos(carnesActualizadas);
         return recepcionDeMateriasPrimasCarnicasRepositorio.save(save);
     }
 

@@ -1,21 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -40,6 +31,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -103,19 +97,20 @@ const ModificarProducto = () => {
     const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
 
     const [blinking, setBlinking] = useState(true);
+    const [checkToken, setCheckToken] = useState(false);
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Producto modificado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el producto, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el producto, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -129,31 +124,23 @@ const ModificarProducto = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerProductos = () => {
@@ -168,16 +155,28 @@ const ModificarProducto = () => {
                     if (!productoEncontrado) {
                         navigate('/listar-producto')
                     }
-                    setProductos(
-                        productosData.map((producto) => ({
-                            productoNombre: producto.productoNombre,
-                            productoCodigo: producto.productoCodigo,
-                        }))
-                    );
+                    const prods = productosData.map((producto) => {
+                        if (producto.productoId !== productoEncontrado.productoId) {
+                            return {
+                                productoNombre: producto.productoNombre,
+                                productoCodigo: producto.productoCodigo,
+                            }
+                        }
+                    })
+                    const productoLista = prods.filter((prod) => prod !== undefined);
+                    setProductos(productoLista);
                     setProducto(productoEncontrado);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -209,7 +208,7 @@ const ModificarProducto = () => {
     const handleChange = event => {
         const { name, value } = event.target;
         if (name === "productoNombre") {
-            const regex = new RegExp("^[A-Za-z\\s]{0,50}$");
+            const regex = new RegExp("^[A-Za-zÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$");
             if (regex.test(value)) {
                 setProducto(prevState => ({
                     ...prevState,
@@ -232,7 +231,7 @@ const ModificarProducto = () => {
         if (nombre === undefined || nombre === null || nombre === '') {
             return false;
         }
-        else if (codigo === codigo || codigo === null || codigo === '') {
+        else if (codigo === undefined || codigo === null || codigo.toString() === '') {
             return false;
         }
         return true;
@@ -240,10 +239,9 @@ const ModificarProducto = () => {
 
 
     const checkCod = (prod) => {
-        console.log(prod);
         let resp = false;
         productos.forEach((producto) => {
-            if (producto.productoCodigo.toString() === prod.productoCodigo.toString()) {
+            if (producto.productoCodigo.toString() === prod.productoCodigo.toString() || producto.productoNombre.toString() === prod.productoNombre.toString()) {
                 resp = true;
             } else {
                 if (producto.productoCodigo.toString() === prod.productoCodigo.toString() && producto.productoNombre.toString() === prod.productoNombre.toString()) {
@@ -252,7 +250,6 @@ const ModificarProducto = () => {
             }
             if (resp) { return }
         })
-        console.log(resp);
         return resp;
     }
 
@@ -267,10 +264,10 @@ const ModificarProducto = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             if (checkC === false) {
-                axios.post(`/modificar-producto/${data.productoId}`, data, {
+                axios.put(`/modificar-producto/${data.productoId}`, data, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
                         "Content-Type": "application/json"
@@ -282,28 +279,25 @@ const ModificarProducto = () => {
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
                                 navigate('/listar-producto');
-                            }, 3000)
+                            }, 2500)
                         } else {
-                            updateErrorAlert('No se logro modificar el producto, revise los datos ingresados.')
+                            updateErrorAlert('No se logró modificar el producto, revise los datos ingresados.')
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
                     .catch(error => {
                         if (error.request.status === 401) {
-                            setShowAlertWarning(true);
-                            setTimeout(() => {
-                                setShowAlertWarning(false);
-                            }, 5000);
+                            setCheckToken(true);
                         }
                         else if (error.request.status === 500) {
-                            updateErrorAlert('No se logro modificar el producto, revise los datos ingresados..');
+                            updateErrorAlert('No se logró modificar el producto, revise los datos ingresados..');
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 5000);
+                            }, 2500);
                         }
                     })
             } else {
@@ -311,10 +305,14 @@ const ModificarProducto = () => {
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 2500);
             }
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-producto')
+    }
 
     return (
         <div>
@@ -328,14 +326,12 @@ const ModificarProducto = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Producto</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -345,17 +341,19 @@ const ModificarProducto = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los productos que produce y vende la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar un producto, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 2 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre del producto.
+                                                                <span className={classes.liTitleBlue}>Nombre</span>: En este campo se debe ingresar el nombre del producto,
+                                                                este campo solo acepta palabras mayúsculas y minúsculas, a su vez cuenta con una longitud máxima de 50 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Código</span>: en este campo se ingresa el código que identifica el producto.
+                                                                <span className={classes.liTitleBlue}>Código</span>: En este campo se debe ingresar el código que identifica el producto,
+                                                                este campo solo acepta números y cuenta con una longitud máxima de 10 caracteres.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -363,11 +361,19 @@ const ModificarProducto = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifique los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
+                                                            <li>No se puede modificar el producto actual por uno que ya existe en lista(este eliminado o no).</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -399,12 +405,11 @@ const ModificarProducto = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Nombre"
-                                            defaultValue="Nombre"
                                             type="text"
                                             name="productoNombre"
                                             value={producto.productoNombre}
@@ -416,12 +421,11 @@ const ModificarProducto = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Código"
-                                            defaultValue="Código"
                                             type="text"
                                             name="productoCodigo"
                                             value={producto.productoCodigo}
@@ -434,7 +438,8 @@ const ModificarProducto = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

@@ -4,19 +4,10 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
-
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,6 +51,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarAnualDeInsumosCarnicos() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [deleteItem, setDeleteItem] = useState(false);
@@ -72,19 +66,20 @@ function ListarAnualDeInsumosCarnicos() {
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+  const [checkToken, setCheckToken] = useState(false);
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el anual de insumos cárnicos con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el anual de insumos cárnicos con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logró eliminar el anual de insumos cárnicos, recargue la pagina.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar el anual de insumos cárnicos, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -97,46 +92,62 @@ function ListarAnualDeInsumosCarnicos() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('No se logró eliminar el anual de insumos cárnicos, recargue la pagina.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const localidadResponse = await axios.get('/listar-anual-de-insumos-carnicos', {
+        const anualResponse = await axios.get('/listar-anual-de-insumos-carnicos', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
 
-        const localidadData = localidadResponse.data;
+        const dataL = anualResponse.data.map((data, index) => {
+          if (index < 30) {
+            return {
+              ...data,
+              Id: data.anualDeInsumosCarnicosId,
+            }
+          }
+        })
+        const dataLast30 = dataL.filter((data) => data !== undefined);
+        const data = anualResponse.data.map((data) => ({
+          ...data,
+          Id: data.anualDeInsumosCarnicosId,
+        }))
 
-        setData(localidadData);
+        setData(dataLast30);
+        setData30(dataLast30)
+        setDataAll(data);
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -150,16 +161,17 @@ function ListarAnualDeInsumosCarnicos() {
   };
 
   const tableHeadCells = [
-    { id: 'anualDeInsumosCarnicosMes', numeric: false, disablePadding: true, label: 'Mes' },
-    { id: 'anualDeInsumosCarnicosAnio', numeric: false, disablePadding: true, label: 'Año' },
-    { id: 'anualDeInsumosCarnicosCarneBovinaSH', numeric: false, disablePadding: true, label: 'Bovina SH' },
-    { id: 'anualDeInsumosCarnicosCarneBovinaCH', numeric: false, disablePadding: true, label: 'Bovina CH' },
-    { id: 'anualDeInsumosCarnicosHigado', numeric: false, disablePadding: true, label: 'Higado' },
-    { id: 'anualDeInsumosCarnicosCarnePorcinaSH', numeric: false, disablePadding: true, label: 'Porcina SH' },
-    { id: 'anualDeInsumosCarnicosCarnePorcinaCH', numeric: false, disablePadding: true, label: 'Porcina CH' },
-    { id: 'anualDeInsumosCarnicosCarnePorcinaGrasa', numeric: false, disablePadding: true, label: 'Porcina grasa' },
-    { id: 'anualDeInsumosCarnicosTripasMadejas', numeric: false, disablePadding: true, label: 'Tripas madejas' },
-    { id: 'anualDeInsumosCarnicosLitrosSangre', numeric: false, disablePadding: true, label: 'Sangre' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'anualDeInsumosCarnicosMes', numeric: false, disablePadding: false, label: 'Mes' },
+    { id: 'anualDeInsumosCarnicosAnio', numeric: false, disablePadding: false, label: 'Año' },
+    { id: 'anualDeInsumosCarnicosCarneBovinaSH', numeric: false, disablePadding: false, label: 'Bovina SH(Kg)' },
+    { id: 'anualDeInsumosCarnicosCarneBovinaCH', numeric: false, disablePadding: false, label: 'Bovina CH(Kg)' },
+    { id: 'anualDeInsumosCarnicosHigado', numeric: false, disablePadding: false, label: 'Higado(Kg)' },
+    { id: 'anualDeInsumosCarnicosCarnePorcinaSH', numeric: false, disablePadding: false, label: 'Porcina SH(Kg)' },
+    { id: 'anualDeInsumosCarnicosCarnePorcinaCH', numeric: false, disablePadding: false, label: 'Porcina CH(Kg)' },
+    { id: 'anualDeInsumosCarnicosCarnePorcinaGrasa', numeric: false, disablePadding: false, label: 'Porcina grasa(Kg)' },
+    { id: 'anualDeInsumosCarnicosTripasMadejas', numeric: false, disablePadding: false, label: 'Tripas madejas(Kg)' },
+    { id: 'anualDeInsumosCarnicosLitrosSangre', numeric: false, disablePadding: false, label: 'Sangre(L)' },
   ];
 
   const filters = [
@@ -198,7 +210,7 @@ function ListarAnualDeInsumosCarnicos() {
     };
 
     if (
-      (!filtros.mes || lowerCaseItem.anualDeInsumosCarnicosMes.toString().startsWith(filtros.mes)) &&
+      (!filtros.mes || lowerCaseItem.anualDeInsumosCarnicosMes.toString() === filtros.mes) &&
       (!filtros.anio || lowerCaseItem.anualDeInsumosCarnicosAnio.toString().startsWith(filtros.anio)) &&
       (!filtros.bovinoSH || lowerCaseItem.anualDeInsumosCarnicosCarneBovinaSH.toString().startsWith(filtros.bovinoSH)) &&
       (!filtros.bovinoCH || lowerCaseItem.anualDeInsumosCarnicosCarneBovinaCH.toString().startsWith(filtros.bovinoCH)) &&
@@ -229,32 +241,29 @@ function ListarAnualDeInsumosCarnicos() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
-          updateErrorAlert('No se logró eliminar el anual de insumos cárnicos, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el anual de insumos cárnicos, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logró eliminar el anual de insumos cárnicos, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el anual de insumos cárnicos, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -282,22 +291,30 @@ function ListarAnualDeInsumosCarnicos() {
     setOpen(false);
   };
 
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Anual de Insumos Cárnicos</Typography>
+          <Typography component='h1' variant='h5'>Listar de Anual de Insumos Cárnicos</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -344,7 +361,7 @@ function ListarAnualDeInsumosCarnicos() {
                         <span className={classes.liTitleBlue}>Tripas madejas</span>: En este campo se puede ingresar la cantidad(kg) de tripas y se listará los registros con esa cantidad.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Sangre</span>: En este campo se puede ingresar la cantidad(litros) de sangrew y se listará los registros con esa cantidad..
+                        <span className={classes.liTitleBlue}>Sangre</span>: En este campo se puede ingresar la cantidad(litros) de sangre y se listará los registros con esa cantidad..
                       </li>
                     </ul>
                   </span>
@@ -353,6 +370,9 @@ function ListarAnualDeInsumosCarnicos() {
                   </span>
                   <span>
                     <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Id</span>: En este campo se muestra el identificador del registro.
+                      </li>
                       <li>
                         <span className={classes.liTitleRed}>Mes</span>: En este campo se muestra el mes en el que se registró el anual de insumos cárnicos.
                       </li>
@@ -384,10 +404,22 @@ function ListarAnualDeInsumosCarnicos() {
                         <span className={classes.liTitleRed}>Sangre</span>: En este campo se muestra la cantidad(litros) de sangre que se recibió en un mes.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>No se recomienda eliminar los registros, ya que se cuenta con una depuración</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -416,7 +448,9 @@ function ListarAnualDeInsumosCarnicos() {
         data={filteredData}
         dataKey="listarLocalidades"
         tableHeadCells={tableHeadCells}
-        title="Localidades"
+        title="Lista de Anual de Insumos Cárnicos"
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={""}
         onEditButton={handleEditAnual}

@@ -1,21 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
+import { format } from 'date-fns';
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -40,6 +32,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -104,6 +99,7 @@ const ModificarDiariaDeProduccion = () => {
     const [aditivoSelect, setAditivoSelect] = useState([]);
     const [aditivosCantidad, setAditivoCantidad] = useState([]);
     const [aditivosRemplazados, setAditivosRemplazados] = useState([]);
+    const [checkToken, setCheckToken] = useState(false);
     const selectEnvasado = [
         { value: true, label: 'Empaquetado' },
         { value: false, label: 'No Empaquetado' },
@@ -121,16 +117,16 @@ const ModificarDiariaDeProduccion = () => {
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Diaria de producción modificada con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar la diaria de producción, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar la diaria de producción, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -151,31 +147,23 @@ const ModificarDiariaDeProduccion = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -191,8 +179,7 @@ const ModificarDiariaDeProduccion = () => {
                         navigate('/listar-diaria-de-produccion')
                     }
                     setCodigoLote(controlEncontrado.diariaDeProduccionLote.loteCodigo);
-                    console.log(controlEncontrado);
-                    axios.get('/listar-carnes-todas', {
+                    axios.get('/listar-carnes', {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('token')}`
                         }
@@ -221,7 +208,15 @@ const ModificarDiariaDeProduccion = () => {
                             );
                         })
                         .catch(error => {
-                            console.error(error);
+                            if (error.request.status === 401) {
+                                setCheckToken(true);
+                            } else {
+                                updateErrorAlert('No se logró cargar las carnes, recargue la página.')
+                                setShowAlertError(true);
+                                setTimeout(() => {
+                                    setShowAlertError(false);
+                                }, 2000);
+                            }
                         });
 
                     axios.get('/listar-aditivos-todos', {
@@ -253,7 +248,15 @@ const ModificarDiariaDeProduccion = () => {
                             );
                         })
                         .catch(error => {
-                            console.error(error);
+                            if (error.request.status === 401) {
+                                setCheckToken(true);
+                            } else {
+                                updateErrorAlert('No se logró cargar los aditivos, recargue la página.')
+                                setShowAlertError(true);
+                                setTimeout(() => {
+                                    setShowAlertError(false);
+                                }, 2000);
+                            }
                         });
 
                     controlEncontrado.diariaDeProduccionCantidadUtilizadaCarnes.forEach(carne => {
@@ -301,11 +304,18 @@ const ModificarDiariaDeProduccion = () => {
                         diariaDeProduccionFechaVencimiento: fechaFormateada,
                     }
 
-                    console.log(controlConFechaParseada);
                     setControl(controlConFechaParseada);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -325,7 +335,15 @@ const ModificarDiariaDeProduccion = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los productos, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -369,7 +387,6 @@ const ModificarDiariaDeProduccion = () => {
     const handleSelectChangeCarne = (event, index) => {
         const updatedCarneCantidad = [...carneCantidad];
         updatedCarneCantidad[index].carneUtilizada.value = event.target.value;
-        console.log(updatedCarneCantidad)
         setCarneCantidad(updatedCarneCantidad);
     };
 
@@ -378,7 +395,6 @@ const ModificarDiariaDeProduccion = () => {
         if (regex.test(event.target.value)) {
             const updatedCarneCantidad = [...carneCantidad];
             updatedCarneCantidad[index].cantidad = event.target.value;
-            console.log(updatedCarneCantidad);
             setCarneCantidad(updatedCarneCantidad);
         }
     };
@@ -386,7 +402,6 @@ const ModificarDiariaDeProduccion = () => {
     const handleSelectChangeAditivo = (event, index) => {
         const updatedAditivoCantidad = [...aditivosCantidad];
         updatedAditivoCantidad[index].aditivoUtilizado.value = event.target.value;
-        console.log(updatedAditivoCantidad)
         setAditivoCantidad(updatedAditivoCantidad);
     };
 
@@ -395,7 +410,6 @@ const ModificarDiariaDeProduccion = () => {
         if (regex.test(event.target.value)) {
             const updatedAditivoCantidad = [...aditivosCantidad];
             updatedAditivoCantidad[index].cantidad = event.target.value;
-            console.log(updatedAditivoCantidad);
             setAditivoCantidad(updatedAditivoCantidad);
         }
     };
@@ -420,51 +434,46 @@ const ModificarDiariaDeProduccion = () => {
     }
 
     const checkMultiple = (carnes, aditivos) => {
+        let resp = true;
         if (carnes && aditivos) {
             carnes.forEach((carne) => {
-                if (carne.carneUtilizada.value === '' || carne.cantidad === '' || carne.carneUtilizada.value === 'Seleccionar' || carne.cantidad === 0) {
-                    return false;
-                } else { }
-            });
-            console.log(aditivos)
-            aditivos.forEach((aditivo) => {
-                if (aditivo.aditivoUtilizado.value === '' || aditivo.cantidad === '' || aditivo.aditivoUtilizado.value === 'Seleccionar' || aditivo.cantidad === 0) {
+                if (carne.carneUtilizada.value === '' || carne.cantidad === '' || carne.carneUtilizada.value === 'Seleccionar' || parseInt(carne.cantidad) === 0) {
                     return false;
                 } else { }
             });
 
+            aditivos.forEach((aditivo) => {
+                if (aditivo.aditivoUtilizado.value === '' || aditivo.cantidad === '' || aditivo.aditivoUtilizado.value === 'Seleccionar' || parseInt(aditivo.cantidad) === 0) {
+                    return false;
+                } else { }
+            });
         } else {
             return false;
         }
+        return resp;
     }
 
     const handleFormSubmit = () => {
-        console.log(carneCantidad)
-        console.log(aditivosCantidad)
-
         const checkMul = checkMultiple(carneCantidad, aditivosCantidad);
         const checkE = checkError(control.diariaDeProduccionProducto, control.diariaDeProduccionCantidadProducida,
             control.diariaDeProduccionFecha, control.diariaDeProduccionEnvasado, control.diariaDeProduccionFechaVencimiento);
 
         if (checkE === false) {
-            updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
+            updateErrorAlert(`No deje vacío el campo de Carne-Cantidad y tampoco el de Aditivo-Cantidad`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             if (checkMul === false) {
-                updateErrorAlert(`Seleccione e ingrese la/el carne/aditivo y la cantidad, no seleccione la opción "Seleccionar" y no deje el campo cantida vacío.`);
+                updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 2500);
             } else {
                 const idCarnes = carneCantidad.map(carne => parseInt(carne.carneUtilizada.value));
                 const idAditivos = aditivosCantidad.map(aditivo => parseInt(aditivo.aditivoUtilizado.value));
-
-                console.log(idCarnes);
-                console.log(idAditivos);
 
                 const carnesCompletas = [];
                 const insumosCompletos = [];
@@ -481,18 +490,11 @@ const ModificarDiariaDeProduccion = () => {
                     }
                 }
 
-                console.log(carnesCompletas)
-                console.log(insumosCompletos);
-
                 const resultadoCarne = carnesCompletas.map(carne => {
                     const cantidaValueEncontradaCarne = carneCantidad.find(cv => cv.carneUtilizada.value.toString() === carne.carneId.toString());
-                    console.log(cantidaValueEncontradaCarne);
-                    console.log(carne);
                     if (cantidaValueEncontradaCarne) {
                         const cantidad = cantidaValueEncontradaCarne.cantidad;
-                        console.log(cantidad);
                         if (cantidad > carne.carneCantidad) {
-                            console.log(carne);
                             return `${carne.carneNombre} - ${carne.carneCorte} - ${carne.carneCantidad} Kg / `;
                         }
                     }
@@ -501,32 +503,24 @@ const ModificarDiariaDeProduccion = () => {
 
                 const resultadoInsumo = insumosCompletos.map(insumo => {
                     const cantidaValueEncontradaInsumo = aditivosCantidad.find(cv => cv.aditivoUtilizado.value.toString() === insumo.insumoId.toString());
-                    console.log(cantidaValueEncontradaInsumo);
                     if (cantidaValueEncontradaInsumo) {
                         const cantidad = cantidaValueEncontradaInsumo.cantidad;
-                        console.log(cantidad);
                         if (cantidad > insumo.insumoCantidad) {
-                            console.log(insumo);
                             return `${insumo.insumoNombre} - ${insumo.insumoNroLote} - ${insumo.insumoCantidad} ${insumo.insumoUnidad} / `;
                         }
                     }
                     return null;
                 })
 
-                console.log(resultadoCarne)
-                console.log(resultadoInsumo);
-
                 const elementoUndefinedCarne = resultadoCarne.some(elemento => elemento === null);
                 const elementoUndefinedInsumo = resultadoInsumo.some(elemento => elemento === null);
 
-                console.log(elementoUndefinedCarne);
-
                 if (!elementoUndefinedInsumo || !elementoUndefinedCarne) {
-                    updateErrorAlert(`La cantidad ingresada de carnes o aditivos utilizada en la producción, es mayor a la disponible, revise los datos ingresados.`);
+                    updateErrorAlert(`La cantidad ingresada de carnes o aditivos utilizados en la producción, es mayor a la disponible, revise los datos ingresados.`);
                     setShowAlertError(true);
                     setTimeout(() => {
                         setShowAlertError(false);
-                    }, 7000);
+                    }, 3000);
                 } else {
                     const productoCompleto = productos.find((producto) => producto.productoId.toString() === control.diariaDeProduccionProducto.productoId.toString());
 
@@ -542,12 +536,9 @@ const ModificarDiariaDeProduccion = () => {
                     const listaCarneCantidad = [];
                     carnesCompletas.forEach((carne, index) => {
                         const cantidadCarne = carneCantidad[index].cantidad;
-                        console.log(cantidadCarne);
                         const carneActualizada = { ...carne, carneCantidad: carne.carneCantidad - cantidadCarne };
-                        console.log(carneActualizada);
                         listaCarneActualizada.push(carneActualizada);
                         const detalleCantidad = control.diariaDeProduccionCantidadUtilizadaCarnes.find(detalle => detalle.detalleCantidadCarneCarne.carneId.toString() === carne.carneId.toString());
-                        console.log(detalleCantidad);
                         const detalleCantidadCarne = {
                             ...detalleCantidad,
                             detalleCantidadCarneCarne: carneActualizada,
@@ -555,8 +546,6 @@ const ModificarDiariaDeProduccion = () => {
                         };
                         listaCarneCantidad.push(detalleCantidadCarne);
                     })
-                    console.log(listaCarneActualizada);
-                    console.log(listaCarneCantidad);
 
                     const listaInsumoActualizado = [];
                     const listaInsumoCantidad = [];
@@ -572,12 +561,6 @@ const ModificarDiariaDeProduccion = () => {
                         };
                         listaInsumoCantidad.push(detalleCantidadInsumo);
                     })
-
-                    console.log(listaInsumoActualizado);
-                    console.log(listaInsumoCantidad);
-
-                    console.log(listaCarneActualizada);
-                    console.log(carnesRemplazadas);
 
                     const listaCarnesDesusadas = [];
 
@@ -599,10 +582,17 @@ const ModificarDiariaDeProduccion = () => {
                         })
                     })
 
-                    console.log(listaCarnesDesusadas);
+                    const fecha = new Date(control.diariaDeProduccionFecha);
+                    const fechaV = new Date(control.diariaDeProduccionFechaVencimiento);
+                    fecha.setDate(fecha.getDate() + 2);
+                    fechaV.setDate(fechaV.getDate() + 2);
+                    const fechon1 = format(fecha, 'yyyy-MM-dd')
+                    const fechon2 = format(fechaV, 'yyyy-MM-dd')
 
                     const data = {
                         ...control,
+                        diariaDeProduccionFecha: fechon1,
+                        diariaDeProduccionFechaVencimiento: fechon2,
                         diariaDeProduccionProducto: productoCompleto,
                         diariaDeProduccionLote: loteCompleto,
                         diariaDeProduccionInsumosCarnicos: listaCarneActualizada,
@@ -618,7 +608,6 @@ const ModificarDiariaDeProduccion = () => {
                         listaAditivosDesusadas: listaAditivosDesusados,
                     }
 
-                    console.log(dataCompleta);
 
                     const check = checkError(data.diariaDeProduccionProducto, data.diariaDeProduccionCantidadProducida,
                         data.diariaDeProduccionFecha, data.diariaDeProduccionEnvasado, data.diariaDeProduccionFechaVencimiento);
@@ -629,7 +618,7 @@ const ModificarDiariaDeProduccion = () => {
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 7000);
+                        }, 2500);
                     } else {
                         axios.put(`/modificar-diaria-de-produccion/${id}`, dataCompleta, {
                             headers: {
@@ -643,28 +632,25 @@ const ModificarDiariaDeProduccion = () => {
                                     setTimeout(() => {
                                         setShowAlertSuccess(false);
                                         navigate('/listar-diaria-de-produccion');
-                                    }, 3000)
+                                    }, 2500)
                                 } else {
-                                    updateErrorAlert('No se logro modificar la diaria de producción, revise los datos ingresados.')
+                                    updateErrorAlert('No se logró modificar la diaria de producción, revise los datos ingresados.')
                                     setShowAlertError(true);
                                     setTimeout(() => {
                                         setShowAlertError(false);
-                                    }, 5000);
+                                    }, 2500);
                                 }
                             })
                             .catch(error => {
                                 if (error.request.status === 401) {
-                                    setShowAlertWarning(true);
-                                    setTimeout(() => {
-                                        setShowAlertWarning(false);
-                                    }, 5000);
+                                    setCheckToken(true);
                                 }
                                 else if (error.request.status === 500) {
-                                    updateErrorAlert('No se logro modificar la diaria de producción, revise los datos ingresados.');
+                                    updateErrorAlert('No se logró modificar la diaria de producción, revise los datos ingresados.');
                                     setShowAlertError(true);
                                     setTimeout(() => {
                                         setShowAlertError(false);
-                                    }, 5000);
+                                    }, 2500);
                                 }
                             })
                     }
@@ -672,6 +658,10 @@ const ModificarDiariaDeProduccion = () => {
             }
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-diaria-de-produccion')
+    }
 
     return (
         <div>
@@ -685,14 +675,12 @@ const ModificarDiariaDeProduccion = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Diaria de Producción</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -702,34 +690,34 @@ const ModificarDiariaDeProduccion = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los productos que se producen en la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar una diaria de producción, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 7 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Producto</span>: en este campo se debe seleccionar el producto que se realizara.
+                                                                <span className={classes.liTitleBlue}>Producto</span>: En este campo se debe seleccionar el producto que se realizara.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Carne y Cantidad</span>: en este campo se divide en 2, en el primero llamado carne donde se ingresa la carne que se utiliza para realizar el producto
-                                                                y el segundo es cantidad, en el cual se ingresa la cantidad que se utiliza de esa carne.
+                                                                <span className={classes.liTitleBlue}>Carne y Cantidad</span>: Este campo se divide en 2, en el primero llamado carne donde se selecciona la carne que se utilizó para realizar el producto
+                                                                y el segundo es cantidad, en el cual se ingresa la cantidad que se utilizó de esa carne.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Aditivo y Cantidad</span>: en este campo se divide en 2, el primero llamado aditivo donde se ingresa el aditivo que se utiliza para realizar el producto
-                                                                y el segundo es cantidad, en el cual se ingresa la cantidad que se utiliza de ese aditivo.
+                                                                <span className={classes.liTitleBlue}>Aditivo y Cantidad</span>: Este campo se divide en 2, el primero llamado aditivo donde se selecciona el aditivo que se utilizó para realizar el producto
+                                                                y el segundo es cantidad, en el cual se ingresa la cantidad que se utilizó de ese aditivo.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Cantidad Producida</span>: en este campo se ingresa la cantidad producida del producto/lote.
+                                                                <span className={classes.liTitleBlue}>Cantidad Producida</span>: En este campo se debe ingresar la cantidad producida del producto/lote.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha de Producción</span>: en este campo se ingresa la fecha y hora en la que se realizo el producto.
+                                                                <span className={classes.liTitleBlue}>Fecha de Producción</span>: En este campo se ingresar la fecha en la que se realizó el producto.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Envasado</span>: en este campo se puede seleccionar si el producto esta envasado o no esta envasado.
+                                                                <span className={classes.liTitleBlue}>Envasado</span>: En este campo se debe seleccionar si el producto está envasado o no está envasado.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha de Vencimiento</span>: en este campo se puede ingresar la fecha de vencimiento del producto/lote que se realizo.
+                                                                <span className={classes.liTitleBlue}>Fecha de Vencimiento</span>: En este campo se debe ingresar la fecha de vencimiento del producto/lote que se realizó.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -737,11 +725,21 @@ const ModificarDiariaDeProduccion = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifique los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
+                                                            <li>En el modificar no se pueden agregar nuevas carnes o aditivos, en caso de que la producción del producto llevaba mas carnes o aditivos, se recomienda eliminar el registro de la lista y agregarlo de nuevo.</li>
+                                                            <li>El lote que se generó para para el producto elaborado no se puede modificar.</li>
+                                                            <li>Los campos de cantidad carne, cantidad aditivo y cantidad producida solo aceptarán números y cuentan con una longitud máxima de 10 caracteres.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -823,12 +821,11 @@ const ModificarDiariaDeProduccion = () => {
                                                     fullWidth
                                                     autoFocus
                                                     className={classes.customOutlinedBlue}
-                                                    InputLabelProps={{ className: classes.customLabelBlue }}
+                                                    InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                                     color="primary"
                                                     margin="normal"
                                                     variant="outlined"
                                                     label="Cantidad"
-                                                    defaultValue={0}
                                                     type="text"
                                                     name="cantidad"
                                                     value={carne.cantidad}
@@ -868,12 +865,11 @@ const ModificarDiariaDeProduccion = () => {
                                                     fullWidth
                                                     autoFocus
                                                     className={classes.customOutlinedBlue}
-                                                    InputLabelProps={{ className: classes.customLabelBlue }}
+                                                    InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                                     color="primary"
                                                     margin="normal"
                                                     variant="outlined"
                                                     label="Cantidad"
-                                                    defaultValue={0}
                                                     type="text"
                                                     name="cantidad"
                                                     value={aditivo.cantidad}
@@ -887,7 +883,7 @@ const ModificarDiariaDeProduccion = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
@@ -903,13 +899,12 @@ const ModificarDiariaDeProduccion = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Cantidad Producida"
-                                            defaultValue={0}
-                                            type="number"
+                                            type="text"
                                             name="diariaDeProduccionCantidadProducida"
                                             value={control.diariaDeProduccionCantidadProducida}
                                             onChange={handleChange}
@@ -920,12 +915,11 @@ const ModificarDiariaDeProduccion = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="diariaDeProduccionFecha"
                                             value={control.diariaDeProduccionFecha}
@@ -961,12 +955,11 @@ const ModificarDiariaDeProduccion = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha Vencimiento"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="diariaDeProduccionFechaVencimiento"
                                             value={control.diariaDeProduccionFechaVencimiento}
@@ -979,7 +972,8 @@ const ModificarDiariaDeProduccion = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -63,15 +55,15 @@ const useStyles = makeStyles(theme => ({
 
 const AgregarCliente = () => {
   const formFieldsModal = [
-    { name: 'localidadDepartamento', label: 'Departamento', obligatorio: true, pattern: "^[A-Za-z\\s]{0,40}$", type: 'text', color: 'primary' },
-    { name: 'localidadCiudad', label: 'Ciudad', type: 'text', obligatorio: true, pattern: "^[A-Za-z\\s]{0,50}$", color: 'primary' },
+    { name: 'localidadDepartamento', label: 'Departamento', obligatorio: true, pattern: "^[A-Za-zÁáÉéÍíÓóÚúÜüÑñ\\s]{0,40}$", type: 'text', color: 'primary' },
+    { name: 'localidadCiudad', label: 'Ciudad', type: 'text', obligatorio: true, pattern: "^[A-Za-zÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$", color: 'primary' },
   ];
 
   const formFields = [
-    { name: 'clienteNombre', label: 'Nombre', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s]{0,50}$", color: 'primary' },
+    { name: 'clienteNombre', label: 'Nombre', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$", color: 'primary' },
     { name: 'clienteEmail', label: 'Email', type: 'text', pattern: "^[A-Za-z0-9.@]{0,50}$", color: 'secondary' },
     { name: 'clienteContacto', label: 'Contacto', type: 'phone', obligatorio: true, pattern: "^[0-9]{0,9}$", color: 'primary' },
-    { name: 'clienteObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
+    { name: 'clienteObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", multi: '3', color: 'secondary' },
     { name: 'clienteLocalidad', label: 'Localidad *', type: 'selector', alta: 'si', altaCampos: formFieldsModal, color: 'primary' }
   ];
 
@@ -80,11 +72,11 @@ const AgregarCliente = () => {
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro agregar el cliente, revise los datos ingresados.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró agregar el cliente, revise los datos ingresados.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
@@ -96,6 +88,7 @@ const AgregarCliente = () => {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -114,31 +107,24 @@ const AgregarCliente = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
+      setCheckToken(false)
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const obtenerClientes = () => {
@@ -151,7 +137,15 @@ const AgregarCliente = () => {
           setClientes(response.data);
         })
         .catch(error => {
-          console.error(error);
+          if (error.request.status === 401) {
+            setCheckToken(true);
+          } else {
+            updateErrorAlert('No se logró cargar los clientes, intente nuevamente.')
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 2000);
+          }
         });
     };
 
@@ -171,7 +165,15 @@ const AgregarCliente = () => {
           );
         })
         .catch(error => {
-          console.error(error);
+          if (error.request.status === 401) {
+            setCheckToken(true);
+        } else {
+            updateErrorAlert('No se logró cargar las localidades, intente nuevamente.')
+            setShowAlertError(true);
+            setTimeout(() => {
+                setShowAlertError(false);
+            }, 2000);
+        }
         });
     };
 
@@ -220,7 +222,6 @@ const AgregarCliente = () => {
     } else {
       clientes.forEach(cliente => {
         cliente.clienteContacto.forEach(telefono => {
-          console.log(telefono)
           telefonosClientes.push(telefono);
         })
       })
@@ -246,7 +247,9 @@ const AgregarCliente = () => {
     if (email) {
       const emailClientes = [];
       clientes.forEach(cliente => {
-        emailClientes.push(cliente.clienteEmail);
+        if (cliente.clienteEmail !== undefined && cliente.clienteEmail !== null && cliente.clienteEmail !== '') {
+          emailClientes.push(cliente.clienteEmail);
+        }
       })
 
       const emailEncontrado = emailClientes.includes(email);
@@ -255,12 +258,12 @@ const AgregarCliente = () => {
   }
 
   const checkError = (nombre, email, localidad) => {
-    if (nombre === undefined || nombre === null || nombre.trim() === '') {
+    if (nombre === undefined || nombre === null || nombre === '') {
       return false;
     }
 
     if (email) {
-      if (email === undefined || email === null || email.trim() === '') {
+      if (email === undefined || email === null || email === '') {
         return false;
       } else {
         if (!email.includes(".") && !email.includes("@")) {
@@ -277,16 +280,15 @@ const AgregarCliente = () => {
 
   const checkErrorTelefono = (telefonos) => {
     let resp = true;
-    console.log(telefonos)
     if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
       return false;
     } else {
-      const regex = /^\d{9}$/;
+      const regex = /^\d{8,9}$/;
       telefonos.forEach((tel) => {
         if (regex.test(tel.telefono)) {
           const primerNum = tel.telefono[0];
           const longitud = tel.telefono.length;
-          if (parseInt(primerNum) === 0 && parseInt(longitud) === 9) { }
+          if (parseInt(primerNum) === 0 && parseInt(longitud) === 9 || parseInt(primerNum) === 4 && parseInt(longitud) === 8) { }
           else { resp = false }
         }
         else { resp = false }
@@ -296,7 +298,6 @@ const AgregarCliente = () => {
   }
 
   const handleFormSubmit = (formData, telefonos) => {
-    console.log(telefonos);
     console.log(formData);
     const localidadSeleccionadaObj = localidades.filter((localidad) => localidad.localidadId.toString() === formData.clienteLocalidad)[0];
 
@@ -311,40 +312,34 @@ const AgregarCliente = () => {
     const tel = clienteConLocalidad.clienteContacto;
     const localidad = clienteConLocalidad.clienteLocalidad;
 
-    console.log(email);
-
     const check = checkError(nombre, email, tel, localidad);
     const emailCheck = checkEmail(email);
     const telefonoCheck = checkTelefono(tel);
     const telefonoErrorCheck = checkErrorTelefono(tel);
-
-    console.log(clienteConLocalidad);
 
     if (check === false) {
       updateErrorAlert(`Revise los datos ingresados en cliente y no deje campos vacíos, no se permite seleccionar la opción "Seleccionar".`);
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 3000);
     } else {
       if (telefonoErrorCheck === false) {
         updateErrorAlert(`Los teléfonos ingresados tienen que empezar con el número 0 y tener una longitud de 9 digitos, en caso de agregar otro campo de contacto, no lo deje vacío.`);
         setShowAlertError(true);
         setTimeout(() => {
           setShowAlertError(false);
-        }, 7000);
+        }, 3000);
       } else {
-        if (email) {
+        if (email && email !== '' && email !== undefined && email !== null) {
           const regex = /^(([^<>()[\]\.,;:\s@"]+(\.[^<>()[\]\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
           if (regex.test(email)) {
             if (telefonoCheck === false && emailCheck === false) {
               const telefonosConvertidos = clienteConLocalidad.clienteContacto.map((tel) => tel.telefono);
-              console.log(telefonosConvertidos);
               const data = {
                 ...clienteConLocalidad,
                 clienteContacto: telefonosConvertidos,
               };
-              console.log(data);
               axios.post('/agregar-cliente', data, {
                 headers: {
                   'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -353,33 +348,30 @@ const AgregarCliente = () => {
               })
                 .then(response => {
                   if (response.status === 201) {
+                    setReloadLocalidades(true);
                     updateSuccessAlert('Cliente registrado con éxito!')
                     setShowAlertSuccess(true);
                     setTimeout(() => {
                       setShowAlertSuccess(false);
-                    }, 5000);
+                    }, 2500);
                   } else {
-                    updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.')
+                    updateErrorAlert('No se logró registrar el cliente, revise los datos ingresados.')
                     setShowAlertError(true);
                     setTimeout(() => {
                       setShowAlertError(false);
-                    }, 5000);
+                    }, 2500);
                   }
                 })
                 .catch(error => {
-                  console.error(error);
                   if (error.request.status === 401) {
-                    setShowAlertWarning(true);
-                    setTimeout(() => {
-                      setShowAlertWarning(false);
-                    }, 5000);
+                    setCheckToken(true);
                   }
                   else if (error.request.status === 500) {
-                    updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
+                    updateErrorAlert('No se logró registrar el cliente, revise los datos ingresados.');
                     setShowAlertError(true);
                     setTimeout(() => {
                       setShowAlertError(false);
-                    }, 5000);
+                    }, 2500);
                   }
                 })
             } else {
@@ -387,25 +379,23 @@ const AgregarCliente = () => {
               setShowAlertError(true);
               setTimeout(() => {
                 setShowAlertError(false);
-              }, 7000);
+              }, 3000);
             }
           } else {
             updateErrorAlert(`El mail ingresado no es válido.`);
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 7000);
+            }, 2500);
           }
         } else {
           if (telefonoCheck === false) {
             const telefonosConvertidos = clienteConLocalidad.clienteContacto.map((tel) => tel.telefono);
-            console.log(telefonosConvertidos);
             const data = {
               ...clienteConLocalidad,
-              clienteEmail: null,
+              clienteEmail: '',
               clienteContacto: telefonosConvertidos,
             };
-            console.log(data);
             axios.post('/agregar-cliente', data, {
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -414,33 +404,30 @@ const AgregarCliente = () => {
             })
               .then(response => {
                 if (response.status === 201) {
+                  setReloadLocalidades(true);
                   updateSuccessAlert('Cliente registrado con éxito!')
                   setShowAlertSuccess(true);
                   setTimeout(() => {
                     setShowAlertSuccess(false);
-                  }, 5000);
+                  }, 2500);
                 } else {
-                  updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.')
+                  updateErrorAlert('No se logró registrar el cliente, revise los datos ingresados.')
                   setShowAlertError(true);
                   setTimeout(() => {
                     setShowAlertError(false);
-                  }, 5000);
+                  }, 2500);
                 }
               })
               .catch(error => {
-                console.error(error);
                 if (error.request.status === 401) {
-                  setShowAlertWarning(true);
-                  setTimeout(() => {
-                    setShowAlertWarning(false);
-                  }, 5000);
+                  setCheckToken(true);
                 }
                 else if (error.request.status === 500) {
                   updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
                   setShowAlertError(true);
                   setTimeout(() => {
                     setShowAlertError(false);
-                  }, 5000);
+                  }, 2500);
                 }
               })
           } else {
@@ -448,7 +435,7 @@ const AgregarCliente = () => {
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 7000);
+            }, 3000);
           }
         }
       }
@@ -456,10 +443,10 @@ const AgregarCliente = () => {
   }
 
   const checkErrorLocalidad = (ciudad, departamento) => {
-    if (ciudad === undefined || ciudad === null || ciudad.trim() === '') {
+    if (ciudad === undefined || ciudad === null || ciudad === '') {
       return false;
     }
-    else if (departamento === undefined || departamento === null || departamento.trim() === '') {
+    else if (departamento === undefined || departamento === null || departamento === '') {
       return false;
     }
     return true;
@@ -470,25 +457,18 @@ const AgregarCliente = () => {
     const localidadDepartamento = formDataModal.localidadDepartamento;
     const localidadCiudad = formDataModal.localidadCiudad;
 
-    console.log(localidadDepartamento)
-    console.log(localidadCiudad)
-
     const localidadesExisten = localidades.some(localidad => {
-      return localidad.localidadDepartamento.toString() === localidadDepartamento && localidad.localidadCiudad.toString() === localidadCiudad;
+      return localidad.localidadDepartamento.toLowerCase().toString() === localidadDepartamento.toLowerCase().toString() && localidad.localidadCiudad.toLowerCase().toString() === localidadCiudad.toLowerCase().toString();
     });
 
-    console.log(localidadesExisten);
-
     const check = checkErrorLocalidad(localidadCiudad, localidadDepartamento);
-
-    console.log(formDataModal);
 
     if (check === false) {
       updateErrorAlert(`Revise los datos ingresados en localidad y no deje campos vacíos.`);
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 2500);
     } else {
       if (!localidadesExisten) {
         axios.post('/agregar-localidad', formDataModal, {
@@ -499,36 +479,31 @@ const AgregarCliente = () => {
         })
           .then(response => {
             if (response.status === 201) {
-              formDataModal.localidadDepartamento = '';
-              formDataModal.localidadCiudad = '';
               updateSuccessAlert('Localidad registrada con éxito!')
               setShowAlertSuccess(true);
               setTimeout(() => {
                 setShowAlertSuccess(false);
-              }, 5000);
+              }, 2500);
               setReloadLocalidades(true);
 
             } else {
-              updateErrorAlert('No se logro registrar la localidad, revise los datos ingresados.')
+              updateErrorAlert('No se logró registrar la localidad, revise los datos ingresados.')
               setShowAlertError(true);
               setTimeout(() => {
                 setShowAlertError(false);
-              }, 5000);
+              }, 2500);
             }
           })
           .catch(error => {
             if (error.request.status === 401) {
-              setShowAlertWarning(true);
-              setTimeout(() => {
-                setShowAlertWarning(false);
-              }, 5000);
+              setCheckToken(true);
             }
             else if (error.request.status === 500) {
-              updateErrorAlert('No se logro registrar la localidad, revise los datos ingresados.');
+              updateErrorAlert('No se logró registrar la localidad, revise los datos ingresados.');
               setShowAlertError(true);
               setTimeout(() => {
                 setShowAlertError(false);
-              }, 5000);
+              }, 2500);
             }
           })
       } else {
@@ -536,11 +511,14 @@ const AgregarCliente = () => {
         setShowAlertError(true);
         setTimeout(() => {
           setShowAlertError(false);
-        }, 5000);
+        }, 2500);
       }
     }
   }
 
+  const redirect = () => {
+    navigate('/listar-cliente')
+  }
 
   return (
     <div>
@@ -554,14 +532,12 @@ const AgregarCliente = () => {
                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                   <Typography component='h1' variant='h4'>Agregar Cliente</Typography>
                   <div>
-                    <Button color="primary" onClick={handleClickOpen}>
-                      <IconButton className={blinking ? classes.blinkingButton : ''}>
-                        <HelpOutlineIcon fontSize="large" color="primary" />
-                      </IconButton>
-                    </Button>
+                    <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                      <HelpOutlineIcon fontSize="large" color="primary" />
+                    </IconButton>
                     <Dialog
                       fullScreen={fullScreen}
-                      fullWidth='md'
+                      fullWidth
                       maxWidth='md'
                       open={open}
                       onClose={handleClose}
@@ -578,21 +554,25 @@ const AgregarCliente = () => {
                             Este formulario cuenta con 5 campos:
                             <ul>
                               <li>
-                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre de la empresa o del cliente.
+                                <span className={classes.liTitleBlue}>Nombre</span>: En este campo se debe ingresar el nombre de la empresa o del cliente,
+                                este campo solo acepta palabras y números, a su vez cuenta con una longitud máxima de 40 caracteres.
                               </li>
                               <li>
-                                <span className={classes.liTitleBlue}>Email</span>: en este campo se debe ingresar el mail proporcionado por el cliente.
+                                <span className={classes.liTitleRed}>Email</span>: En este campo se puede ingresar el mail del cliente,
+                                este campo solo acepta palabras, números, arroba y punto, a su vez cuenta con un máximo de 50 caracteres.
                               </li>
                               <li>
-                                <span className={classes.liTitleBlue}>Contacto</span>: en este campo se ingresa el número de teléfono del cliente,
-                                en caso de que tenga mas de un teléfono, se puede agregar mas al darle click al icono de mas a la derecha del campo
-                                y si desea eliminar el campo, consta en darle click a la X a la derecha del campo generado.
+                                <span className={classes.liTitleBlue}>Contacto</span>: En este campo se ingresa el número de teléfono del cliente,
+                                en caso de que tenga más de un teléfono, se puede agregar más al darle click al icono de más a la derecha del campo
+                                y si desea eliminar el campo, consta en darle click a la X a la derecha del campo generado, los campos de teléfono aceptan solo números y
+                                cuentan con una longitud máxima de 9 caracteres.
                               </li>
                               <li>
-                                <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios del cliente.
+                                <span className={classes.liTitleRed}>Observaciones</span>: En este campo se puede ingresar infomación adicional del cliente,
+                                este campo acepta palabras y números, a su vez cuenta con una longitud máxima de 250 caracteres.
                               </li>
                               <li>
-                                <span className={classes.liTitleBlue}>Localidad</span>: en este campo se puede seleccionar la localidad en donde esta ubicado el cliente o su empresa,
+                                <span className={classes.liTitleBlue}>Localidad</span>: En este campo se debe seleccionar la localidad en donde esta ubicado el cliente o su empresa,
                                 en caso de querer añadir una localidad nueva, es posible dandole al icono de más a la derecha del campo.
                               </li>
                             </ul>
@@ -601,12 +581,25 @@ const AgregarCliente = () => {
                             Campos obligatorios y no obligatorios:
                             <ul>
                               <li>
-                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                               </li>
                               <li>
-                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                               </li>
                             </ul>
+                          </span>
+                          <span>
+                            Aclaraciones:
+                            <br />
+                            - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                            <br />
+                            - Una vez registre el cliente, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro cliente.
+                            <br />
+                            - Los campos para dar de alta una localidad solo aceptan palabras y cuentan con una longitud máxima de 40 caracteres.
+                            <br />
+                            - En el campo de teléfono también se acepta números de teléfono fijo, en caso de que quiera agregar un teléfono fijo ingréselo todo junto.
+                            <br />
+                            - Los clientes se eliminan lógicamente.
                           </span>
                         </DialogContentText>
                       </DialogContent>
@@ -635,6 +628,7 @@ const AgregarCliente = () => {
             fields={formFields}
             onSubmit={handleFormSubmit}
             onSubmitModal={handleFormSubmitModal}
+            handleRedirect={redirect}
             selectOptions={{ clienteLocalidad: localidadesSelect }}
           />
         </Grid>

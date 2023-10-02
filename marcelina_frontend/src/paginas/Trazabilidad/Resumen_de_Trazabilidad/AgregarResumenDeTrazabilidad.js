@@ -1,20 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizable from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
+import { format } from 'date-fns';
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -69,16 +62,16 @@ const AgregarResumenDeTrazabilidad = () => {
         { name: 'resumenDeTrazabilidadDestino', label: 'Destino *', type: 'selector', multiple: 'si', color: 'primary' },
     ];
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Resumen de trazabilidad registrado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro registrar el resumen de trazabilidad, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró registrar el resumen de trazabilidad, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const classes = useStyles();
@@ -89,6 +82,7 @@ const AgregarResumenDeTrazabilidad = () => {
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -108,31 +102,24 @@ const AgregarResumenDeTrazabilidad = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
+            setCheckToken(false)
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerLotes = () => {
@@ -151,7 +138,15 @@ const AgregarResumenDeTrazabilidad = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los lotes, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -171,7 +166,15 @@ const AgregarResumenDeTrazabilidad = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los clientes, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -216,8 +219,14 @@ const AgregarResumenDeTrazabilidad = () => {
     }
 
     const handleFormSubmit = (formData) => {
-        console.log(formData);
-        const res = formData;
+        const fecha = new Date(formData.resumenDeTrazabilidadFecha);
+        fecha.setDate(fecha.getDate() + 2)
+        const fechaPars = format(fecha, 'yyyy-MM-dd');
+        const res = {
+            ...formData,
+            resumenDeTrazabilidadFecha: fechaPars,
+        };
+        console.log(res)
 
         const check = checkError(res.resumenDeTrazabilidadFecha, res.resumenDeTrazabilidadLote, res.resumenDeTrazabilidadDestino);
 
@@ -226,15 +235,13 @@ const AgregarResumenDeTrazabilidad = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 3000);
         } else {
             const loteId = formData.resumenDeTrazabilidadLote;
             const loteCompleto = lotes.filter((lote) => lote.loteId.toString() === formData.resumenDeTrazabilidadLote)[0];
 
             const clientesId = formData.resumenDeTrazabilidadDestino.map(cliente => cliente.value);
             const clientesCompletos = clientes.filter(cliente => clientesId.includes(cliente.clienteId));
-
-            console.log(clientesCompletos);
 
             axios.get(`/buscar-diaria-de-produccion-lote/${loteId}`, {
                 headers: {
@@ -244,10 +251,9 @@ const AgregarResumenDeTrazabilidad = () => {
                 .then(response => {
                     if (response.status === 200) {
                         const diariaDeProduccion = response.data;
-                        console.log(diariaDeProduccion);
 
                         const data = {
-                            resumenDeTrazabilidadFecha: formData.resumenDeTrazabilidadFecha,
+                            resumenDeTrazabilidadFecha: res.resumenDeTrazabilidadFecha,
                             resumenDeTrazabilidadLote: loteCompleto,
                             resumenDeTrazabilidadProducto: loteCompleto.loteProducto,
                             resumenDeTrazabilidadCantidadProducida: diariaDeProduccion.diariaDeProduccionCantidadProducida,
@@ -256,8 +262,6 @@ const AgregarResumenDeTrazabilidad = () => {
                             resumenDeTrazabilidadDestino: clientesCompletos,
                             resumenDeTrazabilidadResponsable: window.localStorage.getItem('user'),
                         }
-
-                        console.log(data);
 
                         axios.post('/agregar-resumen-de-trazabilidad', data, {
                             headers: {
@@ -270,28 +274,25 @@ const AgregarResumenDeTrazabilidad = () => {
                                     setShowAlertSuccess(true);
                                     setTimeout(() => {
                                         setShowAlertSuccess(false);
-                                    }, 5000);
+                                    }, 2500);
                                 } else {
-                                    updateErrorAlert('No se logro registrar el resumen de trazabilidad, revise los datos ingresados.')
+                                    updateErrorAlert('No se logró registrar el resumen de trazabilidad, revise los datos ingresados.')
                                     setShowAlertError(true);
                                     setTimeout(() => {
                                         setShowAlertError(false);
-                                    }, 5000);
+                                    }, 2500);
                                 }
                             })
                             .catch(error => {
                                 if (error.request.status === 401) {
-                                    setShowAlertWarning(true);
-                                    setTimeout(() => {
-                                        setShowAlertWarning(false);
-                                    }, 5000);
+                                    setCheckToken(true);
                                 }
                                 else if (error.request.status === 500) {
-                                    updateErrorAlert('No se logro registrar el resumen de trazabilidad, revise los datos ingresados.');
+                                    updateErrorAlert('No se logró registrar el resumen de trazabilidad, revise los datos ingresados.');
                                     setShowAlertError(true);
                                     setTimeout(() => {
                                         setShowAlertError(false);
-                                    }, 5000);
+                                    }, 2500);
                                 }
                             })
                     } else {
@@ -299,25 +300,26 @@ const AgregarResumenDeTrazabilidad = () => {
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 7000);
+                        }, 2500);
                     }
                 })
                 .catch(error => {
                     if (error.request.status === 401) {
-                        setShowAlertWarning(true);
-                        setTimeout(() => {
-                            setShowAlertWarning(false);
-                        }, 5000);
+                        setCheckToken(true);
                     }
                     else if (error.request.status === 500) {
                         updateErrorAlert('El lote seleccionado no es válido.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 });
         }
+    }
+
+    const redirect = () => {
+        navigate('/listar-resumen-de-trazabilidad')
     }
 
     return (
@@ -330,14 +332,12 @@ const AgregarResumenDeTrazabilidad = () => {
                         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
                             <Typography component='h1' variant='h4'>Agregar Resumen de Trazabilidad</Typography>
                             <div>
-                                <Button color="primary" onClick={handleClickOpen}>
-                                    <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                        <HelpOutlineIcon fontSize="large" color="primary" />
-                                    </IconButton>
-                                </Button>
+                                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                    <HelpOutlineIcon fontSize="large" color="primary" />
+                                </IconButton>
                                 <Dialog
                                     fullScreen={fullScreen}
-                                    fullWidth='md'
+                                    fullWidth
                                     maxWidth='md'
                                     open={open}
                                     onClose={handleClose}
@@ -354,13 +354,13 @@ const AgregarResumenDeTrazabilidad = () => {
                                                 Este formulario cuenta con 3 campos:
                                                 <ul>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se esa documentando el resumen de trazabilidad.
+                                                        <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se realizó el resumen de trazabilidad.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Área</span>: en este campo se selecciona el lote.
+                                                        <span className={classes.liTitleBlue}>Lote</span>: En este campo se debe seleccionar el lote.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Días implementados</span>: en este campo se ingresa a que empresas se le va a vender el lote.
+                                                        <span className={classes.liTitleBlue}>Destino</span>: En este campo se debe ingresar a que empresas se le vendió el lote.
                                                     </li>
                                                 </ul>
                                             </span>
@@ -368,12 +368,21 @@ const AgregarResumenDeTrazabilidad = () => {
                                                 Campos obligatorios y no obligatorios:
                                                 <ul>
                                                     <li>
-                                                        <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                        <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                     </li>
                                                     <li>
-                                                        <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                        <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                     </li>
                                                 </ul>
+                                            </span>
+                                            <span>
+                                                Aclaraciones:
+                                                <br />
+                                                - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                                                <br />
+                                                - Una vez se registre el resumen de trazabilidad, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro resumen de trazabilidad.
+                                                <br />
+                                                - Los campos restantes se asignarán automáticamente a partir de los datos ingresados.
                                             </span>
                                         </DialogContentText>
                                     </DialogContent>
@@ -401,6 +410,7 @@ const AgregarResumenDeTrazabilidad = () => {
             <FormularioReutilizable
                 fields={formFields}
                 onSubmit={handleFormSubmit}
+                handleRedirect={redirect}
                 selectOptions={{
                     resumenDeTrazabilidadLote: loteSelect,
                     resumenDeTrazabilidadDestino: clienteSelect,

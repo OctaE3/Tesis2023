@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
@@ -8,14 +8,6 @@ import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -40,6 +32,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -100,17 +95,18 @@ const ModificarExpedicionDeProducto = () => {
     const [loteSelect, setLoteSelect] = useState([]);
     const [loteCantidad, setLoteCantidad] = useState([]);
     const [lotesRemplazados, setLotesRemplazados] = useState([]);
+    const [checkToken, setCheckToken] = useState(false);
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Expedición de producto modificada con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar la expedición de producto, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar la expedición de producto, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
@@ -143,31 +139,23 @@ const ModificarExpedicionDeProducto = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -184,21 +172,17 @@ const ModificarExpedicionDeProducto = () => {
                                 documento: exp.expedicionDeProductoDocumento,
                             }))
                     );
-                    console.log(controlesData);
                     const controlEncontrado = controlesData.find((control) => control.expedicionDeProductoId.toString() === id.toString());
                     if (!controlEncontrado) {
                         navigate('/listar-expedicion-de-producto');
                     }
-                    console.log(controlEncontrado);
                     axios.get('/listar-lotes', {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('token')}`
                         }
                     })
                         .then(responselote => {
-                            console.log(responselote.data);
                             const data = responselote.data;
-                            console.log(data);
                             setLotes(data);
                             const lotes = data.map((lote) => {
                                 controlEncontrado.expedicionDeProductoCantidad.forEach((lot) => {
@@ -208,21 +192,33 @@ const ModificarExpedicionDeProducto = () => {
                                 })
                                 return lote;
                             })
-                            console.log(lotes);
                             const lotesDeControl = lotes.filter(lote => {
                                 const loteIdEnControl = controlEncontrado.expedicionDeProductoLotes.map(lote => lote.loteId.toString());
                                 return loteIdEnControl.includes(lote.loteId.toString());
                             });
                             setLotesRemplazados(lotesDeControl);
-                            setLoteSelect(
-                                lotes.map((lote) => ({
-                                    value: lote.loteId,
-                                    label: `${lote.loteCodigo} - ${lote.loteCantidad} Kg - ${lote.loteProducto.productoNombre}`,
-                                }))
-                            );
+                            const lotesito = lotes.map((lote) => {
+                                if (lote.loteCantidad === 0) { }
+                                else {
+                                    return {
+                                        value: lote.loteId,
+                                        label: `${lote.loteCodigo} - ${lote.loteCantidad} Kg - ${lote.loteProducto.productoNombre}`,
+                                    }
+                                }
+                            })
+                            const anashe = lotesito.filter((lote) => lote !== undefined);
+                            setLoteSelect(anashe);
                         })
                         .catch(error => {
-                            console.error(error);
+                            if (error.request.status === 401) {
+                                setCheckToken(true);
+                            } else {
+                                updateErrorAlert('No se logró cargar los lotes, recargue la página.')
+                                setShowAlertError(true);
+                                setTimeout(() => {
+                                    setShowAlertError(false);
+                                }, 2000);
+                            }
                         });
 
                     controlEncontrado.expedicionDeProductoCantidad.forEach(detalle => {
@@ -252,11 +248,19 @@ const ModificarExpedicionDeProducto = () => {
                         expedicionDeProductoFecha: fechaFormateada,
                     }
 
-                    console.log(controlConFechaParseada);
                     setControl(controlConFechaParseada);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            redirect();
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -276,7 +280,15 @@ const ModificarExpedicionDeProducto = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los clientes, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -320,7 +332,6 @@ const ModificarExpedicionDeProducto = () => {
     const handleSelectChangeLote = (event, index) => {
         const updatedLoteCantidad = [...loteCantidad];
         updatedLoteCantidad[index].loteVendido.value = event.target.value;
-        console.log(updatedLoteCantidad)
         setLoteCantidad(updatedLoteCantidad);
     };
 
@@ -329,7 +340,6 @@ const ModificarExpedicionDeProducto = () => {
         if (regex.test(event.target.value)) {
             const updatedLoteCantidad = [...loteCantidad];
             updatedLoteCantidad[index].cantidad = event.target.value;
-            console.log(updatedLoteCantidad);
             setLoteCantidad(updatedLoteCantidad);
         }
     };
@@ -350,7 +360,7 @@ const ModificarExpedicionDeProducto = () => {
     const checkMultiple = (lotes) => {
         let resp = true;
         if (lotes) {
-            const resul = lotes.forEach((lote) => {
+            lotes.forEach((lote) => {
                 if (lote.loteVendido.value === '' || lote.cantidad === '' || lote.loteVendido.value === "Seleccionar" || lote.cantidad === 0) {
                     resp = false;
                 } else { }
@@ -359,12 +369,10 @@ const ModificarExpedicionDeProducto = () => {
             })
             return resp;
         } else { return false }
-        return resp;
     }
 
     const checkDoc = (documento) => {
         let resp = true;
-        console.log(controles);
         controles.forEach((exp) => {
             if (exp.documento.toString() === documento.toString()) {
                 resp = false;
@@ -376,18 +384,14 @@ const ModificarExpedicionDeProducto = () => {
     }
 
     const handleFormSubmit = () => {
-        console.log(control);
-        console.log(clienteExpedicion);
-        console.log(loteCantidad);
-
         const checkMul = checkMultiple(loteCantidad);
 
         if (checkMul === false) {
-            updateErrorAlert(`Revise los datos ingresados en cliente y no deje campos vacíos.`);
+            updateErrorAlert(`Revise los datos ingresados y no deje campos vacíos.`);
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             const idLotes = loteCantidad.map(lote => parseInt(lote.loteVendido.value));
 
@@ -401,30 +405,20 @@ const ModificarExpedicionDeProducto = () => {
 
             const resultadoLote = lotesCompletos.map(lote => {
                 const cantidaValueEncontradaLote = loteCantidad.find(cv => cv.loteVendido.value.toString() === lote.loteId.toString());
-                console.log(cantidaValueEncontradaLote);
-                console.log(lote);
                 if (cantidaValueEncontradaLote) {
                     const cantidad = cantidaValueEncontradaLote.cantidad;
-                    console.log(cantidad);
                     if (cantidad > lote.loteCantidad) {
-                        console.log(lote);
                         return `${lote.loteCodigo} - ${lote.loteProducto.productoNombre} - ${lote.loteCantidad} Kg / `;
                     }
                 }
                 return null;
             })
 
-            console.log(resultadoLote)
-
             const elementoUndefinedLote = resultadoLote.some(elemento => elemento === null);
-
-            console.log(elementoUndefinedLote);
 
             if (elementoUndefinedLote === true) {
                 const productosCompletos = lotesCompletos.map(lote => lote.loteProducto);
-                console.log(clienteExpedicion)
                 const clienteCompleto = clientes.find((cliente) => cliente.clienteId.toString() === clienteExpedicion.value.toString());
-                console.log(clienteCompleto);
 
                 const listaDetalleCantidaLote = [];
                 const lotesCompletosConCantidadRestada = [];
@@ -433,14 +427,11 @@ const ModificarExpedicionDeProducto = () => {
                     const loteActualizado = { ...lote, loteCantidad: lote.loteCantidad - cantidadLote };
                     lotesCompletosConCantidadRestada.push(loteActualizado);
                     const detalleLote = control.expedicionDeProductoCantidad[index];
-                    console.log(detalleLote);
-                    console.log(loteActualizado);
                     const detalleCantidadLote = {
                         ...detalleLote,
                         detalleCantidadLoteLote: loteActualizado,
                         detalleCantidadLoteCantidadVendida: cantidadLote,
                     };
-                    console.log(detalleCantidadLote);
                     listaDetalleCantidaLote.push(detalleCantidadLote);
                 });
 
@@ -454,8 +445,6 @@ const ModificarExpedicionDeProducto = () => {
                     })
                 })
 
-                console.log(listaLotesDesusados);
-
                 const uniqueProductos = {};
                 const productosSinDuplicados = productosCompletos.filter((producto) => {
                     const key = `${producto.productoId}-${producto.productoCodigo}`;
@@ -466,11 +455,13 @@ const ModificarExpedicionDeProducto = () => {
                     return false;
                 });
 
-                console.log(productosSinDuplicados);
+                const fecha = new Date(control.expedicionDeProductoFecha);
+                fecha.setDate(fecha.getDate() + 1);
 
                 const data = {
                     ...control,
                     expedicionDeProductoCliente: clienteCompleto,
+                    expedicionDeProductoFecha: fecha,
                     expedicionDeProductoProductos: productosSinDuplicados,
                     expedicionDeProductoLotes: lotesCompletosConCantidadRestada,
                     expedicionDeProductoCantidad: listaDetalleCantidaLote,
@@ -488,7 +479,7 @@ const ModificarExpedicionDeProducto = () => {
                     setShowAlertError(true);
                     setTimeout(() => {
                         setShowAlertError(false);
-                    }, 7000);
+                    }, 3000);
                 } else {
                     const checkD = checkDoc(data.expedicionDeProductoDocumento);
                     if (checkD === false) {
@@ -496,7 +487,7 @@ const ModificarExpedicionDeProducto = () => {
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 7000);
+                        }, 2500);
                     } else {
                         axios.put(`/modificar-expedicion-de-producto/${id}`, dataCompleta, {
                             headers: {
@@ -510,28 +501,25 @@ const ModificarExpedicionDeProducto = () => {
                                     setTimeout(() => {
                                         setShowAlertSuccess(false);
                                         navigate('/listar-expedicion-de-producto');
-                                    }, 3000)
+                                    }, 2500)
                                 } else {
-                                    updateErrorAlert('No se logro modificar la expedición de producto, revise los datos ingresados.')
+                                    updateErrorAlert('No se logró modificar la expedición de producto, revise los datos ingresados.')
                                     setShowAlertError(true);
                                     setTimeout(() => {
                                         setShowAlertError(false);
-                                    }, 5000);
+                                    }, 2500);
                                 }
                             })
                             .catch(error => {
                                 if (error.request.status === 401) {
-                                    setShowAlertWarning(true);
-                                    setTimeout(() => {
-                                        setShowAlertWarning(false);
-                                    }, 5000);
+                                    setCheckToken(true);
                                 }
                                 else if (error.request.status === 500) {
-                                    updateErrorAlert('No se logro modificar la expedición de producto, revise los datos ingresados.');
+                                    updateErrorAlert('No se logró modificar la expedición de producto, revise los datos ingresados.');
                                     setShowAlertError(true);
                                     setTimeout(() => {
                                         setShowAlertError(false);
-                                    }, 5000);
+                                    }, 2500);
                                 }
                             })
                     }
@@ -541,10 +529,14 @@ const ModificarExpedicionDeProducto = () => {
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 5000);
+                }, 3000);
             }
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-expedicion-de-producto')
+    }
 
     return (
         <div>
@@ -558,14 +550,12 @@ const ModificarExpedicionDeProducto = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Expedición de Produto</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -575,26 +565,24 @@ const ModificarExpedicionDeProducto = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar las ventas a empresas o clientes de la chacinería, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página se puede modificar una expedición de producto, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 4 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe ingresar la fecha en la que se vende el lote/lotes.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se vendió el o los lotes.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Lote y Cantidad</span>: en este campo se divide en 2, en el primero llamado lote donde se selecciona el lote que se va a vender
-                                                                y el segundo es cantidad, en el cual se ingresa la cantidad que se le va a vender, a su vez,
-                                                                este campo cuenta con un icono de más a la derecha del campo de lote para añadir otros 2 campos también denominados lote y cantidad, en caso de que se quiera vender mas de un lote,
-                                                                cuando añades más campos de lote y cantidad, del que ya está predeterminado, el icono de más cambia por una X por si deseas eliminar los nuevos campos generados.
+                                                                <span className={classes.liTitleBlue}>Lote y Cantidad</span>: Este campo se divide en 2, en el primero llamado lote donde se selecciona el lote que se vendió
+                                                                y el segundo es cantidad en el cual se ingresa la cantidad que se vendió.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Cliente</span>: en este campo se selecciona el cliente o la empresa a la que se le va a vender el/los lote/lotes.
+                                                                <span className={classes.liTitleBlue}>Cliente</span>: En este campo se selecciona el cliente o la empresa a la que se le va a vender el/los lote/lotes.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Documento</span>: en este campo se ingresa el documento de la venta.
+                                                                <span className={classes.liTitleBlue}>Documento</span>: En este campo se ingresa el documento que identifica la venta.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -602,11 +590,18 @@ const ModificarExpedicionDeProducto = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones:
+                                                        <ul>
+                                                            <li>Solo se pueden cambiar los lotes ya ingresados, no se pueden añadir más.</li>
+                                                            <li>En caso de que falten añadir lotes a la expedición de producto, se recomienda eliminarla y agregarla de nuevo</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -638,15 +633,14 @@ const ModificarExpedicionDeProducto = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="expedicionDeProductoFecha"
-                                            value={control.expedicionDeProductoFecha || new Date()}
+                                            value={control.expedicionDeProductoFecha}
                                             onChange={handleChange}
                                         />
                                     </Grid>
@@ -681,12 +675,11 @@ const ModificarExpedicionDeProducto = () => {
                                                     fullWidth
                                                     autoFocus
                                                     className={classes.customOutlinedBlue}
-                                                    InputLabelProps={{ className: classes.customLabelBlue }}
+                                                    InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                                     color="primary"
                                                     margin="normal"
                                                     variant="outlined"
                                                     label="Cantidad"
-                                                    defaultValue={0}
                                                     type="text"
                                                     name="cantidad"
                                                     value={lote.cantidad}
@@ -724,13 +717,12 @@ const ModificarExpedicionDeProducto = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Documento"
-                                            defaultValue={0}
-                                            type="number"
+                                            type="text"
                                             name="expedicionDeProductoDocumento"
                                             value={control.expedicionDeProductoDocumento}
                                             onChange={handleChange}
@@ -742,7 +734,8 @@ const ModificarExpedicionDeProducto = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

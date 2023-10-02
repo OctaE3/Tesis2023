@@ -3,7 +3,6 @@ package com.chacineria.marcelina.controlador;
 import com.chacineria.marcelina.dto.Control_de_NitratoDto;
 import com.chacineria.marcelina.dto.Control_de_NitritoDto;
 import com.chacineria.marcelina.dto.DiariaDeProdCarneInsumoCantidadDto;
-import com.chacineria.marcelina.dto.ListadoCarnesDto;
 import com.chacineria.marcelina.dto.ModificarDiariaDto;
 import com.chacineria.marcelina.dto.RecepcionConCarnesDto;
 import com.chacineria.marcelina.entidad.insumo.Carne;
@@ -18,8 +17,8 @@ import com.chacineria.marcelina.entidad.insumo.Producto;
 import com.chacineria.marcelina.entidad.persona.Usuario;
 import com.chacineria.marcelina.repositorio.persona.UsuarioRepositorio;
 
-import java.sql.Date;
-import java.util.Calendar;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -62,20 +61,42 @@ public class Controladora_Insumo {
     @Autowired
     private CarneServicioImpl carneServicioImpl;
 
-    @GetMapping("/listar-carnes-todas")
+    @GetMapping("/listar-carnes")
     public List<Carne> listadoCarneTodas() {
         List<Carne> carnes = StreamSupport
                 .stream(carneServicioImpl.findAll().spliterator(), false)
                 .collect(Collectors.toList());
+        Collections.reverse(carnes);
         return carnes;
     }
 
-    @GetMapping("/listar-carnes")
+    @GetMapping("/listar-carnes-no-eliminadas")
     public List<Carne> listadoCarne() {
         List<Carne> carnes = StreamSupport
                 .stream(carneServicioImpl.findAllByCarneEliminado(false).spliterator(), false)
                 .collect(Collectors.toList());
+        Collections.reverse(carnes);
         return carnes;
+    }
+
+    @GetMapping("/listar-ultimas-carnes")
+    public List<Carne> listadoCarneUltimas30() {
+        List<Carne> carnes = StreamSupport
+                .stream(carneServicioImpl.findAllByCarneEliminado(false).spliterator(), false)
+                .collect(Collectors.toList());
+
+        Collections.reverse(carnes);
+        List<Carne> listaCarnes = new ArrayList<>();
+        int length = carnes.size();
+
+        for (int i = 0; i < length; i++) {
+            if (i < 30 && carnes.get(i).getCarneCantidad() > 0 && carnes.get(i).getCarneEliminado() == false) {
+                listaCarnes.add(carnes.get(i));
+            } else {
+                break;
+            }
+        }
+        return listaCarnes;
     }
 
     @GetMapping("/buscar-carne/{carneId}")
@@ -118,13 +139,23 @@ public class Controladora_Insumo {
             @PathVariable(value = "carneId") Long carneId) {
         Optional<Carne> carneData = carneServicioImpl.findById(carneId);
         if (carneData.isPresent()) {
-            carneData.get().setCarneNombre(carne.getCarneNombre());
-            carneData.get().setCarneCantidad(carne.getCarneCantidad());
-            carneData.get().setCarneCategoria(carne.getCarneCategoria());
-            carneData.get().setCarneCorte(carne.getCarneCorte());
-            carneData.get().setCarneTipo(carne.getCarneTipo());
-            carneData.get().setCarnePaseSanitario(carne.getCarnePaseSanitario());
-            carneData.get().setCarneEliminado(carne.getCarneEliminado());
+            if (carne.getCarneCantidad() == 0) {
+                carneData.get().setCarneNombre(carne.getCarneNombre());
+                carneData.get().setCarneCantidad(carne.getCarneCantidad());
+                carneData.get().setCarneCategoria(carne.getCarneCategoria());
+                carneData.get().setCarneCorte(carne.getCarneCorte());
+                carneData.get().setCarneTipo(carne.getCarneTipo());
+                carneData.get().setCarnePaseSanitario(carne.getCarnePaseSanitario());
+                carneData.get().setCarneEliminado(true);
+            } else {
+                carneData.get().setCarneNombre(carne.getCarneNombre());
+                carneData.get().setCarneCantidad(carne.getCarneCantidad());
+                carneData.get().setCarneCategoria(carne.getCarneCategoria());
+                carneData.get().setCarneCorte(carne.getCarneCorte());
+                carneData.get().setCarneTipo(carne.getCarneTipo());
+                carneData.get().setCarnePaseSanitario(carne.getCarnePaseSanitario());
+                carneData.get().setCarneEliminado(false);
+            }
             return new ResponseEntity<>(carneServicioImpl.save(carneData.get()), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -139,10 +170,20 @@ public class Controladora_Insumo {
     private Control_de_InsumosServicioImpl controlDeInsumosServicioImpl;
 
     @GetMapping("/listar-control-de-insumos")
+    public List<Control_de_Insumos> listadoControlDeInsumosTodos() {
+        List<Control_de_Insumos> controlDeInsumos = StreamSupport
+                .stream(controlDeInsumosServicioImpl.findAll().spliterator(), false)
+                .collect(Collectors.toList());
+        Collections.reverse(controlDeInsumos);
+        return controlDeInsumos;
+    }
+
+    @GetMapping("/listar-control-de-insumos-no-eliminados")
     public List<Control_de_Insumos> listadoControlDeInsumos() {
         List<Control_de_Insumos> controlDeInsumos = StreamSupport
                 .stream(controlDeInsumosServicioImpl.findAllByInsumoEliminado(false).spliterator(), false)
                 .collect(Collectors.toList());
+        Collections.reverse(controlDeInsumos);
         return controlDeInsumos;
     }
 
@@ -152,6 +193,7 @@ public class Controladora_Insumo {
                 .stream(controlDeInsumosServicioImpl.findAllByInsumoEliminadoAndInsumoTipo(false, "Aditivo")
                         .spliterator(), false)
                 .collect(Collectors.toList());
+        Collections.reverse(controlDeInsumos);
         return controlDeInsumos;
     }
 
@@ -242,6 +284,15 @@ public class Controladora_Insumo {
     private LoteServicioImpl loteServicioImpl;
 
     @GetMapping("/listar-lotes")
+    public List<Lote> listadoLoteTodos() {
+        List<Lote> lotes = StreamSupport
+                .stream(loteServicioImpl.findAll().spliterator(), false)
+                .collect(Collectors.toList());
+        Collections.reverse(lotes);
+        return lotes;
+    }
+
+    @GetMapping("/listar-lotes-no-eliminados")
     public List<Lote> listadoLote() {
         List<Lote> lotes = StreamSupport
                 .stream(loteServicioImpl.findAllByLoteEliminado(false).spliterator(), false)
@@ -275,6 +326,7 @@ public class Controladora_Insumo {
             Optional<Lote> lote = loteServicioImpl.findById(loteId);
             if (lote.isPresent()) {
                 lote.get().setLoteEliminado(true);
+                lote.get().setLoteCantidad(0);
                 loteServicioImpl.save(lote.get());
                 return new ResponseEntity<>(HttpStatus.OK);
             }
@@ -308,7 +360,28 @@ public class Controladora_Insumo {
         List<PControl_de_Nitrato> controlDeNitrato = StreamSupport
                 .stream(controlDeNitratoServicioImpl.findAll().spliterator(), false)
                 .collect(Collectors.toList());
+        Collections.reverse(controlDeNitrato);
         return controlDeNitrato;
+    }
+
+    @GetMapping("/listar-ultimos-control-de-nitrato")
+    public List<PControl_de_Nitrato> listadoControlDeNitratoUltimos30() {
+        List<PControl_de_Nitrato> controlDeNitrato = StreamSupport
+                .stream(controlDeNitratoServicioImpl.findAll().spliterator(), false)
+                .collect(Collectors.toList());
+
+        Collections.reverse(controlDeNitrato);
+        List<PControl_de_Nitrato> listaNitratos = new ArrayList<>();
+        int length = controlDeNitrato.size();
+
+        for (int i = 0; i < length; i++) {
+            if (i < 30) {
+                listaNitratos.add(controlDeNitrato.get(i));
+            } else {
+                break;
+            }
+        }
+        return listaNitratos;
     }
 
     @GetMapping("/buscar-control-de-nitrato/{controlDeNitratoId}")
@@ -412,6 +485,7 @@ public class Controladora_Insumo {
         List<PControl_de_Nitrito> controlDeNitrito = StreamSupport
                 .stream(controlDeNitritoServicioImpl.findAll().spliterator(), false)
                 .collect(Collectors.toList());
+        Collections.reverse(controlDeNitrito);
         return controlDeNitrito;
     }
 
@@ -516,6 +590,7 @@ public class Controladora_Insumo {
         List<PControl_de_Productos_Quimicos> controlDeProductosQuimicos = StreamSupport
                 .stream(controlDeProductosQuimicosServicioImpl.findAll().spliterator(), false)
                 .collect(Collectors.toList());
+        Collections.reverse(controlDeProductosQuimicos);
         return controlDeProductosQuimicos;
     }
 
@@ -604,6 +679,8 @@ public class Controladora_Insumo {
         List<PDiaria_de_Produccion> diariaDeProduccion = StreamSupport
                 .stream(diariaDeProduccionServicioImpl.findAll().spliterator(), false)
                 .collect(Collectors.toList());
+
+        Collections.reverse(diariaDeProduccion);
         return diariaDeProduccion;
     }
 
@@ -678,24 +755,34 @@ public class Controladora_Insumo {
                 .findById(diariaDeProduccionId);
         if (diariaDeProduccionData.isPresent()) {
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionAditivos(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionAditivos());
+                    .setDiariaDeProduccionAditivos(
+                            modificarDto.getDiariaDeProduccion().getDiariaDeProduccionAditivos());
             diariaDeProduccionData.get().setDiariaDeProduccionCantidadProducida(
                     modificarDto.getDiariaDeProduccion().getDiariaDeProduccionCantidadProducida());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionEnvasado(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionEnvasado());
-            diariaDeProduccionData.get().setDiariaDeProduccionFecha(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionFecha());
+                    .setDiariaDeProduccionEnvasado(
+                            modificarDto.getDiariaDeProduccion().getDiariaDeProduccionEnvasado());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionFechaVencimiento(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionFechaVencimiento());
+                    .setDiariaDeProduccionFecha(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionFecha());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionInsumosCarnicos(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionInsumosCarnicos());
-            diariaDeProduccionData.get().setDiariaDeProduccionLote(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionLote());
+                    .setDiariaDeProduccionFechaVencimiento(
+                            modificarDto.getDiariaDeProduccion().getDiariaDeProduccionFechaVencimiento());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionProducto(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionProducto());
-            diariaDeProduccionData.get().setDiariaDeProduccionCantidadUtilizadaCarnes(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionCantidadUtilizadaCarnes());
-            diariaDeProduccionData.get().setDiariaDeProduccionCantidadUtilizadaInsumos(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionCantidadUtilizadaInsumos());
+                    .setDiariaDeProduccionInsumosCarnicos(
+                            modificarDto.getDiariaDeProduccion().getDiariaDeProduccionInsumosCarnicos());
             diariaDeProduccionData.get()
-                    .setDiariaDeProduccionResponsable(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionResponsable());
-                    modificarDto.setDiariaDeProduccion(diariaDeProduccionData.get());
+                    .setDiariaDeProduccionLote(modificarDto.getDiariaDeProduccion().getDiariaDeProduccionLote());
+            diariaDeProduccionData.get()
+                    .setDiariaDeProduccionProducto(
+                            modificarDto.getDiariaDeProduccion().getDiariaDeProduccionProducto());
+            diariaDeProduccionData.get().setDiariaDeProduccionCantidadUtilizadaCarnes(
+                    modificarDto.getDiariaDeProduccion().getDiariaDeProduccionCantidadUtilizadaCarnes());
+            diariaDeProduccionData.get().setDiariaDeProduccionCantidadUtilizadaInsumos(
+                    modificarDto.getDiariaDeProduccion().getDiariaDeProduccionCantidadUtilizadaInsumos());
+            diariaDeProduccionData.get()
+                    .setDiariaDeProduccionResponsable(
+                            modificarDto.getDiariaDeProduccion().getDiariaDeProduccionResponsable());
+            modificarDto.setDiariaDeProduccion(diariaDeProduccionData.get());
             return new ResponseEntity<>(diariaDeProduccionServicioImpl.saveModificarDiaria(modificarDto),
                     HttpStatus.OK);
         } else {
@@ -715,6 +802,7 @@ public class Controladora_Insumo {
         List<PRecepcion_de_Materias_Primas_Carnicas> recepcionDeMateriasPrimasCarnicas = StreamSupport
                 .stream(recepcionDeMateriasPrimasCarnicasServicioImpl.findAll().spliterator(), false)
                 .collect(Collectors.toList());
+        Collections.reverse(recepcionDeMateriasPrimasCarnicas);
         return recepcionDeMateriasPrimasCarnicas;
     }
 
@@ -796,7 +884,7 @@ public class Controladora_Insumo {
             recepcionDeMateriasPrimasCarnicasData.get().setRecepcionDeMateriasPrimasCarnicasTemperatura(
                     recepcionDeMateriasPrimasCarnicas.getRecepcionDeMateriasPrimasCarnicasTemperatura());
             return new ResponseEntity<>(
-                    recepcionDeMateriasPrimasCarnicasServicioImpl.save(recepcionDeMateriasPrimasCarnicasData.get()),
+                    recepcionDeMateriasPrimasCarnicasServicioImpl.saveModificar(recepcionDeMateriasPrimasCarnicasData.get()),
                     HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -813,8 +901,9 @@ public class Controladora_Insumo {
     @GetMapping("/listar-productos")
     public List<Producto> listadoProducto() {
         List<Producto> producto = StreamSupport
-                .stream(productoServicioImpl.findAllByProductoEliminado(false).spliterator(), false)
+                .stream(productoServicioImpl.findAll().spliterator(), false)
                 .collect(Collectors.toList());
+        Collections.reverse(producto);
         return producto;
     }
 
@@ -844,6 +933,21 @@ public class Controladora_Insumo {
             Optional<Producto> producto = productoServicioImpl.findById(productoId);
             if (producto.isPresent()) {
                 producto.get().setProductoEliminado(true);
+                productoServicioImpl.save(producto.get());
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/añadir-producto/{productoId}")
+    public ResponseEntity<HttpStatus> añadirProducto(@PathVariable Long productoId) {
+        try {
+            Optional<Producto> producto = productoServicioImpl.findById(productoId);
+            if (producto.isPresent()) {
+                producto.get().setProductoEliminado(false);
                 productoServicioImpl.save(producto.get());
                 return new ResponseEntity<>(HttpStatus.OK);
             }

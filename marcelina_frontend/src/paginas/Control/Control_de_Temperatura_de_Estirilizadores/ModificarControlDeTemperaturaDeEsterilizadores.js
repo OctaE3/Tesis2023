@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
+import { Container, Typography, Grid, Box, CssBaseline, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
@@ -8,14 +8,6 @@ import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -40,6 +32,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     auto: {
         marginTop: theme.spacing(2),
@@ -108,17 +103,18 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
     const [blinking, setBlinking] = useState(true);
 
     const navigate = useNavigate();
+    const [checkToken, setCheckToken] = useState(false);
 
-    const [alertSuccess, setAlertSuccess] = useState({
-        title: 'Correcto', body: 'Se modifico el control de temperatura de esterilizadores con éxito!', severity: 'success', type: 'description'
+    const [alertSuccess] = useState({
+        title: 'Correcto', body: 'Se modificó el control de temperatura de esterilizadores con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el control de temperatura de esterilizadores, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el control de temperatura de esterilizadores, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -139,31 +135,23 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -174,7 +162,6 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
             })
                 .then(response => {
                     const controlesData = response.data;
-                    console.log(controlesData);
                     const controlEncontrado = controlesData.find((control) => control.controlDeTemperaturaDeEsterilizadoresId.toString() === id.toString());
                     if (!controlEncontrado) {
                         navigate('/listar-control-de-temperatura-de-esterilizadores')
@@ -188,10 +175,17 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                         controlDeTemperaturaDeEsterilizadoresFecha: fechaParseada,
                     }
                     setControl(controlConFecha);
-                    console.log(controlConFecha)
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -214,14 +208,14 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
     }, []);
 
     const handleChange = event => {
-        const { name, value, id, type } = event.target;
-        if (type === "datetime-local") {
+        const { name, value } = event.target;
+        if (name === "controlDeTemperaturaDeEsterilizadoresFecha") {
             setControl(prevState => ({
                 ...prevState,
                 [name]: value,
             }));
         } else if (name === "controlDeTemperaturaDeEsterilizadoresObservaciones") {
-            const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+            const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$");
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -229,7 +223,7 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                 }));
             }
         } else {
-            const regex = new RegExp(id);
+            const regex = new RegExp("^-?[0-9]{0,4}$");
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -240,8 +234,7 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
     }
 
     const checkError = (fecha, temp1, temp2, temp3) => {
-        console.log(temp1)
-        if (fecha === undefined || fecha === null || fecha === '') {
+        if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (temp1 === undefined || temp1 === null || temp1 === "" || temp1.toString() === 'NaN') {
@@ -266,7 +259,6 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
             controlDeTemperaturaDeEsterilizadoresTemperatura2: parseInt(control.controlDeTemperaturaDeEsterilizadoresTemperatura2),
             controlDeTemperaturaDeEsterilizadoresTemperatura3: parseInt(control.controlDeTemperaturaDeEsterilizadoresTemperatura3),
         };
-        console.log(data);
 
         const fecha = data.controlDeTemperaturaDeEsterilizadoresFecha;
         const temp1 = data.controlDeTemperaturaDeEsterilizadoresTemperatura1;
@@ -280,7 +272,7 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             axios.put(`/modificar-control-de-temperatura-de-esterilizadores/${id}`, data, {
                 headers: {
@@ -289,39 +281,39 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                 }
             })
                 .then(response => {
-                    console.log(response.status);
                     if (response.status === 200) {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
                             navigate('/listar-control-de-temperatura-de-esterilizadores');
-                        }, 3000);
+                        }, 2500);
                     } else {
-                        updateErrorAlert('No se logro modificar el control de temperatura de esterilizadores, revise los datos ingresados.');
+                        updateErrorAlert('No se logró modificar el control de temperatura de esterilizadores, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
                 .catch(error => {
                     console.error(error);
                     if (error.request.status === 401) {
-                        setShowAlertWarning(true);
-                        setTimeout(() => {
-                            setShowAlertWarning(false);
-                        }, 5000);
+                        setCheckToken(true);
                     }
                     else if (error.request.status === 500) {
-                        updateErrorAlert('No se logro modificar el control de temperatura de esterilizadores, revise los datos ingresados.');
+                        updateErrorAlert('No se logró modificar el control de temperatura de esterilizadores, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-control-de-temperatura-de-esterilizadores')
+    }
 
     return (
         <div>
@@ -352,26 +344,27 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar las temperaturas de los esterilizadores, asegúrate de completar los campos necesarios para registrar las temperaturas.
+                                                        En esta página puedes modificar un control de temperatura en esterilizadores, asegúrate de completar los campos necesarios para registrar la modificación.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 5 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha y Hora</span>: en este campo se debe seleccionar la fecha y hora, en la que se midió la temperatura de los esterilizadores.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En el campo 'Fecha', se debe ingresar la fecha en la que se registró el control de temperatura en esterilizadores.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Temperatura 1</span>: en este campo se debe registrar la primera temperatura que se obtuvo al medir, de los esterilizadores.
+                                                                <span className={classes.liTitleBlue}>Temperatura 1</span>: En el campo 'Temperatura 1', se debe ingresar la primera temperatura que se obtuvo de los esterilizadores.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Temperatura 2</span>: en este campo se debe registrar la segunda temperatura que se obtuvo al medir, de los esterilizadores.
+                                                                <span className={classes.liTitleBlue}>Temperatura 2</span>: En el campo 'Temperatura 2', se debe ingresar la segunda temperatura que se obtuvo de los esterilizadores.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Temperatura 3</span>: en este campo se debe registrar la tercera temperatura que se obtuvo al medir, de los esterilizadores.
+                                                                <span className={classes.liTitleBlue}>Temperatura 3</span>: En el campo 'Temperatura 3', se debe ingresar la tercera temperatura que se obtuvo de los esterilizadores.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios que se encontraron al momento de medir las temperaturas de los esterilizadores.
+                                                                <span className={classes.liTitleRed}>Observaciones</span>: En el campo 'Observaciones', se debe ingresar las observaciones o detalles necesarios que se encontraron al momento de añadirle cloro al agua,
+                                                                este campo acepta palabras minúsculas, mayúsculas y también números, el campo cuenta con una longitud máxima de 250 caracteres.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -379,11 +372,18 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifique los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -415,12 +415,11 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha y Hora"
-                                            defaultValue={new Date()}
                                             type="datetime-local"
                                             name="controlDeTemperaturaDeEsterilizadoresFecha"
                                             value={control.controlDeTemperaturaDeEsterilizadoresFecha}
@@ -432,13 +431,11 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Temperatura 1"
-                                            id="^[0-9]{0,10}$"
-                                            defaultValue={0}
                                             type="text"
                                             name="controlDeTemperaturaDeEsterilizadoresTemperatura1"
                                             value={control.controlDeTemperaturaDeEsterilizadoresTemperatura1}
@@ -450,13 +447,11 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Temperatura 2"
-                                            id="^[0-9]{0,10}$"
-                                            defaultValue={0}
                                             type="text"
                                             name="controlDeTemperaturaDeEsterilizadoresTemperatura2"
                                             value={control.controlDeTemperaturaDeEsterilizadoresTemperatura2}
@@ -468,13 +463,11 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Temperatura 3"
-                                            id="^[0-9]{0,10}$"
-                                            defaultValue={0}
                                             type="text"
                                             name="controlDeTemperaturaDeEsterilizadoresTemperatura3"
                                             value={control.controlDeTemperaturaDeEsterilizadoresTemperatura3}
@@ -488,12 +481,11 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            InputLabelProps={{ className: classes.customLabelRed, shrink: true }}
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Observaciones"
-                                            defaultValue="Observaciones"
                                             type="text"
                                             name="controlDeTemperaturaDeEsterilizadoresObservaciones"
                                             value={
@@ -510,7 +502,8 @@ const ModificarControlDeTemperaturaDeEsterilizadores = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

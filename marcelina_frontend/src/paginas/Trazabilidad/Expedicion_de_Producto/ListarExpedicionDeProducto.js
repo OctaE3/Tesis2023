@@ -4,20 +4,12 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -61,11 +53,13 @@ const useStyles = makeStyles(theme => ({
 
 function ListarExpedicionDeProducto() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [responsable, setResponsable] = useState([]);
   const [producto, setProducto] = useState([]);
-  const [lote, setLote] = useState([]);
   const [cliente, setCliente] = useState([]);
   const [deleteItem, setDeleteItem] = useState(false);
   const navigate = useNavigate();
@@ -73,6 +67,7 @@ function ListarExpedicionDeProducto() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -80,16 +75,16 @@ function ListarExpedicionDeProducto() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Expedición de producto eliminado con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Expedición de producto eliminada con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro eliminar la expedición de producto, recargue la página.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar la expedición de producto, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -102,32 +97,23 @@ function ListarExpedicionDeProducto() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
   }, []);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -158,22 +144,42 @@ function ListarExpedicionDeProducto() {
         });
 
 
-        const data = response.data.map((recepcionDeMateriasPrimasCarnicas) => ({
-          ...recepcionDeMateriasPrimasCarnicas,
-          Id: recepcionDeMateriasPrimasCarnicas.recepcionDeMateriasPrimasCarnicas,
-        }));
+        const dataL = response.data.map((exp, index) => {
+          if (index < 30) {
+            return {
+              ...exp,
+              Id: exp.expedicionDeProductoId,
+            }
+          }
+        });
+        const dataLast30 = dataL.filter((data) => data !== undefined);
+        const data = response.data.map((exp) => ({
+          ...exp,
+          Id: exp.expedicionDeProductoId,
+        }))
         const ResponsableData = ResponsableResponse.data;
         const LoteData = LoteResponse.data;
         const ProductoData = ProductoResponse.data;
         const ClienteData = ClienteResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
         setProducto(ProductoData.map((producto) => producto.productoNombre));
         setCliente(ClienteData.map((cliente) => cliente.clienteNombre));
-        setLote(LoteData.map((lote) => lote.loteCodigo));
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -182,7 +188,8 @@ function ListarExpedicionDeProducto() {
   }, [deleteItem]);
 
   const tableHeadCells = [
-    { id: 'expedicionDeProductoProductos', numeric: false, disablePadding: false, label: 'Producto - Lotes - Cantidad' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'expedicionDeProductoLotes', numeric: false, disablePadding: false, label: 'Lotes - Producto - Cantidad' },
     { id: 'expedicionDeProductoCliente', numeric: false, disablePadding: false, label: 'Cliente' },
     { id: 'expedicionDeProductoDocumento', numeric: false, disablePadding: false, label: 'Documento' },
     { id: 'expedicionDeProductoUsuario', numeric: false, disablePadding: false, label: 'Responsable' },
@@ -191,7 +198,7 @@ function ListarExpedicionDeProducto() {
 
   const filters = [
     { id: 'producto', label: 'Producto', type: 'select', options: producto },
-    { id: 'lote', label: 'Lote', type: 'select', options: lote },
+    { id: 'lote', label: 'Lote', type: 'text' },
     { id: 'cantidad', label: 'Cantidad', type: 'text' },
     { id: 'cliente', label: 'Cliente', type: 'select', options: cliente },
     { id: 'documento', label: 'Documento', type: 'text' },
@@ -230,19 +237,19 @@ function ListarExpedicionDeProducto() {
       } else {
         return '';
       }
-    } else if (key === 'expedicionDeProductoProductos') {
-      if (item.expedicionDeProductoProductos && item.expedicionDeProductoProductos.length > 0) {
-        const cantidadCarne = [];
-        for (let i = 0; i < item.expedicionDeProductoProductos.length; i++) {
-          const insumo = item.expedicionDeProductoProductos[i];
+    } else if (key === 'expedicionDeProductoLotes') {
+      if (item.expedicionDeProductoLotes && item.expedicionDeProductoLotes.length > 0) {
+        const cantidadLote = [];
+        for (let i = 0; i < item.expedicionDeProductoLotes.length; i++) {
+          const producto = item.expedicionDeProductoLotes[i].loteProducto;
           const lote = item.expedicionDeProductoLotes[i].loteCodigo;
           const cantidad = item.expedicionDeProductoCantidad[i].detalleCantidadLoteCantidadVendida;
-          
-          const texto = `${insumo.productoNombre} - ${lote} - ${cantidad}`;
-      
-          cantidadCarne.push(texto);
+
+          const texto = `${lote} - ${producto.productoNombre} - ${cantidad} Kg`;
+
+          cantidadLote.push(texto);
         }
-        return cantidadCarne;
+        return cantidadLote;
       } else {
         return [];
       }
@@ -267,16 +274,13 @@ function ListarExpedicionDeProducto() {
       expedicionDeProductoFecha: new Date(item.expedicionDeProductoFecha)
     };
 
-    console.log(filtros.lote)
-
-
     if (
       (!filtros.producto || lowerCaseItem.expedicionDeProductoProductos.some(producto => producto.productoNombre.toLowerCase().includes(filtros.producto))) &&
-      (!filtros.cantidad || item.expedicionDeProductoCantidad.some(cantidad => cantidad.detalleCantidadLoteCantidadVendida.toString().includes(filtros.cantidad))) &&
+      (!filtros.cantidad || item.expedicionDeProductoCantidad.some(cantidad => cantidad.detalleCantidadLoteCantidadVendida.toString() === filtros.cantidad)) &&
       (!filtros.lote || lowerCaseItem.expedicionDeProductoLotes.some(lote => lote.loteCodigo.toLowerCase().includes(filtros.lote))) &&
       (!filtros.cliente || lowerCaseItem.expedicionDeProductoCliente.startsWith(filtros.cliente)) &&
       (!filtros.documento || lowerCaseItem.expedicionDeProductoDocumento.toString().startsWith(filtros.documento)) &&
-      (!filtros.responsable || lowerCaseItem.expedicionDeProductoUsuario.startsWith(filtros.responsable)) &&
+      (!filtros.responsable || lowerCaseItem.expedicionDeProductoUsuario === filtros.responsable) &&
       (!filtros['fecha-desde'] || lowerCaseItem.expedicionDeProductoFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.expedicionDeProductoFecha <= new Date(filtros['fecha-hasta']))
     ) {
@@ -286,10 +290,9 @@ function ListarExpedicionDeProducto() {
   });
 
   const columnRenderers = {
-    expedicionDeProductoLotes: (lote) => lote.loteCodigo,
     expedicionDeProductoUsuario: (responsable) => responsable.usuarioNombre,
     expedicionDeProductoCliente: (cliente) => cliente.clienteNombre,
-    expedicionDeProductoProductos: (prod) => <ColumnaReutilizable contacts={prod} />,
+    expedicionDeProductoLotes: (lote) => <ColumnaReutilizable contacts={lote} />,
   };
 
   const handleEditExpd = (rowData) => {
@@ -307,32 +310,29 @@ function ListarExpedicionDeProducto() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
-          updateErrorAlert('No se logro eliminar la expedición de producto, recargue la página.')
+          updateErrorAlert('No se logró eliminar la expedición de producto, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logro eliminar la expedición de producto, recargue la página.')
+          updateErrorAlert('No se logró eliminar la expedición de producto, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -360,6 +360,19 @@ function ListarExpedicionDeProducto() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/expedicion-de-producto')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
 
   return (
     <div>
@@ -367,16 +380,14 @@ function ListarExpedicionDeProducto() {
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Expedición de Productos</Typography>
+          <Typography component='h1' variant='h5'>Listar de Expedición de Productos</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -386,7 +397,7 @@ function ListarExpedicionDeProducto() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar las expediciones de productos que fueron registradas.
+                    En esta página se encarga de listar las expediciones de productos que fueron registradas y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -399,7 +410,7 @@ function ListarExpedicionDeProducto() {
                         <span className={classes.liTitleBlue}>Producto</span>: En este campo se puede seleccionar el producto por el cual se quiere filtrar la lista.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Lote</span>: En este campo se puede seleccionar el lote por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Lote</span>: En este campo se puede ingresar parte de lote y se listarán todos los registros que incluyan esa parte del lote.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Cantidad</span>: En este campo se puede ingresar la cantidad(kg) que se vendio del producto y filtrar por cantidad.
@@ -427,13 +438,13 @@ function ListarExpedicionDeProducto() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Produto - Lote - Cantidad</span>: En esta columna se muestra el producto que se vendió, a que lote pertenece y la cantidad vendida.
+                        <span className={classes.liTitleRed}>Lote - Producto - Cantidad</span>: En esta columna se muestra el producto que se vendió, a que lote pertenece y la cantidad vendida.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Cliente</span>: En esta columna se muestra a que cliente se vendió el producto.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Documento</span>: En esta columna se muestra el documneto que identifica la venta.
+                        <span className={classes.liTitleRed}>Documento</span>: En esta columna se muestra el documento que identifica la venta.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Responsable</span>: En este campo se muestra el responsable que registró la expedición de producto.
@@ -442,10 +453,22 @@ function ListarExpedicionDeProducto() {
                         <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha en la que se registró o se vendió el producto.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>No se recomienda eliminar los registros, ya que se cuenta con una depuración</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -474,7 +497,11 @@ function ListarExpedicionDeProducto() {
         data={filteredData}
         dataKey="listarExpediciondeProductos"
         tableHeadCells={tableHeadCells}
-        title="Expedición de Productos"
+        title="Lista de Expediciones de Productos"
+        titleButton="Expedición de Producto"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditExpd}

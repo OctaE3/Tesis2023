@@ -4,19 +4,10 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
-
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,9 +51,13 @@ const useStyles = makeStyles(theme => ({
 
 function ListarUsuario() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [deleteItem, setDeleteItem] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
   const navigate = useNavigate();
 
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
@@ -75,16 +70,16 @@ function ListarUsuario() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el usuario con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el usuario con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logró eliminar el usuario, recargue la pagina.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar el usuario, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -97,46 +92,73 @@ function ListarUsuario() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const localidadResponse = await axios.get('/listar-usuarios', {
+        const usuariosResponse = await axios.get('/listar-usuarios', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
 
-        const localidadData = localidadResponse.data;
-
-        setData(localidadData);
+        const usuariosDataL = usuariosResponse.data.map((usuario, index) => {
+          if (index < 30) {
+            if (usuario.usuarioEliminado === false) {
+              return {
+                ...usuario,
+                Id: usuario.usuarioId,
+              }
+            }
+          }
+        });
+        const dataLast30 = usuariosDataL.filter((data) => data !== undefined);
+        const data = usuariosResponse.data.map((usuario) => {
+          if (usuario.usuarioEliminado === true) {
+            return {
+              ...usuario,
+              Id: usuario.usuarioId,
+              isDelete: 'Yes',
+            }
+          } else {
+            return {
+              ...usuario,
+              Id: usuario.usuarioId,
+            }
+          }
+        })
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -149,7 +171,8 @@ function ListarUsuario() {
   };
 
   const tableHeadCells = [
-    { id: 'usuarioNombre', numeric: false, disablePadding: true, label: 'Nombre' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'usuarioNombre', numeric: false, disablePadding: false, label: 'Nombre' },
   ];
 
   const filters = [
@@ -158,19 +181,19 @@ function ListarUsuario() {
 
   const handleFilter = (filter) => {
     const lowerCaseFilter = Object.keys(filter).reduce((acc, key) => {
-        acc[key] = filter[key] ? filter[key].toLowerCase() : '';
-        return acc;
-      }, {});
-      setFiltros(lowerCaseFilter);
+      acc[key] = filter[key] ? filter[key].toLowerCase() : '';
+      return acc;
+    }, {});
+    setFiltros(lowerCaseFilter);
   };
 
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
-        usuarioNombre: item.usuarioNombre ? item.usuarioNombre.toLowerCase() : '',
+      usuarioNombre: item.usuarioNombre ? item.usuarioNombre.toLowerCase() : '',
     };
 
     if (
-      (!filtros.nombre || lowerCaseItem.usuarioNombre.startsWith(filtros.nombre))
+      (!filtros.nombre || lowerCaseItem.usuarioNombre === filtros.nombre)
     ) {
       return true;
     }
@@ -192,32 +215,30 @@ function ListarUsuario() {
     })
       .then(response => {
         if (response.status === 200) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2500);
         } else {
-          updateErrorAlert('No se logró eliminar el usuario, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el usuario, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
       .catch(error => {
+        console.error(error);
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logró eliminar el usuario, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el usuario, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2500);
         }
       })
   }
@@ -245,22 +266,34 @@ function ListarUsuario() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/agregar-usuario')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Usuarios</Typography>
+          <Typography component='h1' variant='h5'>Listar de Usuarios</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -270,7 +303,7 @@ function ListarUsuario() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los proveedores que fueron registrados.
+                    En esta página se encarga de listar los proveedores que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -280,7 +313,7 @@ function ListarUsuario() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleBlue}>Nombre</span>: En este campo se puede ingresar un nombre por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Nombre</span>: En este campo se puede ingresar un nombre de usuario y al aplicar el filtro se listará el usuario con ese nombre.
                       </li>
                     </ul>
                   </span>
@@ -290,13 +323,30 @@ function ListarUsuario() {
                   <span>
                     <ul>
                       <li>
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
+                      </li>
+                      <li>
                         <span className={classes.liTitleRed}>Nombre</span>: En esta columna se muestra el nombre del usuario.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>El registro de los usuarios eliminados aparecerá de color azul.</li>
+                      <li>Solo el usuario maestro(el que tiene Id 1) puede agregar o modificar usuarios.</li>
+                      <li>Los otros usuarios solo podrán ver la lista.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -325,7 +375,11 @@ function ListarUsuario() {
         data={filteredData}
         dataKey="listarUsuarios"
         tableHeadCells={tableHeadCells}
-        title="Usuarios"
+        title="Lista de Usuarios"
+        titleButton="Usuario"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={""}
         onEditButton={handleEditUsuario}

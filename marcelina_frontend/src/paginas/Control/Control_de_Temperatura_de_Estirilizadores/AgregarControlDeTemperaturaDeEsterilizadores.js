@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -62,26 +54,25 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AgregarControlDeTemperaturaDeEsterilizadores = () => {
-  const text = "Este campo es Obligatorio";
 
   const formFields = [
     { name: 'controlDeTemperaturaDeEsterilizadoresFecha', label: 'Fecha y Hora', type: 'datetime-local', color: 'primary' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura1', label: 'Temperatura 1', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura2', label: 'Temperatura 2', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura3', label: 'Temperatura 3', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", adornment: 'si', unit: '°C', color: 'primary' },
-    { name: 'controlDeTemperaturaDeEsterilizadoresObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'secondary' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura1', label: 'Temperatura 1', type: 'text', obligatorio: true, pattern: "^-?[0-9]{0,4}$", adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura2', label: 'Temperatura 2', type: 'text', obligatorio: true, pattern: "^-?[0-9]{0,4}$", adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresTemperatura3', label: 'Temperatura 3', type: 'text', obligatorio: true, pattern: "^-?[0-9]{0,4}$", adornment: 'si', unit: '°C', color: 'primary' },
+    { name: 'controlDeTemperaturaDeEsterilizadoresObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", multi: '3', color: 'secondary' },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se registro el control de temperatura de esterilizadores con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se registró el control de temperatura de esterilizadores con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro regristrar el control de temperatura de esterilizadores, revise los datos ingresados', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró regristrar el control de temperatura de esterilizadores, revise los datos ingresados', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
@@ -95,35 +86,29 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
 
   const [blinking, setBlinking] = useState(true);
+  const [checkToken, setCheckToken] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
+      setCheckToken(false)
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -156,11 +141,12 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
   };
 
   const checkError = (fecha, temp1, temp2, temp3) => {
-    if (fecha === undefined || fecha === null || fecha === '') {
+    if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
       return false;
     }
     else if (temp1 === undefined || temp1 === null || temp1 === "") {
       return false;
+
     }
     else if (temp2 === undefined || temp2 === null || temp2 === "") {
       return false;
@@ -176,14 +162,11 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
       ...formData,
       controlDeTemperaturaDeEsterilizadoresResponsable: window.localStorage.getItem('user'),
     }
-    console.log(controlDeTemperaturaConResponsable);
 
     const fecha = controlDeTemperaturaConResponsable.controlDeTemperaturaDeEsterilizadoresFecha;
     const temp1 = controlDeTemperaturaConResponsable.controlDeTemperaturaDeEsterilizadoresTemperatura1;
     const temp2 = controlDeTemperaturaConResponsable.controlDeTemperaturaDeEsterilizadoresTemperatura2;
     const temp3 = controlDeTemperaturaConResponsable.controlDeTemperaturaDeEsterilizadoresTemperatura3;
-
-    console.log(fecha);
 
     const check = checkError(fecha, temp1, temp2, temp3);
 
@@ -192,7 +175,7 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 2500);
     } else {
       axios.post('/agregar-control-de-temperatura-de-esterilizadores', controlDeTemperaturaConResponsable, {
         headers: {
@@ -205,31 +188,33 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
-            }, 5000);
+            }, 2500);
           } else {
-            updateErrorAlert('No se logro regristrar el control de temperatura de esterilizadores, revise los datos ingresados.');
+            updateErrorAlert('No se logró regristrar el control de temperatura de esterilizadores, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 2500);
           }
         })
         .catch(error => {
           if (error.request.status === 401) {
-            setShowAlertWarning(true);
-            setTimeout(() => {
-              setShowAlertWarning(false);
-            }, 5000);
+            setCheckToken(true);
           }
           else if (error.request.status === 500) {
-            updateErrorAlert('No se logro regristrar el control de temperatura de esterilizadores, revise los datos ingresados.');
+            updateErrorAlert('No se logró regristrar el control de temperatura de esterilizadores, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 2500);
           }
         })
     }
+    setCheckToken(true);
+  }
+
+  const redirect = () => {
+    navigate('/listar-control-de-temperatura-de-esterilizadores')
   }
 
   return (
@@ -286,12 +271,19 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                        <br />
+                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                        <br />
+                        - Una vez registre el control de temperaturas en esterilizadores, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro control de temperatura en esterilizadores.
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -319,6 +311,7 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
       <FormularioReutilizanle
         fields={formFields}
         onSubmit={handleFormSubmit}
+        handleRedirect={redirect}
       />
     </Grid>
   )

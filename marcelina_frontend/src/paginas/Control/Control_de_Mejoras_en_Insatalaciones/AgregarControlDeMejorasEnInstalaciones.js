@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import FormularioReutilizanle from '../../../components/Reutilizable/FormularioReutilizable'
@@ -8,14 +8,6 @@ import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutili
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -63,31 +55,31 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AgregarControlDeMejorasEnInstalaciones = () => {
-  const text = "Este campo es Obligatorio";
 
   const formFields = [
     { name: 'controlDeMejorasEnInstalacionesFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeMejorasEnInstalacionesSector', label: 'Sector', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,50}$", color: 'primary' },
-    { name: 'controlDeMejorasEnInstalacionesDefecto', label: 'Defecto', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", multi: '3', color: 'primary' },
-    { name: 'controlDeMejorasEnInstalacionesMejoraRealizada', label: 'Mejora Realizada', obligatorio: true, pattern: "^[A-Za-z0-9\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
+    { name: 'controlDeMejorasEnInstalacionesSector', label: 'Sector', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,50}$", color: 'primary' },
+    { name: 'controlDeMejorasEnInstalacionesDefecto', label: 'Defecto', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", multi: '3', color: 'primary' },
+    { name: 'controlDeMejorasEnInstalacionesMejoraRealizada', label: 'Mejora Realizada', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", type: 'text', multi: '3', color: 'primary' },
   ];
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se registro el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se registró el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logro regristrar el control de mejoras en instalaciones, revise los datos ingresados.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró regristrar el control de mejoras en instalaciones, revise los datos ingresados.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const classes = useStyles();
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -115,31 +107,23 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -200,7 +184,7 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
       setShowAlertError(true);
       setTimeout(() => {
         setShowAlertError(false);
-      }, 7000);
+      }, 2000);
     } else {
       axios.post('/agregar-control-de-mejoras-en-instalaciones', controlDeMejorasConResponsable, {
         headers: {
@@ -213,31 +197,32 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
-            }, 5000);
+            }, 3000);
           } else {
-            updateErrorAlert('No se logro regristrar el control de mejoras en instalaciones, revise los datos ingresados.');
+            updateErrorAlert('No se logró regristrar el control de mejoras en instalaciones, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
         .catch(error => {
           if (error.request.status === 401) {
-            setShowAlertWarning(true);
-            setTimeout(() => {
-              setShowAlertWarning(false);
-            }, 5000);
+            setCheckToken(true);
           }
           else if (error.request.status === 500) {
-            updateErrorAlert('No se logro regristrar el control de mejoras en instalaciones, revise los datos ingresados.');
+            updateErrorAlert('No se logró regristrar el control de mejoras en instalaciones, revise los datos ingresados.');
             setShowAlertError(true);
             setTimeout(() => {
               setShowAlertError(false);
-            }, 5000);
+            }, 3000);
           }
         })
     }
+  }
+
+  const redirect = () => {
+    navigate('/listar-control-de-mejoras-en-instalaciones')
   }
 
   return (
@@ -248,16 +233,14 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
           <Grid container spacing={0}>
             <Grid item lg={2} md={2} ></Grid>
             <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-              <Typography component='h1' variant='h4'>Control de Mejoras en Instalaciones</Typography>
+              <Typography component='h1' variant='h4'>Registrar Control de Mejoras en Instalaciones</Typography>
               <div>
-                <Button color="primary" onClick={handleClickOpen}>
-                  <IconButton className={blinking ? classes.blinkingButton : ''}>
-                    <HelpOutlineIcon fontSize="large" color="primary" />
-                  </IconButton>
-                </Button>
+                <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                  <HelpOutlineIcon fontSize="large" color="primary" />
+                </IconButton>
                 <Dialog
                   fullScreen={fullScreen}
-                  fullWidth='md'
+                  fullWidth
                   maxWidth='md'
                   open={open}
                   onClose={handleClose}
@@ -274,16 +257,16 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
                         Este formulario cuenta con 4 campos:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en que se realizó de la mejora de la instalación.
+                            <span className={classes.liTitleBlue}>Fecha</span>: En este campo se debe ingresar la fecha en la que se realizó la mejora en la instalación.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Sector</span>: en este campo se registrará en que sector se realizó la mejora.
+                            <span className={classes.liTitleBlue}>Sector</span>: En este campo se debe ingresar en que sector se realizó la mejora,este campo acepta palabras minúsculas, mayúsculas y también números, el campo cuenta con una longitud máxima de 50 caracteres.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Defecto</span>: en este campo se registrará el defecto que se encontró.
+                            <span className={classes.liTitleBlue}>Defecto</span>: En este campo se debe ingresar el defecto que se encontró, este campo acepta palabras minúsculas, mayúsculas y también números, el campo cuenta con una longitud máxima de 250 caracteres.
                           </li>
                           <li>
-                            <span className={classes.liTitleBlue}>Mejora Realizada</span>: en este campo se pueden registrar la mejora que se realizó.
+                            <span className={classes.liTitleBlue}>Mejora Realizada</span>: En este campo se debe ingresar la mejora que se realizó, este campo acepta palabras minúsculas, mayúsculas y también números, el campo cuenta con una longitud máxima de 250 caracteres.
                           </li>
                         </ul>
                       </span>
@@ -291,12 +274,19 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
                         Campos obligatorios y no obligatorios:
                         <ul>
                           <li>
-                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                            <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                           </li>
                           <li>
-                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                            <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                           </li>
                         </ul>
+                      </span>
+                      <span>
+                        Aclaraciones:
+                        <br />
+                        - No se permite dejar los campos vacíos, excepto los de contorno rojo.
+                        <br />
+                        - Una vez registre el control de mejoras en instalaciones, no se le redirigirá al listar. Se determinó así por si está buscando registrar otro control de mejoras en instalaciones.
                       </span>
                     </DialogContentText>
                   </DialogContent>
@@ -324,6 +314,7 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
       <FormularioReutilizanle
         fields={formFields}
         onSubmit={handleFormSubmit}
+        handleRedirect={redirect}
       />
     </Grid>
   )

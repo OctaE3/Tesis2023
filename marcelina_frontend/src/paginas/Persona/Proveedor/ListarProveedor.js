@@ -4,19 +4,11 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
 import { useNavigate } from 'react-router-dom';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,6 +52,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarProveedor() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const [localidades, setLocalidades] = useState([]);
   const classes = useStyles();
@@ -69,6 +64,7 @@ function ListarProveedor() {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [checkToken, setCheckToken] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -77,16 +73,23 @@ function ListarProveedor() {
   const [blinking, setBlinking] = useState(true);
 
   const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el proveedor con éxito!', severity: 'success', type: 'description'
+    title: 'Correcto', body: 'Se eliminó el proveedor con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logró eliminar el proveedor, recargue la pagina.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar el proveedor, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
+
+  const updateSuccesAlert = (newBody) => {
+    setAlertSuccess((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
 
   const updateErrorAlert = (newBody) => {
     setAlertError((prevAlert) => ({
@@ -98,36 +101,28 @@ function ListarProveedor() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const Response = await axios.get('/listar-proveedores', {
+        const response = await axios.get('/listar-proveedores', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -138,16 +133,50 @@ function ListarProveedor() {
           }
         });
 
-        const Data = Response.data.map((proveedor) => ({
-          ...proveedor,
-          Id: proveedor.proveedorId,
-        }))
+        const dataL = response.data.map((proveedor, index) => {
+          if (index < 30) {
+            if (proveedor.proveedorEliminado === false) {
+              return {
+                ...proveedor,
+                Id: proveedor.proveedorId,
+              }
+            }
+          }
+        })
+        const dataLast30 = dataL.filter((data) => data !== undefined);
+        const data = response.data.map((proveedor) => {
+          if (proveedor.proveedorEliminado === true) {
+            return {
+              ...proveedor,
+              Id: proveedor.proveedorId,
+              isDelete: 'Yes',
+            }
+          } else {
+            return {
+              ...proveedor,
+              Id: proveedor.proveedorId,
+            }
+          }
+        })
         const localidadesData = localidadesResponse.data;
 
-        setData(Data);
+        setData(dataLast30);
+        setData30(dataLast30)
+        setDataAll(data)
         setLocalidades(localidadesData.map((localidad) => localidad.localidadCiudad)); // Obtener solo los nombres de las localidades
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
+
       }
     };
 
@@ -164,7 +193,6 @@ function ListarProveedor() {
       }
     } else if (key === 'proveedorContacto') {
       if (item.proveedorContacto && item.proveedorContacto.length > 0) {
-        console.log(item.proveedorContacto)
         return item.proveedorContacto;
       } else {
         return [];
@@ -175,7 +203,8 @@ function ListarProveedor() {
   };
 
   const tableHeadCells = [
-    { id: 'proveedorNombre', numeric: false, disablePadding: true, label: 'Nombre' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'proveedorNombre', numeric: false, disablePadding: false, label: 'Nombre' },
     { id: 'proveedorEmail', numeric: false, disablePadding: false, label: 'Email' },
     { id: 'proveedorContacto', numeric: false, disablePadding: false, label: 'Teléfonos' },
     { id: 'proveedorRUT', numeric: false, disablePadding: false, label: 'RUT' },
@@ -208,7 +237,7 @@ function ListarProveedor() {
     };
 
     if (
-      (!filtros.nombre || lowerCaseItem.proveedorNombre.startsWith(filtros.nombre)) &&
+      (!filtros.nombre || lowerCaseItem.proveedorNombre === filtros.nombre) &&
       (!filtros.email || lowerCaseItem.proveedorEmail.startsWith(filtros.email)) &&
       (!filtros.telefono || lowerCaseItem.proveedorContacto.some(contacto => contacto.startsWith(filtros.telefono))) &&
       (!filtros.RUT || lowerCaseItem.proveedorRUT.startsWith(filtros.RUT)) &&
@@ -238,32 +267,29 @@ function ListarProveedor() {
     })
       .then(response => {
         if (response.status === 200) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
-          updateErrorAlert('No se logró eliminar el proveedor, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el proveedor, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logró eliminar el proveedor, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar el proveedor, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
   }
@@ -291,22 +317,35 @@ function ListarProveedor() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/proveedor')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Proveedores</Typography>
+          <Typography component='h1' variant='h5'>Listar de Proveedores</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -316,7 +355,7 @@ function ListarProveedor() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los proveedores que fueron registrados.
+                    En esta página se encarga de listar los proveedores que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -338,7 +377,7 @@ function ListarProveedor() {
                         <span className={classes.liTitleBlue}>RUT</span>: En este campo se puede ingresar un código RUT y se mostrará el proveedor con ese código.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Localidad</span>: En este campo se puede seleccionar una localidad y mostrar los clientes asociados a esa localidad.
+                        <span className={classes.liTitleBlue}>Localidad</span>: En este campo se puede seleccionar una localidad y mostrar los proveedores asociados a esa localidad.
                       </li>
                     </ul>
                   </span>
@@ -347,6 +386,9 @@ function ListarProveedor() {
                   </span>
                   <span>
                     <ul>
+                      <li>
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro
+                      </li>
                       <li>
                         <span className={classes.liTitleRed}>Nombre</span>: En esta columna se muestra el nombre del proveedor o de su empresa.
                       </li>
@@ -363,10 +405,22 @@ function ListarProveedor() {
                         <span className={classes.liTitleRed}>Localidad</span>: En esta columna se muestra la localidad a la que pertenece la empresa o el proveedor.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>El registro de los proveedores eliminados aparecerá de color azul.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -395,7 +449,11 @@ function ListarProveedor() {
         data={filteredData}
         dataKey="proveedor"
         tableHeadCells={tableHeadCells}
-        title="Proveedores"
+        title="Lista de Proveedores"
+        titleButton="Proveedor"
+        linkButton={redirect}
+        listButton={listRefresh}
+        titleListButton={buttonName}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditProveedor}

@@ -29,6 +29,9 @@ const useStyles = makeStyles(theme => ({
         minWidth: '100%',
         marginBottom: theme.spacing(1)
     },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
+    },
     select: {
         width: '100%',
         '& .MuiOutlinedInput-notchedOutline': {
@@ -100,9 +103,8 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
     const classes = useStyles();
     const { id } = useParams();
     const [control, setControl] = useState({});
-    const [controles, setControles] = useState([]);
     const [diasControl, setDiasControl] = useState([]);
-    const [dias, setDias] = useState([
+    const [dias] = useState([
         { value: 'Lunes', label: 'Lunes' },
         { value: 'Martes', label: 'Martes' },
         { value: 'Miercoles', label: 'Miércoles' },
@@ -128,21 +130,22 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+    const [checkToken, setCheckToken] = useState(false);
 
     const [blinking, setBlinking] = useState(true);
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Monitoreo de ssop operativo modificado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el monitoreo de ssop operativo, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el monitoreo de ssop operativo, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -163,31 +166,23 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerControles = () => {
@@ -202,8 +197,6 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                     if (!controlEncontrado) {
                         navigate('/listar-monitoreo-de-ssop-operativo');
                     }
-                    setControles(controlesData);
-                    console.log(controlEncontrado)
 
                     const fechaControl = controlEncontrado.monitoreoDeSSOPOperativoFechaInicio;
                     const fecha = new Date(fechaControl);
@@ -217,12 +210,20 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                         ...controlEncontrado,
                         monitoreoDeSSOPOperativoFechaInicio: fechaFormateada,
                     }
-                    console.log(controlConFechaParseada);
                     setDiasControl(opciones);
                     setControl(controlConFechaParseada);
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            redirect();
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -246,7 +247,7 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
 
     const handleChange = event => {
         const { name, value } = event.target;
-        const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+        const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$");
         if (name === "monitoreoDeSSOPOperativoObservaciones" || name === "monitoreoDeSSOPOperativoAccCorrectivas" || name === "monitoreoDeSSOPOperativoAccPreventivas") {
             if (regex.test(value)) {
                 setControl(prevState => ({
@@ -290,11 +291,9 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
         const fechaFinal = control.monitoreoDeSSOPOperativoFechaInicio;
         const fecha = new Date(fechaFinal);
         fecha.setDate(fecha.getDate() + 6);
-        const fechaFormateada = format(fecha, 'yyyy-MM-dd');
 
         const fecha2 = new Date(fechaFinal);
         fecha2.setDate(fecha2.getDate() + 2);
-        const fechaFormateada2 = format(fecha2, 'yyyy-MM-dd');
 
         const dias = diasControl;
 
@@ -303,11 +302,9 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
         const data = {
             ...control,
             monitoreoDeSSOPOperativoDias: valoresDias,
-            monitoreoDeSSOPOperativoFechaInicio: fechaFormateada2,
-            monitoreoDeSSOPOperativoFechaFinal: fechaFormateada,
+            monitoreoDeSSOPOperativoFechaInicio: fecha2,
+            monitoreoDeSSOPOperativoFechaFinal: fecha,
         };
-
-        console.log(data);
 
         const check = checkError(data.monitoreoDeSSOPOperativoFechaInicio, data.monitoreoDeSSOPOperativoArea,
             data.monitoreoDeSSOPOperativoDias, data.monitoreoDeSSOPOperativoAccCorrectivas, data.monitoreoDeSSOPOperativoAccPreventivas);
@@ -317,7 +314,7 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             axios.put(`/modificar-monitoreo-de-ssop-operativo/${id}`, data, {
                 headers: {
@@ -331,32 +328,33 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                         setTimeout(() => {
                             setShowAlertSuccess(false);
                             navigate('/listar-monitoreo-de-ssop-operativo');
-                        }, 3000)
+                        }, 2500)
                     } else {
-                        updateErrorAlert('No se logro modificar el monitoreo de ssop operativo, revise los datos ingresados.')
+                        updateErrorAlert('No se logró modificar el monitoreo de ssop operativo, revise los datos ingresados.')
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 3000);
                     }
                 })
                 .catch(error => {
                     if (error.request.status === 401) {
-                        setShowAlertWarning(true);
-                        setTimeout(() => {
-                            setShowAlertWarning(false);
-                        }, 5000);
+                        setCheckToken(true);
                     }
                     else if (error.request.status === 500) {
-                        updateErrorAlert('No se logro modificar el monitoreo de ssop operativo, revise los datos ingresados.');
+                        updateErrorAlert('No se logró modificar el monitoreo de ssop operativo, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 3000);
                     }
                 })
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-monitoreo-de-ssop-operativo')
+    }
 
     return (
         <div>
@@ -370,14 +368,12 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Monitoreo de SSOP Operativo</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -387,7 +383,7 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los monitoreos de SSOP Operativos, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar un monitoreo de ssop operativo, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
@@ -409,7 +405,7 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                                                 <span className={classes.liTitleBlue}>Acciones Correctivas</span>: en este campo se ingresa las acciones que se implementaron para corregir el inconveniente.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Acciones Preventivas</span>: en este campo se ingresa las acciones que se implementaran para solucionar posibles problemas a futuro.
+                                                                <span className={classes.liTitleBlue}>Acciones Preventivas</span>: en este campo se ingresa las acciones que se implementarán para solucionar posibles problemas a futuro.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -417,12 +413,17 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción..
-
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones:
+                                                        <ul>
+                                                            <li>Los campos de Observaciones, Acciones Correctivas y Acciones Preventivas cuentan con una longitud máxima de 250 caracteres y se podrán ingresar letras y números.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -454,12 +455,11 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha de Inicio de la Semana"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="monitoreoDeSSOPOperativoFechaInicio"
                                             value={control.monitoreoDeSSOPOperativoFechaInicio}
@@ -518,12 +518,11 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            InputLabelProps={{ className: classes.customLabelRed, shrink: true }}
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Observaciones"
-                                            defaultValue="Observaciones"
                                             type="text"
                                             name="monitoreoDeSSOPOperativoObservaciones"
                                             value={
@@ -541,12 +540,11 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Acciones Correctivas"
-                                            defaultValue="Acciones Correctivas"
                                             type="text"
                                             name="monitoreoDeSSOPOperativoAccCorrectivas"
                                             value={control.monitoreoDeSSOPOperativoAccCorrectivas}
@@ -560,12 +558,11 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Acciones Preventivas"
-                                            defaultValue="Acciones Preventivas"
                                             type="text"
                                             name="monitoreoDeSSOPOperativoAccPreventivas"
                                             value={control.monitoreoDeSSOPOperativoAccPreventivas}
@@ -578,7 +575,8 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

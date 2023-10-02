@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from '@material-ui/icons/Close';
@@ -9,14 +9,6 @@ import { useParams } from 'react-router-dom';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -41,6 +33,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     customOutlinedRed: {
         '& .MuiOutlinedInput-notchedOutline': {
@@ -109,6 +104,7 @@ const ModificarCliente = () => {
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
+    const [checkToken, setCheckToken] = useState(false);
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -118,16 +114,16 @@ const ModificarCliente = () => {
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Cliente modificado con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el cliente, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el cliente, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -148,31 +144,23 @@ const ModificarCliente = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
-    }, []);
+    }, [checkToken]);
 
     useEffect(() => {
         const obtenerClientes = () => {
@@ -200,7 +188,16 @@ const ModificarCliente = () => {
                     });
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los datos del registro, intente nuevamente.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            redirect()
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -220,7 +217,15 @@ const ModificarCliente = () => {
                     );
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar las localidades, recargue la p[agina].')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
                 });
         };
 
@@ -246,7 +251,7 @@ const ModificarCliente = () => {
     const handleChange = event => {
         const { name, value } = event.target;
         if (name === "clienteNombre") {
-            const regex = new RegExp("^[A-Za-z0-9\\s]{0,50}$");
+            const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s]{0,50}$");
             if (regex.test(value)) {
                 setCliente(prevState => ({
                     ...prevState,
@@ -264,7 +269,7 @@ const ModificarCliente = () => {
             }
         }
         else if (name === "clienteObservaciones") {
-            const regex = new RegExp("^[A-Za-z0-9\\s,.]{0,250}$");
+            const regex = new RegExp("^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$");
             if (regex.test(value)) {
                 setCliente(prevState => ({
                     ...prevState,
@@ -272,12 +277,10 @@ const ModificarCliente = () => {
                 }));
             }
         }
-        console.log(cliente);
     }
 
     const handleChangeTelefono = (index, telefono) => {
         const regex = new RegExp("^[0-9]{0,9}$");
-        console.log(index);
 
         if (regex.test(telefono)) {
             setTelefonos(prevTelefonos => {
@@ -297,7 +300,6 @@ const ModificarCliente = () => {
         nuevosTelefonos.splice(index, 1);
 
         setTelefonos(nuevosTelefonos);
-        console.log(nuevosTelefonos);
     };
 
     const checkTelefono = (telefonos) => {
@@ -307,7 +309,6 @@ const ModificarCliente = () => {
         } else {
             clientes.forEach(cliente => {
                 cliente.clienteContacto.forEach(telefono => {
-                    console.log(telefono)
                     if (cliente.clienteId.toString() === id.toString()) { }
                     else {
                         telefonosClientes.push(telefono);
@@ -316,7 +317,6 @@ const ModificarCliente = () => {
             })
 
             let telCheck = false;
-            console.log(telefonosClientes);
 
             telefonosClientes.forEach((telC) => {
                 telefonos.forEach((tel) => {
@@ -329,7 +329,6 @@ const ModificarCliente = () => {
                 }
             });
 
-            console.log(telCheck);
             return telCheck;
         }
     }
@@ -340,10 +339,12 @@ const ModificarCliente = () => {
             clientes.forEach(cliente => {
                 if (cliente.clienteId.toString() === id.toString()) { }
                 else {
-                    emailClientes.push(cliente.clienteEmail);
+                    if (cliente.clienteEmail !== undefined && cliente.clienteEmail !== null && cliente.clienteEmail !== '') {
+                        emailClientes.push(cliente.clienteEmail);
+                    }
                 }
             })
-            console.log(emailClientes);
+
 
             const emailEncontrado = emailClientes.includes(email);
             return emailEncontrado;
@@ -351,12 +352,12 @@ const ModificarCliente = () => {
     }
 
     const checkError = (nombre, email, localidad) => {
-        if (nombre === undefined || nombre === null || nombre.trim() === '') {
+        if (nombre === undefined || nombre === null || nombre === '') {
             return false;
         }
 
         if (email) {
-            if (email === undefined || email === null || email.trim() === '') { }
+            if (email === undefined || email === null || email === '') { }
             else {
                 if (!email.includes(".") && !email.includes("@")) {
                     return false;
@@ -372,18 +373,15 @@ const ModificarCliente = () => {
 
     const checkErrorTelefono = (telefonos) => {
         let resp = true;
-        console.log(telefonos)
         if (telefonos === undefined || telefonos === null || telefonos.length === 0) {
             return false;
         } else {
-            const regex = /^\d{9}$/;
+            const regex = /^\d{8,9}$/;
             telefonos.forEach((tel) => {
                 if (regex.test(tel)) {
                     const primerNum = tel[0];
                     const longitud = tel.length;
-                    console.log(primerNum)
-                    console.log(longitud)
-                    if (parseInt(primerNum) === 0 && longitud === 9) { }
+                    if (parseInt(primerNum) === 0 && parseInt(longitud) === 9 || parseInt(primerNum) === 4 && parseInt(longitud) === 8) { }
                     else { resp = false }
                 }
                 else { resp = false }
@@ -394,26 +392,23 @@ const ModificarCliente = () => {
 
     const handleFormSubmit = () => {
         const localidadValue = clienteLocalidad === "Seleccionar" ? "Seleccionar" : clienteLocalidad.value;
-        console.log(cliente);
         const localidadCompleta = localidades.find((localidad) => localidad.localidadId.toString() === localidadValue.toString());
 
         const telefonosStrings = [];
         telefonos.forEach((telefono) => {
             telefonosStrings.push(telefono.tel);
         })
-        console.log(telefonosStrings);
+
         const data = {
             ...cliente,
-            clienteEmail: !cliente.clienteEmail || cliente.clienteEmail === '' ? undefined : cliente.clienteEmail,
+            clienteEmail: !cliente.clienteEmail || cliente.clienteEmail === '' ? '' : cliente.clienteEmail,
             clienteContacto: telefonosStrings,
             clienteLocalidad: localidadCompleta,
         };
-        console.log(data);
 
         const check = checkError(data.clienteNombre, data.clienteEmail, data.clienteLocalidad);
         const telefonoCheck = checkTelefono(data.clienteContacto);
         const emailCheck = checkEmail(data.clienteEmail);
-        console.log(emailCheck)
         const telefonoErrorCheck = checkErrorTelefono(data.clienteContacto);
 
         if (check === false) {
@@ -421,16 +416,16 @@ const ModificarCliente = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             if (telefonoErrorCheck === false) {
                 updateErrorAlert(`Los teléfonos ingresados tienen que empezar con el número 0 y tener una longitud de 9 digitos, en caso de agregar otro campo de contacto, no lo deje vacío.`);
                 setShowAlertError(true);
                 setTimeout(() => {
                     setShowAlertError(false);
-                }, 7000);
+                }, 3000);
             } else {
-                if (data.clienteEmail) {
+                if (data.clienteEmail && data.clienteEmail !== '' && data.clienteEmail !== undefined && data.clienteEmail !== null) {
                     const regex = /^(([^<>()[\]\.,;:\s@"]+(\.[^<>()[\]\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
                     if (regex.test(data.clienteEmail)) {
                         if (telefonoCheck === false && emailCheck === false) {
@@ -446,28 +441,25 @@ const ModificarCliente = () => {
                                         setTimeout(() => {
                                             setShowAlertSuccess(false);
                                             navigate('/listar-cliente');
-                                        }, 3000)
+                                        }, 2500)
                                     } else {
-                                        updateErrorAlert('No se logro modificar el cliente, revise los datos ingresados.')
+                                        updateErrorAlert('No se logró modificar el cliente, revise los datos ingresados.')
                                         setShowAlertError(true);
                                         setTimeout(() => {
                                             setShowAlertError(false);
-                                        }, 5000);
+                                        }, 2500);
                                     }
                                 })
                                 .catch(error => {
                                     if (error.request.status === 401) {
-                                        setShowAlertWarning(true);
-                                        setTimeout(() => {
-                                            setShowAlertWarning(false);
-                                        }, 5000);
+                                        setCheckToken(true);
                                     }
                                     else if (error.request.status === 500) {
-                                        updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
+                                        updateErrorAlert('No se logró registrar el cliente, revise los datos ingresados.');
                                         setShowAlertError(true);
                                         setTimeout(() => {
                                             setShowAlertError(false);
-                                        }, 5000);
+                                        }, 2500);
                                     }
                                 })
                         } else {
@@ -475,20 +467,20 @@ const ModificarCliente = () => {
                             setShowAlertError(true);
                             setTimeout(() => {
                                 setShowAlertError(false);
-                            }, 7000);
+                            }, 3000);
                         }
                     } else {
                         updateErrorAlert(`El mail ingresado no es válido.`);
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 7000);
+                        }, 2500);
                     }
                 } else {
                     if (telefonoCheck === false) {
                         const dataMod = {
                             ...data,
-                            clienteEmail: null,
+                            clienteEmail: '',
                         }
                         axios.put(`/modificar-cliente/${id}`, dataMod, {
                             headers: {
@@ -500,29 +492,27 @@ const ModificarCliente = () => {
                                 if (response.status === 200) {
                                     setShowAlertSuccess(true);
                                     setTimeout(() => {
+                                        navigate('/listar-cliente');
                                         setShowAlertSuccess(false);
-                                    }, 5000);
+                                    }, 2500);
                                 } else {
-                                    updateErrorAlert('No se logro modificar el cliente, revise los datos ingresados.')
+                                    updateErrorAlert('No se logró modificar el cliente, revise los datos ingresados.')
                                     setShowAlertError(true);
                                     setTimeout(() => {
                                         setShowAlertError(false);
-                                    }, 5000);
+                                    }, 2500);
                                 }
                             })
                             .catch(error => {
                                 if (error.request.status === 401) {
-                                    setShowAlertWarning(true);
-                                    setTimeout(() => {
-                                        setShowAlertWarning(false);
-                                    }, 5000);
+                                    setCheckToken(true);
                                 }
                                 else if (error.request.status === 500) {
-                                    updateErrorAlert('No se logro registrar el cliente, revise los datos ingresados.');
+                                    updateErrorAlert('No se logró registrar el cliente, revise los datos ingresados.');
                                     setShowAlertError(true);
                                     setTimeout(() => {
                                         setShowAlertError(false);
-                                    }, 5000);
+                                    }, 2500);
                                 }
                             })
                     } else {
@@ -537,6 +527,10 @@ const ModificarCliente = () => {
         }
     };
 
+    const redirect = () => {
+        navigate('/listar-cliente')
+    }
+
     return (
         <div>
             <CssBaseline>
@@ -549,14 +543,12 @@ const ModificarCliente = () => {
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
                                     <Typography component='h1' variant='h4'>Modificar Cliente</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -566,29 +558,32 @@ const ModificarCliente = () => {
                                             <DialogContent>
                                                 <DialogContentText className={classes.text}>
                                                     <span>
-                                                        En esta página puedes registrar los clientes, asegúrate de completar los campos necesarios para registrar el estado.
+                                                        En esta página puedes modificar un cliente, asegúrate de completar los campos necesarios para registrar el estado.
                                                     </span>
                                                     <br />
                                                     <span>
                                                         Este formulario cuenta con 5 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Nombre</span>: en este campo se debe ingresar el nombre de la empresa o del cliente.
+                                                                <span className={classes.liTitleBlue}>Nombre</span>: En este campo se debe ingresar el nombre de la empresa o del cliente,
+                                                                este campo acepta palabras y número, a su vez cuenta con una longitud máxima de 50 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Email</span>: en este campo se debe ingresar el mail proporcionado por el cliente.
+                                                                <span className={classes.liTitleBlue}>Email</span>: En este campo se debe ingresar el mail del cliente,
+                                                                este campo solo acepta palabras, números, arroba y punto.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Contacto</span>: en este campo se ingresa el número de teléfono del cliente,
-                                                                en caso de que tenga mas de un teléfono, se puede agregar mas al darle click al icono de mas a la derecha del campo
-                                                                y si desea eliminar el campo, consta en darle click a la X a la derecha del campo generado.
+                                                                <span className={classes.liTitleBlue}>Contacto</span>: En este campo se ingresa el número de teléfono del cliente,
+                                                                en caso de que tenga más de un teléfono, se puede agregar más al darle click al icono de más a la derecha del campo
+                                                                y si desea eliminar el campo, consta en darle click a la X a la derecha del campo generado,
+                                                                los campos de teléfono aceptan solo números y cuentan con una longitud máxima de 9 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Observaciones</span>: en este campo se pueden registrar las observaciones o detalles necesarios del cliente.
+                                                                <span className={classes.liTitleRed}>Observaciones</span>: En este campo se pueden registrar las observaciones o detalles necesarios del cliente,
+                                                                este campo acepta palabras y números, a su vez cuenta con una longitud máxima de 250 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Localidad</span>: en este campo se puede seleccionar la localidad en donde esta ubicado el cliente o su empresa,
-                                                                en caso de querer añadir una localidad nueva, es posible dandole al icono de más a la derecha del campo.
+                                                                <span className={classes.liTitleBlue}>Localidad</span>: En este campo se debe seleccionar la localidad en donde esta ubicado el cliente o su empresa.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -596,11 +591,20 @@ const ModificarCliente = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifiqué los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
+                                                            <li>En el campo de teléfono también se acepta números de teléfono fijo, en caso de que quiera agregar un teléfono fijo ingréselo todo junto.</li>
+                                                            <li>En el modificar también se pueden agregar o sacar teléfonos.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -632,12 +636,11 @@ const ModificarCliente = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true, }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Nombre"
-                                            defaultValue="Nombre"
                                             type="text"
                                             name="clienteNombre"
                                             value={cliente.clienteNombre}
@@ -649,12 +652,11 @@ const ModificarCliente = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            InputLabelProps={{ className: classes.customLabelRed, shrink: true, }}
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Email"
-                                            defaultValue="Nombre"
                                             type="email"
                                             name="clienteEmail"
                                             value={cliente.clienteEmail}
@@ -677,14 +679,14 @@ const ModificarCliente = () => {
                                                 fullWidth
                                                 autoFocus
                                                 className={classes.customOutlinedBlue}
-                                                InputLabelProps={{ className: classes.customLabelBlue }}
+                                                InputLabelProps={{ className: classes.customLabelBlue, shrink: true, }}
                                                 color="primary"
                                                 margin="normal"
                                                 variant="outlined"
                                                 label={`Teléfono ${index + 1}`}
                                                 type="text"
                                                 name={`clienteContacto-${index}`}
-                                                value={telefono.tel || ''}
+                                                value={telefono.tel}
                                                 onChange={(e) => handleChangeTelefono(index, e.target.value)}
                                             />
                                         </Grid>
@@ -718,12 +720,11 @@ const ModificarCliente = () => {
                                             multiline
                                             autoFocus
                                             className={classes.customOutlinedRed}
-                                            InputLabelProps={{ className: classes.customLabelRed }}
+                                            InputLabelProps={{ className: classes.customLabelRed, shrink: true, }}
                                             color="secondary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Observaciones"
-                                            defaultValue="Observaciones"
                                             type="text"
                                             name="clienteObservaciones"
                                             value={cliente.clienteObservaciones ? cliente.clienteObservaciones : ''}
@@ -742,7 +743,7 @@ const ModificarCliente = () => {
                                                     name: "clienteLocalidad",
                                                     id: `outlined-localidad-native-simple`,
                                                 }}
-                                                onChange={(e) => setClienteLocalidad(e.target.value)}
+                                                onChange={(e) => setClienteLocalidad({ value: e.target.value })}
                                             >
                                                 <option>Seleccionar</option>
                                                 {localidadesSelect.map((option, ind) => (
@@ -760,7 +761,8 @@ const ModificarCliente = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

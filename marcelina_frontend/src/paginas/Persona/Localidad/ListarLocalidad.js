@@ -4,19 +4,10 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { useNavigate } from 'react-router-dom';
-
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,6 +51,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarLocalidad() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
   const [deleteItem, setDeleteItem] = useState(false);
@@ -72,20 +66,28 @@ function ListarLocalidad() {
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+  const [checkToken, setCheckToken] = useState(false);
 
   const [blinking, setBlinking] = useState(true);
 
   const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino la localidad con éxito!', severity: 'success', type: 'description'
+    title: 'Correcto', body: 'Se eliminó la localidad con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
-    title: 'Error', body: 'No se logró eliminar la localidad, recargue la pagina.', severity: 'error', type: 'description'
+    title: 'Error', body: 'No se logró eliminar la localidad, recargue la página.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
+
+  const updateSuccesAlert = (newBody) => {
+    setAlertSuccess((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
 
   const updateErrorAlert = (newBody) => {
     setAlertError((prevAlert) => ({
@@ -97,31 +99,23 @@ function ListarLocalidad() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,14 +126,47 @@ function ListarLocalidad() {
           }
         });
 
-        const localidadData = localidadResponse.data.map((localidad) => ({
-          ...localidad,
-          Id: localidad.localidadId,
-        }));
+        const localidadDataL = localidadResponse.data.map((localidad, index) => {
+          if (index < 30) {
+            if (localidad.localidadEliminado === false) {
+              return {
+                ...localidad,
+                Id: localidad.localidadId,
+              }
+            }
+          }
+        });
 
-        setData(localidadData);
+        const dataLast30 = localidadDataL.filter((data) => data !== undefined);
+        const data = localidadResponse.data.map((localidad) => {
+          if (localidad.localidadEliminado === true) {
+            return {
+              ...localidad,
+              Id: localidad.localidadId,
+              isDelete: 'Yes',
+            }
+          } else {
+            return {
+              ...localidad,
+              Id: localidad.localidadId,
+            }
+          }
+        })
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data);
+        setButtonName('Listar Todos')
+        setDeleteItem(false);
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -152,21 +179,22 @@ function ListarLocalidad() {
   };
 
   const tableHeadCells = [
-    { id: 'localidadCiudad', numeric: false, disablePadding: true, label: 'Ciudad' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'localidadCiudad', numeric: false, disablePadding: false, label: 'Ciudad' },
     { id: 'localidadDepartamento', numeric: false, disablePadding: false, label: 'Departamento' },
   ];
 
   const filters = [
     { id: 'ciudad', label: 'Ciudad', type: 'text' },
-    { id: 'departamento', label: 'Departamento', type: 'text'},
+    { id: 'departamento', label: 'Departamento', type: 'text' },
   ];
 
   const handleFilter = (filter) => {
     const lowerCaseFilter = Object.keys(filter).reduce((acc, key) => {
-        acc[key] = filter[key] ? filter[key].toLowerCase() : '';
-        return acc;
-      }, {});
-      setFiltros(lowerCaseFilter);
+      acc[key] = filter[key] ? filter[key].toLowerCase() : '';
+      return acc;
+    }, {});
+    setFiltros(lowerCaseFilter);
   };
 
   const filteredData = data.filter((item) => {
@@ -176,8 +204,8 @@ function ListarLocalidad() {
     };
 
     if (
-      (!filtros.ciudad || lowerCaseItem.localidadCiudad.toString().startsWith(filtros.ciudad)) &&
-      (!filtros.departamento || lowerCaseItem.localidadDepartamento.toString().startsWith(filtros.departamento))
+      (!filtros.ciudad || lowerCaseItem.localidadCiudad.toString() === filtros.ciudad) &&
+      (!filtros.departamento || lowerCaseItem.localidadDepartamento.toString() === filtros.departamento)
     ) {
       return true;
     }
@@ -199,32 +227,68 @@ function ListarLocalidad() {
     })
       .then(response => {
         if (response.status === 200) {
+          setDeleteItem(true);
+          updateSuccesAlert('Se eliminó la localidad con éxito!')
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
-          updateErrorAlert('No se logró eliminar la localidad, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar la localidad, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
-          updateErrorAlert('No se logró eliminar la localidad, recargue la pagina.')
+          updateErrorAlert('No se logró eliminar la localidad, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 2000);
+        }
+      })
+  }
+
+  const handleAddLocalidad = (rowData) => {
+    const id = rowData.Id;
+    axios.put(`/añadir-localidad/${id}`, null, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 200) {
+          setDeleteItem(true);
+          updateSuccesAlert('Se añadió la localidad nuevamente con éxito!')
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 2000);
+        } else {
+          updateErrorAlert('No se logró añadir nuevamente la localidad, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
+      })
+      .catch(error => {
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        }
+        else if (error.request.status === 500) {
+          updateErrorAlert('No se logró añadir nuevamente la localidad, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
         }
       })
   }
@@ -252,22 +316,34 @@ function ListarLocalidad() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/localidad')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Localidades</Typography>
+          <Typography component='h1' variant='h5'>Listar de Localidades</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -277,7 +353,7 @@ function ListarLocalidad() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar las localidades que fueron registrados.
+                    En esta página se encarga de listar las localidades que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -287,10 +363,10 @@ function ListarLocalidad() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleBlue}>Ciudad</span>: En este campo se puede ingresar una ciudad para filtrar los registros con esa ciudad.
+                        <span className={classes.liTitleBlue}>Ciudad</span>: En este campo se puede ingresar una ciudad para filtrar la lista por esa ciudad.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Departamento</span>: En este campo se puede ingresar un departamento para filtrar los registros con ese departamento.
+                        <span className={classes.liTitleBlue}>Departamento</span>: En este campo se puede ingresar un departamento para filtrar la lista por ese departamento.
                       </li>
                     </ul>
                   </span>
@@ -300,16 +376,31 @@ function ListarLocalidad() {
                   <span>
                     <ul>
                       <li>
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
+                      </li>
+                      <li>
                         <span className={classes.liTitleRed}>Ciudad</span>: En esta columna se muestra la ciudad de la localidad.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Departamento</span>: En esta columna se muestra el departamento de la localidad.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
+                      <li>El registro de las localidades eliminadas aparecerá de color azul.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -338,11 +429,16 @@ function ListarLocalidad() {
         data={filteredData}
         dataKey="listarLocalidades"
         tableHeadCells={tableHeadCells}
-        title="Localidades"
+        title="Lista de Localidades"
+        titleButton="Localidad"
+        linkButton={redirect}
+        titleListButton={buttonName}
+        listButton={listRefresh}
         dataMapper={mapData}
         columnRenderers={""}
         onEditButton={handleEditLocalidad}
         onDeleteButton={handleDeleteLocalidad}
+        onAddButton={handleAddLocalidad}
       />
 
     </div>

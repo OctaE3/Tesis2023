@@ -3,6 +3,9 @@ package com.chacineria.marcelina.entidad.persona;
 import java.io.Serializable;
 import java.util.List;
 
+import com.chacineria.marcelina.entidad.insumo.PRecepcion_de_Materias_Primas_Carnicas;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.CollectionTable;
@@ -12,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 @Entity(name = "proveedores")
 public class Proveedor implements Serializable {
@@ -108,6 +112,10 @@ public class Proveedor implements Serializable {
         this.proveedorLocalidad = proveedorLocalidad;
         this.proveedorEliminado = proveedorEliminado;
     }
+
+    @OneToMany(mappedBy = "recepcionDeMateriasPrimasCarnicasProveedor")
+    @JsonIgnore
+    private List<PRecepcion_de_Materias_Primas_Carnicas> recepcionesDeMateriasPrimasCarnicas;
 
     public Proveedor() {
     }

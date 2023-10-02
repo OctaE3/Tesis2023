@@ -6,6 +6,7 @@ import com.chacineria.marcelina.entidad.persona.Usuario;
 
 public interface UsuarioServicio {
     public Iterable<Usuario> findAllByUsuarioEliminado(Boolean eliminado);
+    public Iterable<Usuario> findAll();
     public Optional<Usuario> findById(Long Id);
     public Usuario save(Usuario save);
     public void deleteById(Long Id); 

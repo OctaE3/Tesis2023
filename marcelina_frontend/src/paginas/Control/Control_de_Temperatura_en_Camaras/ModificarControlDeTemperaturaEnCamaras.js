@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
@@ -8,14 +8,6 @@ import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#2C2C71'
-        }
-    }
-});
 
 const useStyles = makeStyles(theme => ({
     title: {
@@ -43,6 +35,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: 5,
         marginBottom: 10,
+    },
+    sendButtonMargin: {
+        margin: theme.spacing(1),
     },
     auto: {
         marginTop: theme.spacing(2),
@@ -100,12 +95,12 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
     const { id } = useParams();
     const [control, setControl] = useState({});
     const selectNroCamara = [
-        { value: 'Camara 1', label: 'Camara 1' },
-        { value: 'Camara 2', label: 'Camara 2' },
-        { value: 'Camara 3', label: 'Camara 3' },
-        { value: 'Camara 4', label: 'Camara 4' },
-        { value: 'Camara 5', label: 'Camara 5' },
-        { value: 'Camara 6', label: 'Camara 6' },
+        { value: 'Cámara 1', label: 'Cámara 1' },
+        { value: 'Cámara 2', label: 'Cámara 2' },
+        { value: 'Cámara 3', label: 'Cámara 3' },
+        { value: 'Cámara 4', label: 'Cámara 4' },
+        { value: 'Cámara 5', label: 'Cámara 5' },
+        { value: 'Cámara 6', label: 'Cámara 6' },
     ];
 
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
@@ -120,16 +115,16 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
 
     const navigate = useNavigate();
 
-    const [alertSuccess, setAlertSuccess] = useState({
-        title: 'Correcto', body: 'Se modifico el control de temperatura en camaras con éxito!', severity: 'success', type: 'description'
+    const [alertSuccess] = useState({
+        title: 'Correcto', body: 'Se modificó el control de temperatura en cámaras con éxito!', severity: 'success', type: 'description'
     });
 
     const [alertError, setAlertError] = useState({
-        title: 'Error', body: 'No se logro modificar el control de temperatura en camaras, revise los datos ingresados.', severity: 'error', type: 'description'
+        title: 'Error', body: 'No se logró modificar el control de temperatura en cámaras, revise los datos ingresados.', severity: 'error', type: 'description'
     });
 
-    const [alertWarning, setAlertWarning] = useState({
-        title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+    const [alertWarning] = useState({
+        title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
     });
 
     const handleClickOpen = () => {
@@ -150,28 +145,20 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-            setShowAlertError(true);
-            setTimeout(() => {
-                setShowAlertError(false);
-                navigate('/')
-            }, 5000);
+            navigate('/')
         } else {
             const tokenParts = token.split('.');
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log(payload)
 
             const tokenExpiration = payload.exp * 1000;
-            console.log(tokenExpiration)
             const currentTime = Date.now();
-            console.log(currentTime)
 
             if (tokenExpiration < currentTime) {
                 setShowAlertWarning(true);
                 setTimeout(() => {
                     setShowAlertWarning(false);
                     navigate('/')
-                }, 3000);
+                }, 2000);
             }
         }
     }, []);
@@ -185,7 +172,6 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
             })
                 .then(response => {
                     const controlesData = response.data;
-                    console.log(controlesData);
                     const controlEncontrado = controlesData.find((control) => control.controlDeTemperaturaEnCamarasId.toString() === id.toString());
                     if (!controlEncontrado) {
                         navigate('/listar-control-de-temperatura-en-camaras')
@@ -198,10 +184,13 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                         controlDeTemperaturaEnCamarasFecha: fechaFormateada,
                     }
                     setControl(controlConFecha);
-                    console.log(controlConFecha)
                 })
                 .catch(error => {
-                    console.error(error);
+                    updateErrorAlert('No se logró cargar los datos del registro, regrese a la lista y intente nuevamente.')
+                    setShowAlertError(true);
+                    setTimeout(() => {
+                        setShowAlertError(false);
+                    }, 2000);
                 });
         };
 
@@ -224,14 +213,22 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
     }, []);
 
     const handleChange = event => {
-        const { name, value, id, type } = event.target;
-        const regex = new RegExp(id);
-        if (type === "date" || name === "controlDeTemperaturaEnCamarasNroCamara") {
+        const { name, value } = event.target;
+        if (name === "controlDeTemperaturaEnCamarasFecha" || name === "controlDeTemperaturaEnCamarasNroCamara") {
             setControl(prevState => ({
                 ...prevState,
                 [name]: value,
             }));
+        } else if (name === "controlDeTemperaturaEnCamarasTempInterna" || name === "controlDeTemperaturaEnCamaraTempExterna") {
+            const regex = new RegExp("^-?[0-9]{0,4}$");
+            if (regex.test(value)) {
+                setControl(prevState => ({
+                    ...prevState,
+                    [name]: value,
+                }));
+            }
         } else {
+            const regex = new RegExp("^[0-9]{0,2}$");
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,
@@ -242,10 +239,10 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
     }
 
     const checkError = (nroC, fecha, hora, tempI, tempE) => {
-        if (nroC === undefined || nroC === null || nroC === "Seleccionar") {
+        if (nroC === undefined || nroC === null || nroC === "Seleccionar" || nroC === '') {
             return false;
         }
-        else if (fecha === undefined || fecha === null || fecha === '') {
+        else if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
         else if (hora === undefined || hora === null || hora === '') {
@@ -261,18 +258,19 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
     }
 
     const handleFormSubmit = () => {
-        let fechaControl = new Date(control.controlDeReposicionDeCloroFecha);
+        let fechaControl = new Date(control.controlDeTemperaturaEnCamarasFecha);
         let fechaPars = '';
-        if (fechaControl.toString() === 'Invalid Date') { }
+        if (fechaControl.toString() === 'Invalid Date') { 
+            fechaControl.setDate(null);
+        }
         else {
             fechaControl.setDate(fechaControl.getDate() + 2);
             fechaPars = format(fechaControl, 'yyyy-MM-dd');
         }
         const data = {
             ...control,
-            controlDeTemperaturaEnCamarasFecha: fechaPars === fechaPars === '' ? fechaControl : fechaPars,
+            controlDeTemperaturaEnCamarasFecha: fechaPars === '' ? fechaControl : fechaPars,
         };
-        console.log(data);
 
         const nroC = data.controlDeTemperaturaEnCamarasNroCamara;
         const fechaData = data.controlDeTemperaturaEnCamarasFecha;
@@ -287,7 +285,7 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
             setShowAlertError(true);
             setTimeout(() => {
                 setShowAlertError(false);
-            }, 7000);
+            }, 2500);
         } else {
             axios.put(`/modificar-control-de-temperatura-en-camaras/${id}`, data, {
                 headers: {
@@ -296,19 +294,18 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                 }
             })
                 .then(response => {
-                    console.log(response.status);
                     if (response.status === 200) {
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
                             navigate('/listar-control-de-temperatura-en-camaras');
-                        }, 3000)
+                        }, 2500)
                     } else {
-                        updateErrorAlert('No se logro modificar el control de temperatura en camaras, revise los datos ingresados.');
+                        updateErrorAlert('No se logró modificar el control de temperatura en cámaras, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
                 .catch(error => {
@@ -317,18 +314,22 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                         setShowAlertWarning(true);
                         setTimeout(() => {
                             setShowAlertWarning(false);
-                        }, 5000);
+                        }, 2500);
                     }
                     else if (error.request.status === 500) {
-                        updateErrorAlert('No se logro modificar el control de temperatura en camaras, revise los datos ingresados.');
+                        updateErrorAlert('No se logró modificar el control de temperatura en cámaras, revise los datos ingresados.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
         }
     };
+
+    const redirect = () => {
+        navigate('/listar-control-de-temperatura-en-camaras')
+    }
 
     return (
         <div>
@@ -340,16 +341,14 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                             <Grid container spacing={0}>
                                 <Grid item lg={2} md={2}></Grid>
                                 <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title} >
-                                    <Typography component='h1' variant='h4'>Modificar Control de Temperatura en Camaras</Typography>
+                                    <Typography component='h1' variant='h4'>Modificar Control de Temperatura en Cámaras</Typography>
                                     <div>
-                                        <Button color="primary" onClick={handleClickOpen}>
-                                            <IconButton className={blinking ? classes.blinkingButton : ''}>
-                                                <HelpOutlineIcon fontSize="large" color="primary" />
-                                            </IconButton>
-                                        </Button>
+                                        <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+                                            <HelpOutlineIcon fontSize="large" color="primary" />
+                                        </IconButton>
                                         <Dialog
                                             fullScreen={fullScreen}
-                                            fullWidth='md'
+                                            fullWidth
                                             maxWidth='md'
                                             open={open}
                                             onClose={handleClose}
@@ -366,19 +365,19 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                                                         Este formulario cuenta con 5 campos:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Número de la cámara</span>: en este campo se debe seleccionar la cámara de la cual se midió su temperatura interna y externa.
+                                                                <span className={classes.liTitleBlue}>Número de la cámara</span>: En el campo 'Número de la cámara', se debe seleccionar la cámara de la cual se obtuvo la temperatura.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Fecha</span>: en este campo se debe registrar la fecha en la que se midió la temperatura de la cámara.
+                                                                <span className={classes.liTitleBlue}>Fecha</span>: En el campo 'Fecha', se debe ingresar la fecha en la que se registró el control de temperatura en cámaras.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Hora</span>: en este campo se registrará la hora en la que se midió la temperatura de la cámara.
+                                                                <span className={classes.liTitleBlue}>Hora</span>: En el campo 'Hora', se debe ingresar la hora en la que se obtuvo la temperatura de la cámara, este campo solo acepta números y cuenta con una longitud máxima de 2 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Temperatura Interna</span>: en este campo se registrará la temperatura interna de la cámara seleccionada.
+                                                                <span className={classes.liTitleBlue}>Temperatura Interna</span>: En el campo 'Temperatura Interna', se debe ingresar la temperatura interna de la cámara, este campo solo acepta números postivos y negativos, este campo cuenta con una longitud máxima de 4 caracteres.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Temperatura Externa</span>: en este campo se registrará la temperatura externa de la cámara seleccionada.
+                                                                <span className={classes.liTitleBlue}>Temperatura Externa</span>: En el campo 'Temperatura Externa', se debe ingresar la temperatura externa de la cámara, este campo solo acepta números postivos y negativos, este campo cuenta con una longitud máxima de 4 caracteres.
                                                             </li>
                                                         </ul>
                                                     </span>
@@ -386,11 +385,19 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                                                         Campos obligatorios y no obligatorios:
                                                         <ul>
                                                             <li>
-                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
+                                                                <span className={classes.liTitleBlue}>Campos con contorno azul y con asterisco en su nombre</span>: Los campos con contorno azul y asterisco son obligatorios, se tienen que completar sin excepción.
                                                             </li>
                                                             <li>
-                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: en cambio, los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
+                                                                <span className={classes.liTitleRed}>Campos con contorno rojo</span>: Los campos con contorno rojo no son obligatorios, se pueden dejar vacíos de ser necesario.
                                                             </li>
+                                                        </ul>
+                                                    </span>
+                                                    <span>
+                                                        Aclaraciones y Recomendaciones:
+                                                        <ul>
+                                                            <li>Solo modifique los campos que necesite.</li>
+                                                            <li>No se acepta que los campos con contorno azul se dejen vacíos.</li>
+                                                            <li>El formato en el que se ingresa la hora es solo el número de la hora, ejemplo: 12.</li>
                                                         </ul>
                                                     </span>
                                                 </DialogContentText>
@@ -419,13 +426,13 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                                 <Grid item lg={8} md={8} sm={8} xs={8}>
                                     <Grid item lg={12} md={12} sm={12} xs={12}>
                                         <FormControl variant="outlined" className={classes.formControl}>
-                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-controlDeTemperaturaEnCamarasNroCamara-native-simple`}>Número de Camara</InputLabel>
+                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-controlDeTemperaturaEnCamarasNroCamara-native-simple`}>Número de la Cámara</InputLabel>
                                             <Select
                                                 className={classes.select}
                                                 native
                                                 value={control.controlDeTemperaturaEnCamarasNroCamara}
                                                 name="controlDeTemperaturaEnCamarasNroCamara"
-                                                label="Número de Camara"
+                                                label="Número de la Cámara"
                                                 inputProps={{
                                                     name: "controlDeTemperaturaEnCamarasNroCamara",
                                                     id: `outlined-controlDeTemperaturaEnCamarasNroCamara-native-simple`,
@@ -446,12 +453,11 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Fecha"
-                                            defaultValue={new Date()}
                                             type="date"
                                             name="controlDeTemperaturaEnCamarasFecha"
                                             value={control.controlDeTemperaturaEnCamarasFecha}
@@ -463,13 +469,12 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Hora"
-                                            id="^[0-9]{0,10}$"
-                                            defaultValue={0}
+                                            id="^[0-9]{0,2}$"
                                             type="number"
                                             name="controlDeTemperaturaEnCamarasHora"
                                             value={control.controlDeTemperaturaEnCamarasHora}
@@ -481,13 +486,11 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Temperatura Interna"
-                                            id="^-?[0-9]{0,10}"
-                                            defaultValue={0}
                                             type="number"
                                             name="controlDeTemperaturaEnCamarasTempInterna"
                                             value={control.controlDeTemperaturaEnCamarasTempInterna}
@@ -499,13 +502,11 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                                             fullWidth
                                             autoFocus
                                             className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue }}
+                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
                                             color="primary"
                                             margin="normal"
                                             variant="outlined"
                                             label="Temperatura Externa"
-                                            id="^-?[0-9]{0,10}$"
-                                            defaultValue={0}
                                             type="number"
                                             name="controlDeTemperaturaEnCamaraTempExterna"
                                             value={control.controlDeTemperaturaEnCamaraTempExterna}
@@ -518,7 +519,8 @@ const ModificarControlDeTemperaturaEnCamaras = () => {
                             <Grid container justifyContent='flex-start' alignItems="center">
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                                 <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={handleFormSubmit} className={classes.sendButtonMargin}>Modificar</Button>
+                                    <Button type="submit" variant="contained" color="primary" onClick={redirect} className={classes.sendButtonMargin}>Volver</Button>
                                 </Grid>
                                 <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
                             </Grid>

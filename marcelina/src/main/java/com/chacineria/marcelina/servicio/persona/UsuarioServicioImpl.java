@@ -20,8 +20,8 @@ import java.nio.CharBuffer;
 
 @RequiredArgsConstructor
 @Service
-public class UsuarioServicioImpl implements UsuarioServicio{
-    
+public class UsuarioServicioImpl implements UsuarioServicio {
+
     @Autowired
     private UsuarioRepositorio usuarioRepositorio;
 
@@ -30,14 +30,21 @@ public class UsuarioServicioImpl implements UsuarioServicio{
 
     @Override
     @Transactional
-    public Optional<Usuario> findById(Long Id){
+    public Iterable<Usuario> findAll() {
+        return usuarioRepositorio.findAll();
+    }
+
+    @Override
+    @Transactional
+    public Optional<Usuario> findById(Long Id) {
         return usuarioRepositorio.findById(Id);
     }
 
-    public UsuarioDto login(Usuario usuario){
+    public UsuarioDto login(Usuario usuario) {
         Usuario usuarioData = usuarioRepositorio.findByUsuarioNombre(usuario.getUsuarioNombre());
-        if (usuarioData != null){
-            if (passwordEncoder.matches(CharBuffer.wrap(usuario.getUsuarioContrasenia()), usuarioData.getUsuarioContrasenia())){
+        if (usuarioData != null) {
+            if (passwordEncoder.matches(CharBuffer.wrap(usuario.getUsuarioContrasenia()),
+                    usuarioData.getUsuarioContrasenia())) {
                 return usuarioMapper.toUsuarioDto(usuarioData);
             }
             throw new AppException("Ususario o Contraseña incorrectos", HttpStatus.NOT_FOUND);
@@ -47,9 +54,9 @@ public class UsuarioServicioImpl implements UsuarioServicio{
 
     @Override
     @Transactional
-    public Usuario save(Usuario usuario){
+    public Usuario save(Usuario usuario) {
         Usuario usuarioData = usuarioRepositorio.findByUsuarioNombre(usuario.getUsuarioNombre());
-        if(usuarioData != null){
+        if (usuarioData != null) {
             throw new AppException("El usuario que desea ingresar ya existe.", HttpStatus.BAD_REQUEST);
         }
 
@@ -59,9 +66,26 @@ public class UsuarioServicioImpl implements UsuarioServicio{
         return usuarioRepositorio.save(usuarioSave);
     }
 
+    @Transactional
+    public Usuario modificar(Usuario usuario) {
+        Usuario usuarioSave = usuario;
+        if (usuarioSave != null) {
+            String codeo = usuarioSave.getUsuarioContrasenia().substring(0, 4);
+            if (codeo.equals("$2a$")) {
+                return usuarioRepositorio.save(usuarioSave);
+            } else {
+                usuarioSave.setUsuarioContrasenia(
+                        passwordEncoder.encode(CharBuffer.wrap(usuario.getUsuarioContrasenia())));
+                return usuarioRepositorio.save(usuarioSave);
+            }
+        } else {
+            throw new AppException("Ususario o Contraseña incorrectos", HttpStatus.NOT_FOUND);
+        }
+    }
+
     @Override
     @Transactional
-    public void deleteById(Long Id){
+    public void deleteById(Long Id) {
         usuarioRepositorio.deleteById(Id);
     }
 

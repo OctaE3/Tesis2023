@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Container, Grid, Paper, Avatar, Typography, TextField, Button, ThemeProvider, createTheme, CssBaseline } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import { useNavigate } from 'react-router-dom';
@@ -61,10 +61,10 @@ const Login = () => {
 
     const classes = useStyles();
     const navigate = useNavigate();
-    const [showAlertSuccess, setShowAlertSuccess] = useState(false);
+    const [showAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
 
-    const [alertSuccess, setAlertSuccess] = useState({
+    const [alertSuccess] = useState({
         title: 'Correcto', body: 'Inicio de sesión exitoso!', severity: 'success', type: 'description'
     });
 
@@ -82,14 +82,12 @@ const Login = () => {
         if (name === 'user') {
             const regex = new RegExp("^[A-Za-z0-9]{0,50}$");
             if (regex.test(value)) {
-                console.log(value)
                 setUsuarioNombre(value);
             }
         }
         else if (name === 'password') {
             const regex = new RegExp("^[a-zA-Z0-9@\\-_\\.]{0,150}$");
             if (regex.test(value)) {
-                console.log(value)
                 setUsuarioContrasenia(value);
             }
         }
@@ -131,6 +129,7 @@ const Login = () => {
             )
                 .then(response => {
                     if (response.status === 200) {
+                        window.localStorage.setItem('status', response.status);
                         window.localStorage.setItem('token', response.data.token);
                         window.localStorage.setItem('user', response.data.usuarioNombre);
                         redireccionar();
@@ -139,7 +138,7 @@ const Login = () => {
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
                 .catch(error => {
@@ -148,21 +147,21 @@ const Login = () => {
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                     else if (error.request.status === 404) {
                         updateErrorAlert(`Usuario o contraseña incorrectos.`);
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                     else if (error.request.status === 500) {
                         updateErrorAlert('Error al iniciar sesión, intente de nuevo.');
                         setShowAlertError(true);
                         setTimeout(() => {
                             setShowAlertError(false);
-                        }, 5000);
+                        }, 2500);
                     }
                 })
         }

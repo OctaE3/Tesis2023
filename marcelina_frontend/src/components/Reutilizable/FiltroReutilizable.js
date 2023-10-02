@@ -4,7 +4,7 @@ import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import Button from '@material-ui/core/Button';
-import { TextField, Container, Box, Grid } from '@material-ui/core';
+import { TextField, Container, Box, Grid, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -33,6 +33,10 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: theme.spacing(2),
+  },
+  btnFilter: {
+    marginLeft: '1%',
+    marginRight: '1%'
   },
 }));
 
@@ -63,11 +67,22 @@ function FiltroReutilizable({ filters, handleFilter }) {
 
     handleFilter(validFilterValues);
   };
-  
+
+  const handleCleanFilter = () => {
+    setFilterValues({});
+    handleFilter({});
+  }
 
   return (
     <Container className={classes.root}>
       <Box className={classes.container}>
+        <Grid container>
+          <Grid item xs={12} sm={12} md={12} lg={12} style={{ textAlign: 'center', marginBottom: '1%', }}>
+            <Typography variant="h6">
+              Filtros
+            </Typography>
+          </Grid>
+        </Grid>
         <Grid container justifyContent='center' alignContent='center'>
           {filters.map((filter) => (
             <React.Fragment key={filter.id}>
@@ -78,8 +93,9 @@ function FiltroReutilizable({ filters, handleFilter }) {
                       {filter.label}
                     </InputLabel>
                     <Select
+                      id={filter.id}
                       native
-                      value={filterValues[filter.id] || ''}
+                      value={filterValues[filter.id] || 'Seleccionar'}
                       onChange={(event) => handleFilterChange(event, filter.id)}
                       label={filter.label}
                       inputProps={{
@@ -97,60 +113,80 @@ function FiltroReutilizable({ filters, handleFilter }) {
                   </FormControl>
                 </Grid>
               ) : filter.type === 'datetime' ? ( // Modificación para los filtros de tipo datetime
-              <>
+                <>
+                  <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
+                    <TextField
+                      fullWidth
+                      id={filter.id}
+                      className={classes.textField}
+                      variant="outlined"
+                      label={`Desde ${filter.label}`}
+                      type="datetime-local"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      value={filterValues[`${filter.id}-desde`] || null}
+                      onChange={(event) => handleFilterChange(event, `${filter.id}-desde`)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
+                    <TextField
+                      fullWidth
+                      id={filter.id}
+                      className={classes.textField}
+                      variant="outlined"
+                      label={`Hasta ${filter.label}`}
+                      type="datetime-local"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      value={filterValues[`${filter.id}-hasta`] || ''}
+                      onChange={(event) => handleFilterChange(event, `${filter.id}-hasta`)}
+                    />
+                  </Grid>
+                </>
+              ) : filter.type === 'date' ? ( // Modificación para los filtros de tipo datetime
+                <>
+                  <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
+                    <TextField
+                      id={filter.id}
+                      className={classes.textField}
+                      variant="outlined"
+                      label={`Desde ${filter.label}`}
+                      type="date"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      value={filterValues[`${filter.id}-desde`] || undefined}
+                      onChange={(event) => handleFilterChange(event, `${filter.id}-desde`)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
+                    <TextField
+                      id={filter.id}
+                      className={classes.textField}
+                      variant="outlined"
+                      label={`Hasta ${filter.label}`}
+                      type="date"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      value={filterValues[`${filter.id}-hasta`] || ''}
+                      onChange={(event) => handleFilterChange(event, `${filter.id}-hasta`)}
+                    />
+                  </Grid>
+                </>
+              ) : (
                 <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
                   <TextField
-                    fullWidth
-                    className={classes.textField}
-                    variant="outlined"
-                    label={`Desde ${filter.label}`}
-                    type="datetime-local"
-                    value={filterValues[`${filter.id}-desde`] || new Date()}
-                    onChange={(event) => handleFilterChange(event, `${filter.id}-desde`)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
-                  <TextField
-                    fullWidth
-                    className={classes.textField}
-                    variant="outlined"
-                    label={`Hasta ${filter.label}`}
-                    type="datetime-local"
-                    value={filterValues[`${filter.id}-hasta`] || new Date()}
-                    onChange={(event) => handleFilterChange(event, `${filter.id}-hasta`)}
-                  />
-                </Grid>
-              </>
-            ) : filter.type === 'date' ? ( // Modificación para los filtros de tipo datetime
-            <>
-              <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
-                <TextField
-                  className={classes.textField}
-                  variant="outlined"
-                  label={`Desde ${filter.label}`}
-                  type="date"
-                  value={filterValues[`${filter.id}-desde`] || new Date()}
-                  onChange={(event) => handleFilterChange(event, `${filter.id}-desde`)}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
-                <TextField
-                  className={classes.textField}
-                  variant="outlined"
-                  label={`Hasta ${filter.label}`}
-                  type="date"
-                  value={filterValues[`${filter.id}-hasta`] || new Date()}
-                  onChange={(event) => handleFilterChange(event, `${filter.id}-hasta`)}
-                />
-              </Grid>
-            </>
-          ) :(
-                <Grid item xs={12} sm={4} md={3} lg={2} className={classes.filters}>
-                  <TextField
+                    id={filter.id}
                     className={classes.textField}
                     variant="outlined"
                     label={filter.label}
                     value={filterValues[filter.id] || ''}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
                     onChange={(event) => handleFilterChange(event, filter.id)}
                   />
                 </Grid>
@@ -162,7 +198,8 @@ function FiltroReutilizable({ filters, handleFilter }) {
           >
             <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
             <Grid item lg={8} md={8} sm={8} xs={8} className={classes.sendButton}>
-              <Button type="submit" variant="contained" color="primary" onClick={handleApplyFilter}>Aplicar Filtro</Button>
+              <Button type="submit" variant="contained" color="primary" onClick={handleApplyFilter} className={classes.btnFilter}>Aplicar Filtros</Button>
+              <Button type="submit" variant="contained" color="primary" onClick={handleCleanFilter} className={classes.btnFilter}>Limpiar Filtros</Button>
             </Grid>
             <Grid item lg={2} md={2} sm={2} xs={2}></Grid>
           </Grid>

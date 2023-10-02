@@ -4,19 +4,11 @@ import ListaReutilizable from '../../../components/Reutilizable/ListaReutilizabl
 import Navbar from '../../../components/Navbar/Navbar';
 import FiltroReutilizable from '../../../components/Reutilizable/FiltroReutilizable';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
-import { Grid, Typography, Button, IconButton, Dialog, makeStyles, createTheme, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Button, IconButton, Dialog, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2C2C71'
-    }
-  }
-});
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -60,6 +52,9 @@ const useStyles = makeStyles(theme => ({
 
 function ListarControlDeMejorasEnInstalaciones() {
   const [data, setData] = useState([]);
+  const [data30, setData30] = useState([]);
+  const [dataAll, setDataAll] = useState([]);
+  const [buttonName, setButtonName] = useState('Listar Todos');
   const [responsable, setResponsable] = useState([]);
   const [filtros, setFiltros] = useState({});
   const classes = useStyles();
@@ -73,19 +68,20 @@ function ListarControlDeMejorasEnInstalaciones() {
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+  const [checkToken, setCheckToken] = useState(false);
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess, setAlertSuccess] = useState({
-    title: 'Correcto', body: 'Se elimino el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description'
+  const [alertSuccess] = useState({
+    title: 'Correcto', body: 'Se eliminó el control de mejoras en instalaciones con éxito!', severity: 'success', type: 'description'
   });
 
   const [alertError, setAlertError] = useState({
     title: 'Error', body: 'No se logró eliminar el control de mejoras en instalaciones, recargue la pagina.', severity: 'error', type: 'description'
   });
 
-  const [alertWarning, setAlertWarning] = useState({
-    title: 'Advertencia', body: 'Expiro el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
+  const [alertWarning] = useState({
+    title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
   const updateErrorAlert = (newBody) => {
@@ -98,31 +94,23 @@ function ListarControlDeMejorasEnInstalaciones() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      updateErrorAlert('El token no existe, inicie sesión nuevamente.')
-      setShowAlertError(true);
-      setTimeout(() => {
-        setShowAlertError(false);
-        navigate('/')
-      }, 5000);
+      navigate('/')
     } else {
       const tokenParts = token.split('.');
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log(payload)
 
       const tokenExpiration = payload.exp * 1000;
-      console.log(tokenExpiration)
       const currentTime = Date.now();
-      console.log(currentTime)
 
       if (tokenExpiration < currentTime) {
         setShowAlertWarning(true);
         setTimeout(() => {
           setShowAlertWarning(false);
           navigate('/')
-        }, 3000);
+        }, 2000);
       }
     }
-  }, []);
+  }, [checkToken]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -138,16 +126,37 @@ function ListarControlDeMejorasEnInstalaciones() {
           }
         });
 
-        const data = response.data.map((controlDeMejorasEnInstalaciones) => ({
-          ...controlDeMejorasEnInstalaciones,
-          Id: controlDeMejorasEnInstalaciones.controlDeMejorasEnInstalacionesId,
-        }));
+        const dataL = response.data.map((control, index) => {
+          if (index < 30) {
+            return {
+              ...control,
+              Id: control.controlDeMejorasEnInstalacionesId,
+            }
+          }
+        });
+        const dataLast30 = dataL.filter((data) => data !== undefined);
+        const data = response.data.map((data) => ({
+          ...data,
+          Id: data.controlDeMejorasEnInstalacionesId,
+        }))
         const ResponsableData = ResponsableResponse.data;
 
-        setData(data);
+        setData(dataLast30);
+        setData30(dataLast30);
+        setDataAll(data)
         setResponsable(ResponsableData.map((usuario) => usuario.usuarioNombre));
+        setButtonName('Listar Todos')
+        setDeleteItem(false)
       } catch (error) {
-        console.error('Error al cargar los datos:', error);
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        } else {
+          updateErrorAlert('No se logró cargar la lista, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
       }
     };
 
@@ -155,7 +164,8 @@ function ListarControlDeMejorasEnInstalaciones() {
   }, [deleteItem]);
 
   const tableHeadCells = [
-    { id: 'controlDeMejorasEnInstalacionesFecha', numeric: false, disablePadding: true, label: 'Fecha' },
+    { id: 'Id', numeric: false, disablePadding: false, label: 'Id' },
+    { id: 'controlDeMejorasEnInstalacionesFecha', numeric: false, disablePadding: false, label: 'Fecha' },
     { id: 'controlDeMejorasEnInstalacionesSector', numeric: false, disablePadding: false, label: 'Sector' },
     { id: 'controlDeMejorasEnInstalacionesDefecto', numeric: false, disablePadding: false, label: 'Defecto' },
     { id: 'controlDeMejorasEnInstalacionesMejoraRealizada', numeric: false, disablePadding: false, label: 'Mejora Realizada' },
@@ -215,7 +225,7 @@ function ListarControlDeMejorasEnInstalaciones() {
       (!filtros.sector || lowerCaseItem.controlDeMejorasEnInstalacionesSector.includes(filtros.sector)) &&
       (!filtros.defecto || lowerCaseItem.controlDeMejorasEnInstalacionesDefecto.includes(filtros.defecto)) &&
       (!filtros.mejora || lowerCaseItem.controlDeMejorasEnInstalacionesMejoraRealizada.includes(filtros.mejora)) &&
-      (!filtros.responsable || lowerCaseItem.controlDeMejorasEnInstalacionesResponsable.startsWith(filtros.responsable))
+      (!filtros.responsable || lowerCaseItem.controlDeMejorasEnInstalacionesResponsable === filtros.responsable)
     ) {
       return true;
     }
@@ -241,32 +251,29 @@ function ListarControlDeMejorasEnInstalaciones() {
     })
       .then(response => {
         if (response.status === 204) {
+          setDeleteItem(true);
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
-          }, 5000);
-          setDeleteItem(true);
+          }, 2000);
         } else {
           updateErrorAlert('No se logró eliminar el control de mejoras en instalaciones, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 3000);
         }
       })
       .catch(error => {
         if (error.request.status === 401) {
-          setShowAlertWarning(true);
-          setTimeout(() => {
-            setShowAlertWarning(false);
-          }, 5000);
+          setCheckToken(true);
         }
         else if (error.request.status === 500) {
           updateErrorAlert('No se logró eliminar el control de mejoras en instalaciones, recargue la pagina.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
-          }, 5000);
+          }, 3000);
         }
       })
   }
@@ -294,22 +301,34 @@ function ListarControlDeMejorasEnInstalaciones() {
     setOpen(false);
   };
 
+  const redirect = () => {
+    navigate('/control-de-mejoras-en-instalaciones')
+  }
+
+  const listRefresh = () => {
+    if (buttonName === 'Listar Todos') {
+      setButtonName('Listar últimos 30')
+      setData(dataAll);
+    } else {
+      setButtonName('Listar Todos')
+      setData(data30);
+    }
+  }
+
   return (
     <div>
       <Navbar />
       <Grid container justifyContent='center' alignContent='center' className={classes.container} >
         <Grid item lg={2} md={2}></Grid>
         <Grid item lg={8} md={8} sm={12} xs={12} className={classes.title}>
-          <Typography component='h1' variant='h5'>Lista de Control De Mejoras En Instalaciones</Typography>
+          <Typography component='h1' variant='h5'>Listar de Control De Mejoras En Instalaciones</Typography>
           <div className={classes.info}>
-            <Button color="primary" onClick={handleClickOpen}>
-              <IconButton className={blinking ? classes.blinkingButton : ''}>
-                <HelpOutlineIcon fontSize="large" color="primary" />
-              </IconButton>
-            </Button>
+            <IconButton className={blinking ? classes.blinkingButton : ''} onClick={handleClickOpen}>
+              <HelpOutlineIcon fontSize="large" color="primary" />
+            </IconButton>
             <Dialog
               fullScreen={fullScreen}
-              fullWidth='md'
+              fullWidth
               maxWidth='md'
               open={open}
               onClose={handleClose}
@@ -319,7 +338,7 @@ function ListarControlDeMejorasEnInstalaciones() {
               <DialogContent>
                 <DialogContentText className={classes.text}>
                   <span>
-                    En esta página se encarga de listar los controles de mejoras en instalaciones que fueron registrados.
+                    En esta página se encarga de listar los controles de mejoras en instalaciones que fueron registrados y también se cuenta con filtros para facilitar la búsqueda de información.
                   </span>
                   <br />
                   <br />
@@ -335,13 +354,13 @@ function ListarControlDeMejorasEnInstalaciones() {
                         se listará todos los registros que su fecha sea posterior a la fecha ingresada en Fecha Desde.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Sector</span>: En este campo se puede ingresar un sector por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Sector</span>: En este campo se puede ingresar un sector por el cual se quiere filtrar la lista y se listarán todos los registros que contengan ese sector.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Defecto</span>: En este campo se puede ingresar el defecto por el cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Defecto</span>: En este campo se puede ingresar el defecto por el cual se quiere filtrar la lista y se listarán todos los registros que contengan ese defecto.
                       </li>
                       <li>
-                        <span className={classes.liTitleBlue}>Mejora Realizada</span>: En este campo se puede ingresar la mejora realizada por la cual se quiere filtrar la lista.
+                        <span className={classes.liTitleBlue}>Mejora Realizada</span>: En este campo se puede ingresar la mejora realizada por la cual se quiere filtrar la lista y se listarán todos los registros que contengan esa mejora realizada.
                       </li>
                       <li>
                         <span className={classes.liTitleBlue}>Responsable</span>: En este campo se puede seleccionar un responsable y se listará los registros asociados a ese responsable.
@@ -354,25 +373,39 @@ function ListarControlDeMejorasEnInstalaciones() {
                   <span>
                     <ul>
                       <li>
-                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró o realizó la mejora.
+                        <span className={classes.liTitleRed}>Id</span>: En esta columna se muestra el identificador del registro.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Sector</span>: En esta columna se muestran el sector en la que se aplicó la mejora.
+                        <span className={classes.liTitleRed}>Fecha</span>: En esta columna se muestra la fecha que se registró el control de mejoras en instalaciones.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Defecto</span>: En esta columna se muestran el defecto por el que se aplicó la mejora.
+                        <span className={classes.liTitleRed}>Sector</span>: En esta columna se muestra el sector en la que se aplicó la mejora.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Mejora Realizada</span>: En esta columna se muestran la mejora que se realizo en el sector.
+                        <span className={classes.liTitleRed}>Defecto</span>: En esta columna se muestra el defecto por el que se aplicó la mejora.
+                      </li>
+                      <li>
+                        <span className={classes.liTitleRed}>Mejora Realizada</span>: En esta columna se muestra la mejora que se realizó en el sector.
                       </li>
                       <li>
                         <span className={classes.liTitleRed}>Responsable</span>: En esta columna se muestra el responsable que registró el control de mejoras en instalaciones.
                       </li>
                       <li>
-                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestra 2 botones, el botón con icono de un lápiz al presionarlo te llevará a un formulario con los datos del registro,
-                        en ese formulario puedes modificar los datos y guardar el registro con los datos modificados, en cambio, el icono con un cubo de basura al presionarlo te mostrara un cartel que te preguntara si quieres eliminar ese registro,
-                        si presionas "Si" se eliminara el registro de la lista y en caso de presionar "No" sé cerrera la ventana y el registro permanecerá en la lista.
+                        <span className={classes.liTitleRed}>Acciones</span>: En esta columna se muestran 2 botones, el botón de modificar es el que contiene un icono de una lapíz y el de eliminar el que tiene un cubo de basura,
+                        el botón de modificar al presionarlo te enviará a un formulario con los datos del registro, para poder realizar la modificación. El botón de eliminar al presionarlo desplegará una ventana, que preguntará si
+                        desea eliminar el registro, en caso de presionar si, el registro sera eliminado y si presiona no, la ventana se cerrará.
                       </li>
+                    </ul>
+                  </span>
+                  <span>
+                    Aclaraciones:
+                    <ul>
+                      <li>En la lista vienen por defecto listados los últimos 30 registros que se agregaron.</li>
+                      <li>El botón llamado Aplicar Filtro al presionarlo, filtrará la lista según los datos ingresados en los campos.</li>
+                      <li>El botón llamado Limpiar Filtro al presionarlo, borrará los datos ingresados en los campos y se listarán los últimos 30 registros agregados.</li>
+                      <li>El botón denominado Añadir Registro al presionarlo te enviará a un formulario donde puedes agregar un nuevo registro.</li>
+                      <li>El botón denominado Listar Todos al presionarlo actualizará la lista y mostrará todos los registros existentes.</li>
+                      <li>Cuando se haya presionado el botón de Listar Todos y haya realizado su función, el nombre del botón habrá cambiado por Listar Últimos 30, que al presionarlo listará los últimos 30 registros que fueron agregados.</li>
                     </ul>
                   </span>
                 </DialogContentText>
@@ -401,7 +434,10 @@ function ListarControlDeMejorasEnInstalaciones() {
         data={filteredData}
         dataKey="listarControlDeMejorasEnInstalaciones"
         tableHeadCells={tableHeadCells}
-        title="Control De Mejoras En Instalaciones"
+        title="Lista de Controles de Mejoras en Instalaciones"
+        titleListButton={buttonName}
+        listButton={listRefresh}
+        linkButton={redirect}
         dataMapper={mapData}
         columnRenderers={columnRenderers}
         onEditButton={handleEditControl}
