@@ -80,6 +80,7 @@ const AgregarUsuario = () => {
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
     const [checkToken, setCheckToken] = useState(false);
+    const [formKey, setFormKey] = useState(0);
 
     const [open, setOpen] = React.useState(false);
     const theme = useTheme();
@@ -228,6 +229,7 @@ const AgregarUsuario = () => {
                 })
                     .then(response => {
                         if (response.status === 201) {
+                            setFormKey(prevKey => prevKey + 1);
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
@@ -343,7 +345,7 @@ const AgregarUsuario = () => {
                     </Grid>
                 </Box>
             </Container>
-            <FormularioReutilizable fields={formFields} onSubmit={handleFormSubmit} handleRedirect={redirect} />
+            <FormularioReutilizable fields={formFields} onSubmit={handleFormSubmit} handleRedirect={redirect} key={formKey} />
         </Grid>
     )
 }

@@ -97,6 +97,7 @@ const AgregarDiariaDeProduccion = () => {
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
     const [checkToken, setCheckToken] = useState(false);
+    const [formKey, setFormKey] = useState(0);
     const [envasado] = useState([
         { value: true, label: 'Empaquetado' },
         { value: false, label: 'Sin empaquetar' }
@@ -497,6 +498,7 @@ const AgregarDiariaDeProduccion = () => {
                             })
                                 .then(response => {
                                     if (response.status === 201) {
+                                        setFormKey(prevKey => prevKey + 1);
                                         setShowAlertSuccess(true);
                                         setTimeout(() => {
                                             setShowAlertSuccess(false);
@@ -646,6 +648,7 @@ const AgregarDiariaDeProduccion = () => {
             </Container >
             <FormularioReutilizable
                 fields={formFields}
+                key={formKey}
                 onSubmit={handleFormSubmit}
                 handleRedirect={redirect}
                 selectOptions={{

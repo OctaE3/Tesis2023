@@ -60,6 +60,7 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
     const [checkToken, setCheckToken] = useState(false);
+    const [formKey, setFormKey] = useState(0);
     const [sector] = useState([
         { value: 'Sala Elaboracion', label: 'Sala Elaboración' },
         { value: 'Desosado', label: 'Desosado' },
@@ -175,7 +176,7 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
         }
         else if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
-        }
+        } 
         else if (dias === undefined || dias === null || dias.length === 0) {
             return false;
         }
@@ -217,6 +218,7 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
             })
                 .then(response => {
                     if (response.status === 201) {
+                        setFormKey(prevKey => prevKey + 1);
                         setShowAlertSuccess(true);
                         setTimeout(() => {
                             setShowAlertSuccess(false);
@@ -347,6 +349,7 @@ const AgregarMonitoreoDeSSOPPreOperativo = () => {
             </Container>
             <FormularioReutilizable
                 fields={formFields}
+                key={formKey}
                 onSubmit={handleFormSubmit}
                 handleRedirect={redirect}
                 selectOptions={{

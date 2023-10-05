@@ -87,6 +87,7 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
 
   const [blinking, setBlinking] = useState(true);
   const [checkToken, setCheckToken] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -185,6 +186,7 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
       })
         .then(response => {
           if (response.status === 201) {
+            setFormKey(prevKey => prevKey + 1);
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
@@ -310,6 +312,7 @@ const AgregarControlDeTemperaturaDeEsterilizadores = () => {
       </Container>
       <FormularioReutilizanle
         fields={formFields}
+        key={formKey}
         onSubmit={handleFormSubmit}
         handleRedirect={redirect}
       />

@@ -94,6 +94,7 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
 
   const [blinking, setBlinking] = useState(true);
   const [checkToken, setCheckToken] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -192,6 +193,7 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
       })
         .then(response => {
           if (response.status === 201) {
+            setFormKey(prevKey => prevKey + 1);
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
@@ -320,6 +322,7 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
       </Container>
       <FormularioReutilizanle
         fields={formFields}
+        key={formKey}
         onSubmit={handleFormSubmit}
         selectOptions={{ controlDeTemperaturaEnCamarasNroCamara: selectNroCamara }}
         handleRedirect={redirect}

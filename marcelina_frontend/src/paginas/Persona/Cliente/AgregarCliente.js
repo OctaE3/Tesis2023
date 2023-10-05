@@ -89,6 +89,8 @@ const AgregarCliente = () => {
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
   const [checkToken, setCheckToken] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const [formKeyModal, setFormKeyModal] = useState(0);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -167,13 +169,13 @@ const AgregarCliente = () => {
         .catch(error => {
           if (error.request.status === 401) {
             setCheckToken(true);
-        } else {
+          } else {
             updateErrorAlert('No se logró cargar las localidades, intente nuevamente.')
             setShowAlertError(true);
             setTimeout(() => {
-                setShowAlertError(false);
+              setShowAlertError(false);
             }, 2000);
-        }
+          }
         });
     };
 
@@ -348,6 +350,7 @@ const AgregarCliente = () => {
               })
                 .then(response => {
                   if (response.status === 201) {
+                    setFormKey(prevKey => prevKey + 1);
                     setReloadLocalidades(true);
                     updateSuccessAlert('Cliente registrado con éxito!')
                     setShowAlertSuccess(true);
@@ -404,6 +407,7 @@ const AgregarCliente = () => {
             })
               .then(response => {
                 if (response.status === 201) {
+                  setFormKey(prevKey => prevKey + 1);
                   setReloadLocalidades(true);
                   updateSuccessAlert('Cliente registrado con éxito!')
                   setShowAlertSuccess(true);
@@ -479,13 +483,13 @@ const AgregarCliente = () => {
         })
           .then(response => {
             if (response.status === 201) {
+              setFormKeyModal(prevKey => prevKey + 1);
+              setReloadLocalidades(true);
               updateSuccessAlert('Localidad registrada con éxito!')
               setShowAlertSuccess(true);
               setTimeout(() => {
                 setShowAlertSuccess(false);
               }, 2500);
-              setReloadLocalidades(true);
-
             } else {
               updateErrorAlert('No se logró registrar la localidad, revise los datos ingresados.')
               setShowAlertError(true);
@@ -626,6 +630,8 @@ const AgregarCliente = () => {
           </Container>
           <FormularioReutilizable
             fields={formFields}
+            key={formKey}
+            keyModal={formKeyModal}
             onSubmit={handleFormSubmit}
             onSubmitModal={handleFormSubmitModal}
             handleRedirect={redirect}

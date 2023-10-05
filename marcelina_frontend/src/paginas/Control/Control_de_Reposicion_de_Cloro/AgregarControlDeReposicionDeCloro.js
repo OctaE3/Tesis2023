@@ -79,6 +79,7 @@ const AgregarControlDeReposicionDeCloro = () => {
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
   const [checkToken, setCheckToken] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const navigate = useNavigate();
 
   const [open, setOpen] = React.useState(false);
@@ -188,6 +189,7 @@ const AgregarControlDeReposicionDeCloro = () => {
       })
         .then(response => {
           if (response.status === 201) {
+            setFormKey(prevKey => prevKey + 1);
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
@@ -311,6 +313,7 @@ const AgregarControlDeReposicionDeCloro = () => {
       </Container>
       <FormularioReutilizanle
         fields={formFields}
+        key={formKey}
         onSubmit={handleFormSubmit}
         handleRedirect={redirect}
       />

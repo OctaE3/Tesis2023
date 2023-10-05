@@ -149,7 +149,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal, handleRedirect }) => {
+const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal, handleRedirect, key, keyModal }) => {
 
   const classes = useStyles();
   const [formData, setFormData] = useState({});
@@ -165,6 +165,8 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const [stockRestar, setStockRestar] = useState();
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [identificador, setIdentificador] = useState(0);
+  const [formDataClean, setFormDataClean] = useState(0);
+  const [formDataModalClean, setFormDataModalClean] = useState(0);
 
   const [opcion] = useState([
     { label: ' ', value: null },
@@ -176,6 +178,18 @@ const FormularioReutilizable = ({ fields, onSubmit, selectOptions, onSubmitModal
   const [stock, setStock] = useState(0);
 
   const [areaOptions, setAreaOptions] = useState([]);
+
+  useEffect(() => {
+    if (formDataClean !== key) {
+      setFormData({});
+      setFormDataClean(key);
+    }
+
+    if (formDataModalClean !== keyModal) {
+      setFormDataModal({});
+      setFormDataModalClean(keyModal);
+    }
+  }, []);
 
   useEffect(() => {
     if (selectOptions) {

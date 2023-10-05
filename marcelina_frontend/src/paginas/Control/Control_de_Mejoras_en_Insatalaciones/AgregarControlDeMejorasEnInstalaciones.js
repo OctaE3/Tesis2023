@@ -80,6 +80,7 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
   const [checkToken, setCheckToken] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -194,6 +195,7 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
       })
         .then(response => {
           if (response.status === 201) {
+            setFormKey(prevKey => prevKey + 1);
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
@@ -313,6 +315,7 @@ const AgregarControlDeMejorasEnInstalaciones = () => {
       </Container>
       <FormularioReutilizanle
         fields={formFields}
+        key={formKey}
         onSubmit={handleFormSubmit}
         handleRedirect={redirect}
       />
