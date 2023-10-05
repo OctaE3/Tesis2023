@@ -89,6 +89,8 @@ const AgregarProveedor = () => {
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
     const [checkToken, setCheckToken] = useState(false);
+    const [formKey, setFormKey] = useState(0);
+    const [formKeyModal, setFormKeyModal] = useState(0);
 
     const classes = useStyles();
 
@@ -374,6 +376,8 @@ const AgregarProveedor = () => {
                                     .then(response => {
                                         if (response.status === 201) {
                                             updateSuccessAlert('Proveedor registrado con éxito!')
+                                            setFormKey(prevKey => prevKey + 1);
+                                            setReloadLocalidades(true);
                                             setShowAlertSuccess(true);
                                             setTimeout(() => {
                                                 setShowAlertSuccess(false);
@@ -431,6 +435,7 @@ const AgregarProveedor = () => {
                                 .then(response => {
                                     if (response.status === 201) {
                                         updateSuccessAlert('Proveedor registrado con éxito!')
+                                        setFormKey(prevKey => prevKey + 1);
                                         setReloadLocalidades(true);
                                         setShowAlertSuccess(true);
                                         setTimeout(() => {
@@ -490,6 +495,7 @@ const AgregarProveedor = () => {
                 .then(response => {
                     if (response.status === 201) {
                         updateSuccessAlert('Localidad registrada con éxito!')
+                        setFormKeyModal(prevKey => prevKey + 1);
                         setReloadLocalidades(true);
                         setShowAlertSuccess(true);
                         setTimeout(() => {
@@ -634,6 +640,8 @@ const AgregarProveedor = () => {
                     </Container>
                     <FormularioReutilizable
                         fields={formFields}
+                        key={formKey}
+                        keyModal={formKeyModal}
                         onSubmit={handleFormSubmit}
                         onSubmitModal={handleFormSubmitModal}
                         handleRedirect={redirect}

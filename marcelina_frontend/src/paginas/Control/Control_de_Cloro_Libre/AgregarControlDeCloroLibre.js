@@ -78,6 +78,7 @@ const AgregarControlDeCloroLibre = () => {
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -179,10 +180,10 @@ const AgregarControlDeCloroLibre = () => {
       })
         .then(response => {
           if (response.status === 201) {
+            setFormKey(prevKey => prevKey + 1);
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
-              navigate('/control-de-cloro-libre')
             }, 2000);
           } else {
             updateErrorAlert('No se logró regristrar el control de cloro libre, revise los datos ingresados');
@@ -303,6 +304,7 @@ const AgregarControlDeCloroLibre = () => {
       </Container>
       <FormularioReutilizanle
         fields={formFields}
+        key={formKey}
         onSubmit={handleFormSubmit}
         handleRedirect={redirect}
       />

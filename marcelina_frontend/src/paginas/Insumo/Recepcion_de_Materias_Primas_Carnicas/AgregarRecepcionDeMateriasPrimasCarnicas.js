@@ -87,6 +87,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
     const [proveedores, setProveedores] = useState([]);
     const [proveedoresSelect, setProveedoresSelect] = useState('');
     const [checkToken, setCheckToken] = useState(false);
+    const [formKey, setFormKey] = useState(0);
     const [carneTipoSelect] = useState([
         { value: 'Porcino', label: 'Porcino' },
         { value: 'Bovino', label: 'Bovino' },
@@ -321,6 +322,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                 })
                     .then(response => {
                         if (response.status === 201) {
+                            setFormKey(prevKey => prevKey + 1);
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
@@ -468,6 +470,7 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                     </Container>
                     <FormularioReutilizable
                         fields={formFields}
+                        key={formKey}
                         onSubmit={handleFormSubmit}
                         handleRedirect={redirect}
                         selectOptions={{

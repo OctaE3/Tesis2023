@@ -84,6 +84,7 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
   const [checkToken, setCheckToken] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -195,10 +196,10 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
       })
         .then(response => {
           if (response.status === 201) {
+            setFormKey(prevKey => prevKey + 1);
             setShowAlertSuccess(true);
             setTimeout(() => {
               setShowAlertSuccess(false);
-              navigate('/control-de-limpieza-y-desinfeccion-de-depositos-de-agua-y-cañerias')
             }, 2500);
           } else {
             updateErrorAlert('No se logró regristrar el control de limpieza y desinfección, revise los datos ingresados.');
@@ -210,10 +211,7 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
         })
         .catch(error => {
           if (error.request.status === 401) {
-            setShowAlertWarning(true);
-            setTimeout(() => {
-              setShowAlertWarning(false);
-            }, 3000);
+            setCheckToken(true);
           }
           else if (error.request.status === 500) {
             updateErrorAlert('No se logró regristrar el control de limpieza y desinfección, revise los datos ingresados.');
@@ -321,6 +319,7 @@ const AgregarControlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanierias = () => {
       </Container>
       <FormularioReutilizanle
         fields={formFields}
+        key={formKey}
         onSubmit={handleFormSubmit}
         handleRedirect={redirect}
         selectOptions={{ controlDeLimpiezaYDesinfeccionDeDepositosDeAguaYCanieriasDeposito: depositoSelect }}

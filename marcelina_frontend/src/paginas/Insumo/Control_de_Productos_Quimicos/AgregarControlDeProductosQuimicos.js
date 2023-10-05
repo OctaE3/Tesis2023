@@ -85,6 +85,7 @@ const AgregarControlDeProductosQuimicos = () => {
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
     const [checkToken, setCheckToken] = useState(false);
+    const [formKey, setFormKey] = useState(0);
 
     const classes = useStyles();
     const navigate = useNavigate();
@@ -235,6 +236,7 @@ const AgregarControlDeProductosQuimicos = () => {
                 })
                     .then(response => {
                         if (response.status === 201) {
+                            setFormKey(prevKey => prevKey + 1);
                             setShowAlertSuccess(true);
                             setTimeout(() => {
                                 setShowAlertSuccess(false);
@@ -361,6 +363,7 @@ const AgregarControlDeProductosQuimicos = () => {
                     </Container>
                     <FormularioReutilizable
                         fields={formFields}
+                        key={formKey}
                         onSubmit={handleFormSubmit}
                         handleRedirect={redirect}
                         selectOptions={{ controlDeProductosQuimicosProveedor: proveedoresSelect }}

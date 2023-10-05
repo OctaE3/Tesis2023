@@ -79,6 +79,7 @@ const AgregarLocalidad = () => {
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
   const [checkToken, setCheckToken] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const departamentosUruguay = [
     { value: 'Artigas', label: 'Artigas' },
     { value: 'Canelones', label: 'Canelones' },
@@ -228,6 +229,7 @@ const AgregarLocalidad = () => {
         })
           .then(response => {
             if (response.status === 201) {
+              setFormKey(prevKey => prevKey + 1);
               setShowAlertSuccess(true);
               setTimeout(() => {
                 setShowAlertSuccess(false);
@@ -354,6 +356,7 @@ const AgregarLocalidad = () => {
       </Container>
       <FormularioReutilizable
         fields={formFields}
+        key={formKey}
         onSubmit={handleFormSubmit}
         handleRedirect={redirect}
         selectOptions={{ localidadDepartamento: departamentosUruguay }}
