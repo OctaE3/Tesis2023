@@ -81,6 +81,7 @@ const AgregarExpedicionDeProducto = () => {
   const classes = useStyles();
   const navigate = useNavigate();
   const [expediciones, setExpediciones] = useState([]);
+  const [expedicionesDeProd, setExpedicionesDeProd] = useState([]);
   const [lotes, setLotes] = useState('');
   const [loteSelect, setLoteSelect] = useState('');
   const [clientes, setClientes] = useState('');
@@ -90,6 +91,7 @@ const AgregarExpedicionDeProducto = () => {
   const [showAlertWarning, setShowAlertWarning] = useState(false);
   const [checkToken, setCheckToken] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [reload, setReload] = useState(false);
 
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
@@ -135,6 +137,7 @@ const AgregarExpedicionDeProducto = () => {
         }
       })
         .then(response => {
+          setExpedicionesDeProd(response.data);
           setExpediciones(
             response.data.map((exp) => ({
               documento: exp.expedicionDeProductoDocumento,
@@ -163,12 +166,16 @@ const AgregarExpedicionDeProducto = () => {
       })
         .then(response => {
           setLotes(response.data);
-          setLoteSelect(
-            response.data.map((lote) => ({
-              value: lote.loteId,
-              label: `${lote.loteCodigo} - ${lote.loteCantidad} Kg - ${lote.loteProducto.productoNombre}`,
-            }))
-          );
+          const lotesCantidadMayor = response.data.map((lote) => {
+            if (lote.loteCantidad > 0) {
+              return {
+                value: lote.loteId,
+                label: `${lote.loteCodigo} - ${lote.loteCantidad} Kg - ${lote.loteProducto.productoNombre}`,
+              }
+            }
+          })
+          const lotesSelect = lotesCantidadMayor.filter(lote => lote !== undefined);
+          setLoteSelect(lotesSelect);
         })
         .catch(error => {
           if (error.request.status === 401) {
@@ -214,8 +221,9 @@ const AgregarExpedicionDeProducto = () => {
     obtenerExpedicion();
     obtenerLotes();
     obtenerClientes();
+    setReload(false);
 
-  }, []);
+  }, [reload]);
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -238,6 +246,74 @@ const AgregarExpedicionDeProducto = () => {
       body: newBody,
     }));
   };
+
+
+  /*const diariaPorLote = lotes => {
+    if (lotes !== undefined && lotes !== null && lotes.length > 0) {
+      const lotesId = lotes.map((lote) => lote.loteId);
+      axios.post("/buscar-diarias-de-produccion-lotes", lotesId, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+        }
+      })
+        .then(response => {
+          if (response.status === 200) {
+            const diarias = response.data;
+            return diarias;
+          } else {
+          }
+        })
+        .catch(error => {
+          console.error(error);
+          if (error.request.status === 401) {
+            setCheckToken(true);
+          }
+          else if (error.request.status === 500) {
+
+          }
+        })
+    }
+  }*/
+
+  /*const altaResumenDeTrazabilidad = (expediciones, diarias) => {
+    const mapaLotesClientes = {};
+    let usuario = {};
+    expediciones.forEach(expedicion => {
+      usuario = expedicion.expedicionDeProductoUsuario;
+      expedicion.expedicionDeProductoLotes.forEach(lote => {
+        const loteId = lote.loteId;
+        if (!mapaLotesClientes[loteId]) {
+          mapaLotesClientes[loteId] = [];
+        }
+        mapaLotesClientes[loteId].push(expedicion.expedicionDeProductoCliente);
+      });
+    });
+
+    const resumenes = [];
+    diarias.forEach(diar => {
+      expediciones.forEach(exp => {
+        exp.expedicionDeProductoLotes.forEach(lote => {
+          if (diar.diariaDeProduccionLote.loteId === lote.loteId) {
+            const loteId = lote.loteId;
+            const clientes = mapaLotesClientes[loteId];
+
+            const resumen = {
+              resumenDeTrazabilidadFecha: diar.diariaDeProduccionFecha,
+              resumenDeTrazabilidadLote: lote,
+              resumenDeTrazabilidadProducto: lote.loteProducto,
+              resumenDeTrazabilidadCantidadProducida: diar.diariaDeProduccionCantidadProducida,
+              resumenDeTrazabilidadMatPrimaCarnica: diar.diariaDeProduccionInsumosCarnicos,
+              resumenDeTrazabilidadMatPrimaNoCarnica: diar.diariaDeProduccionAditivos,
+              resumenDeTrazabilidadDestino: clientes,
+              resumenDeTrazabilidadResponsable: usuario,
+            }
+            resumenes.push(resumen);
+          }
+        })
+      })
+    })
+  }*/
 
   function hasDuplicate(list) {
     return new Set(list).size !== list.length;
@@ -383,11 +459,111 @@ const AgregarExpedicionDeProducto = () => {
               })
                 .then(response => {
                   if (response.status === 201) {
+                    setReload(true);
                     setFormKey(prevKey => prevKey + 1);
                     setShowAlertSuccess(true);
                     setTimeout(() => {
                       setShowAlertSuccess(false);
                     }, 2500);
+                    const expedicionNueva = response.data;
+                    const listaExpediciones = expedicionesDeProd;
+                    listaExpediciones.push(expedicionNueva);
+                    const lotesTerminados = updateFormData.expedicionDeProductoLotes.filter((lote) => lote.loteCantidad === 0);
+
+                    const expedicionesLote = listaExpediciones.filter(exp => {
+                      return exp.expedicionDeProductoLotes.some(lote => lotesTerminados.some(loteTerm => loteTerm.loteId.toString() === lote.loteId.toString()));
+                    });
+                    console.log(lotesTerminados)
+                    console.log(expedicionesLote)
+                    if (lotesTerminados !== undefined && lotesTerminados !== null && lotesTerminados.length > 0) {
+                      const lotesId = lotesTerminados.map((lote) => lote.loteId);
+                      axios.post("/buscar-diarias-de-produccion-lotes", lotesId, {
+                        headers: {
+                          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                          "Content-Type": "application/json"
+                        }
+                      })
+                        .then(response => {
+                          const diarias = response.data;
+                          console.log(diarias);
+                          const mapaLotesClientes = {};
+                          let usuario = {};
+                          expedicionesLote.forEach(expedicion => {
+                            usuario = expedicion.expedicionDeProductoUsuario;
+                            expedicion.expedicionDeProductoLotes.forEach(lote => {
+                              const loteId = lote.loteId;
+                              if (!mapaLotesClientes[loteId]) {
+                                mapaLotesClientes[loteId] = [];
+                              }
+                              mapaLotesClientes[loteId].push(expedicion.expedicionDeProductoCliente);
+                            });
+                          });
+                          console.log(mapaLotesClientes);
+                          const resumenes = [];
+                          diarias.forEach(diar => {
+                            expedicionesLote.forEach(exp => {
+                              exp.expedicionDeProductoLotes.forEach(lote => {
+                                if (diar.diariaDeProduccionLote.loteId === lote.loteId) {
+                                  console.log(diar)
+                                  console.log(lote)
+                                  console.log(exp)
+                                  const loteId = lote.loteId;
+                                  const clienteVisto = {};
+                                  const clientes = mapaLotesClientes[loteId].filter(cliente => {
+                                    const cliId = cliente.clienteId;
+                                    if (!clienteVisto[cliId]) {
+                                      clienteVisto[cliId] = true;
+                                      return true;
+                                    }
+                                    return false;
+                                  })
+                                  console.log(clientes);
+                                  const resumen = {
+                                    resumenDeTrazabilidadFecha: exp.expedicionDeProductoFecha,
+                                    resumenDeTrazabilidadLote: lote,
+                                    resumenDeTrazabilidadProducto: lote.loteProducto,
+                                    resumenDeTrazabilidadCantidadProducida: diar.diariaDeProduccionCantidadProducida,
+                                    resumenDeTrazabilidadMatPrimaCarnica: diar.diariaDeProduccionInsumosCarnicos,
+                                    resumenDeTrazabilidadMatPrimaNoCarnica: diar.diariaDeProduccionAditivos,
+                                    resumenDeTrazabilidadDestino: clientes,
+                                    resumenDeTrazabilidadResponsable: usuario,
+                                  }
+                                  resumenes.push(resumen);
+                                }
+                              })
+                            })
+                          })
+
+                          const lotesVistos = {};
+                          const resumenesDeTrazabilidad = resumenes.filter(resumen => {
+                            const loteId = resumen.resumenDeTrazabilidadLote.loteId;
+                            if (!lotesVistos[loteId]) {
+                              lotesVistos[loteId] = true;
+                              return true;
+                            }
+                            return false;
+                          });
+
+                          console.log(resumenesDeTrazabilidad);
+
+                          axios.post('/agregar-resumen-de-trazabilidad', resumenesDeTrazabilidad, {
+                            headers: {
+                              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                              "Content-Type": "application/json"
+                            }
+                          })
+                            .then(response => {
+                              console.log(response.data);
+                            })
+                            .catch(error => {
+
+                            })
+
+                        })
+                        .catch(error => {
+                          console.error(error);
+                        })
+                    }
                   } else {
                     updateErrorAlert('No se logró agregar la expedición de producto, revise los datos ingresados.')
                     setShowAlertError(true);

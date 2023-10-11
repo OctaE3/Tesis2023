@@ -86,6 +86,7 @@ const AgregarDiariaDeProduccion = () => {
 
     const classes = useStyles();
     const navigate = useNavigate();
+    const [reload, setReload] = useState(false);
     const [productos, setProductos] = useState('');
     const [productoSelect, setProductoSelect] = useState('');
     const [carnes, setCarnes] = useState('');
@@ -261,8 +262,8 @@ const AgregarDiariaDeProduccion = () => {
         obtenerProductos();
         obtenerCarnes();
         obtenerAditivos();
-
-    }, []);
+        setReload(false);
+    }, [reload]);
 
     useEffect(() => {
         const blinkInterval = setInterval(() => {
@@ -498,6 +499,7 @@ const AgregarDiariaDeProduccion = () => {
                             })
                                 .then(response => {
                                     if (response.status === 201) {
+                                        setReload(true);
                                         setFormKey(prevKey => prevKey + 1);
                                         setShowAlertSuccess(true);
                                         setTimeout(() => {

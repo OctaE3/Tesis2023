@@ -76,13 +76,13 @@ public class PExpedicion_de_ProductoServicioImpl implements PExpedicion_de_Produ
         Set<PExpedicion_de_Producto> exp = new HashSet<>();
         Set<Lote> lotes = save.getExpedicionDeProducto().getExpedicionDeProductoLotes();
         List<Lote> lotesDesusados = save.getListaLotesDesusados();
+
         Set<Detalle_Cantidad_Lote> detalleLotes = save.getExpedicionDeProducto().getExpedicionDeProductoCantidad();
 
         for (Lote lote : lotes) {
             if (lote.getLoteCantidad() == 0) {
                 lote.setLoteEliminado(true);
-            }
-            else if (lote.getLoteCantidad() > 0) {
+            } else if (lote.getLoteCantidad() > 0) {
                 lote.setLoteEliminado(false);
             }
             loteRepositorio.save(lote);

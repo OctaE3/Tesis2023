@@ -695,14 +695,20 @@ public class Controladora_Insumo {
         return ResponseEntity.ok(diariaDeProduccion);
     }
 
-    @GetMapping("/buscar-diaria-de-produccion-lote/{loteId}")
-    public ResponseEntity<?> buscarDiariaDeProduccionPorLote(
-            @PathVariable(value = "loteId") Long loteId) {
-        PDiaria_de_Produccion diaria = diariaDeProduccionServicioImpl.findByDiariaDeProduccionLote(loteId);
-        if (diaria == null) {
+    @PostMapping("/buscar-diarias-de-produccion-lotes")
+    public ResponseEntity<?> buscarDiariaDeProduccionPorLote(@RequestBody List<Long> lotesId) {
+        List<PDiaria_de_Produccion> listaDiarias = new ArrayList<>();
+        for (Long loteId : lotesId) {
+            Optional<PDiaria_de_Produccion> diaria = diariaDeProduccionServicioImpl.findById(loteId);
+            if (diaria.isPresent()) {
+                listaDiarias.add(diaria.get());
+            }
+        }
+
+        if (listaDiarias.size() == 0) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(diaria);
+        return ResponseEntity.ok(listaDiarias);
     }
 
     @PostMapping("/agregar-diaria-de-produccion")
