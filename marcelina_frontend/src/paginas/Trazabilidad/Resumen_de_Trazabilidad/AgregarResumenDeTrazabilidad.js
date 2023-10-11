@@ -79,6 +79,7 @@ const AgregarResumenDeTrazabilidad = () => {
     const [loteSelect, setLoteSelect] = useState('');
     const [clientes, setClientes] = useState('');
     const [clienteSelect, setClienteSelect] = useState('');
+    const [lotesResumen, setLotesResumen] = useState(['']);
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
@@ -179,6 +180,28 @@ const AgregarResumenDeTrazabilidad = () => {
                 });
         };
 
+        const obtenerLotesResumen = () => {
+            axios.get('/listar-resumen-de-trazabilidad', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(response => {
+                    setLotesResumen(response.data.map(resumen => resumen.resumenDeTrazabilidadLote.loteCodigo));
+                })
+                .catch(error => {
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los lotes, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
+                });
+        };
+
         obtenerClientes();
         obtenerLotes();
 
@@ -219,6 +242,18 @@ const AgregarResumenDeTrazabilidad = () => {
         return true;
     }
 
+    const checkLotesResumen = (lote) => {
+        let resp = true;
+        lotesResumen.forEach((loteR) => {
+            if (loteR.toString() === lote.loteCodigo.toString()) {
+                resp = false;
+            }
+
+            if (resp === false) { return }
+        })
+        return resp;
+    }
+
     const handleFormSubmit = (formData) => {
         const fecha = new Date(formData.resumenDeTrazabilidadFecha);
         fecha.setDate(fecha.getDate() + 2)
@@ -227,7 +262,6 @@ const AgregarResumenDeTrazabilidad = () => {
             ...formData,
             resumenDeTrazabilidadFecha: fechaPars,
         };
-        console.log(res)
 
         const check = checkError(res.resumenDeTrazabilidadFecha, res.resumenDeTrazabilidadLote, res.resumenDeTrazabilidadDestino);
 
@@ -244,6 +278,15 @@ const AgregarResumenDeTrazabilidad = () => {
             const clientesId = formData.resumenDeTrazabilidadDestino.map(cliente => cliente.value);
             const clientesCompletos = clientes.filter(cliente => clientesId.includes(cliente.clienteId));
 
+            const checkLote = checkLotesResumen(loteCompleto);
+
+            if (checkLote === false) {
+                updateErrorAlert(`El lote ingresado ya cuenta con un resumen de trazabilidad, ingrese otro.`);
+                setShowAlertError(true);
+                setTimeout(() => {
+                    setShowAlertError(false);
+                }, 3000);
+            }
             axios.get(`/buscar-diaria-de-produccion-lote/${loteId}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -403,7 +446,7 @@ const AgregarResumenDeTrazabilidad = () => {
                         <Grid item lg={4} md={4} sm={4} xs={4}>
                             <AlertasReutilizable alert={alertSuccess} isVisible={showAlertSuccess} />
                             <AlertasReutilizable alert={alertError} isVisible={showAlertError} />
-                            <AlertasReutilizable alert={showAlertWarning} isVisible={showAlertWarning} />
+                            <AlertasReutilizable alert={alertWarning} isVisible={showAlertWarning} />
                         </Grid>
                         <Grid item lg={4} md={4} sm={4} xs={4}></Grid>
                     </Grid>

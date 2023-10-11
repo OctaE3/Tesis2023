@@ -150,6 +150,21 @@ public class PResumen_de_Trazabilidad implements Serializable {
         this.resumenDeTrazabilidadResponsable = resumenDeTrazabilidadResponsable;
     }
 
+    public PResumen_de_Trazabilidad(Date resumenDeTrazabilidadFecha,
+            Lote resumenDeTrazabilidadLote, Producto resumenDeTrazabilidadProducto,
+            Double resumenDeTrazabilidadCantidadProducida, Set<Carne> resumenDeTrazabilidadMatPrimaCarnica,
+            Set<Control_de_Insumos> resumenDeTrazabilidadMatPrimaNoCarnica, Set<Cliente> resumenDeTrazabilidadDestino,
+            Usuario resumenDeTrazabilidadResponsable) {
+        this.resumenDeTrazabilidadFecha = resumenDeTrazabilidadFecha;
+        this.resumenDeTrazabilidadLote = resumenDeTrazabilidadLote;
+        this.resumenDeTrazabilidadProducto = resumenDeTrazabilidadProducto;
+        this.resumenDeTrazabilidadCantidadProducida = resumenDeTrazabilidadCantidadProducida;
+        this.resumenDeTrazabilidadMatPrimaCarnica = resumenDeTrazabilidadMatPrimaCarnica;
+        this.resumenDeTrazabilidadMatPrimaNoCarnica = resumenDeTrazabilidadMatPrimaNoCarnica;
+        this.resumenDeTrazabilidadDestino = resumenDeTrazabilidadDestino;
+        this.resumenDeTrazabilidadResponsable = resumenDeTrazabilidadResponsable;
+    }
+
     public PResumen_de_Trazabilidad() {
     }
 

@@ -48,7 +48,7 @@ public class Controladora_Trazabilidad {
 
         @Autowired
         private PAnual_de_Insumos_CarnicosServicioImpl anualDeInsumosCarnicosServicioImpl;
-        
+
         @Autowired
         private PAnual_de_Insumos_CarnicosRepositorio anualDeInsumosCarnicosRepositorio;
 
@@ -189,9 +189,12 @@ public class Controladora_Trazabilidad {
                         }
 
                         if (dto.getExpedicionDeProducto() != null && dto.getListaCantidad() != null) {
-                                return ResponseEntity.status(HttpStatus.CREATED).body(expedicionDeProductoServicioImpl
-                                                .saveExpCantidad(dto.getExpedicionDeProducto(),
-                                                                dto.getListaCantidad()));
+
+                                return ResponseEntity.status(HttpStatus.CREATED).body(
+                                                expedicionDeProductoServicioImpl
+                                                                .saveExpCantidad(dto.getExpedicionDeProducto(),
+                                                                                dto.getListaCantidad()));
+
                         } else {
                                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                                 .body("Error en la expedicon de producto eviada o en la lista");
@@ -481,25 +484,10 @@ public class Controladora_Trazabilidad {
 
         @PostMapping("/agregar-resumen-de-trazabilidad")
         public ResponseEntity<?> agregarResumenDeTrazabilidad(
-                        @RequestBody PResumen_de_Trazabilidad resumenDeTrazabilidad) {
+                        @RequestBody List<PResumen_de_Trazabilidad> resumenesDeTrazabilidad) {
                 try {
-                        Usuario responsable = resumenDeTrazabilidad.getResumenDeTrazabilidadResponsable();
-                        if (responsable != null && responsable.getUsuarioNombre() != null) {
-                                Usuario usuarioExistente = usuarioRepositorio
-                                                .findByUsuarioNombre(responsable.getUsuarioNombre());
-                                if (usuarioExistente != null) {
-                                        resumenDeTrazabilidad.setResumenDeTrazabilidadResponsable(usuarioExistente);
-                                } else {
-                                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                                        .body("Surgio un problema con el usuario, intete lograrse de nuevo.");
-                                }
-                        } else {
-                                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                                .body("No tiene un usuario asignado.");
-                        }
-
                         return ResponseEntity.status(HttpStatus.CREATED)
-                                        .body(resumenDeTrazabilidadServicioImpl.save(resumenDeTrazabilidad));
+                                        .body(resumenDeTrazabilidadServicioImpl.saveAll(resumenesDeTrazabilidad));
                 } catch (Exception e) {
                         HashMap<String, String> error = new HashMap<>();
                         error.put("error", e.getMessage());
