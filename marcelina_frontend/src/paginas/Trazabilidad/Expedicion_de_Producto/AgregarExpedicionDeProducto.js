@@ -157,7 +157,6 @@ const AgregarExpedicionDeProducto = () => {
         });
     };
 
-
     const obtenerLotes = () => {
       axios.get('/listar-lotes', {
         headers: {
@@ -246,74 +245,6 @@ const AgregarExpedicionDeProducto = () => {
       body: newBody,
     }));
   };
-
-
-  /*const diariaPorLote = lotes => {
-    if (lotes !== undefined && lotes !== null && lotes.length > 0) {
-      const lotesId = lotes.map((lote) => lote.loteId);
-      axios.post("/buscar-diarias-de-produccion-lotes", lotesId, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          "Content-Type": "application/json"
-        }
-      })
-        .then(response => {
-          if (response.status === 200) {
-            const diarias = response.data;
-            return diarias;
-          } else {
-          }
-        })
-        .catch(error => {
-          console.error(error);
-          if (error.request.status === 401) {
-            setCheckToken(true);
-          }
-          else if (error.request.status === 500) {
-
-          }
-        })
-    }
-  }*/
-
-  /*const altaResumenDeTrazabilidad = (expediciones, diarias) => {
-    const mapaLotesClientes = {};
-    let usuario = {};
-    expediciones.forEach(expedicion => {
-      usuario = expedicion.expedicionDeProductoUsuario;
-      expedicion.expedicionDeProductoLotes.forEach(lote => {
-        const loteId = lote.loteId;
-        if (!mapaLotesClientes[loteId]) {
-          mapaLotesClientes[loteId] = [];
-        }
-        mapaLotesClientes[loteId].push(expedicion.expedicionDeProductoCliente);
-      });
-    });
-
-    const resumenes = [];
-    diarias.forEach(diar => {
-      expediciones.forEach(exp => {
-        exp.expedicionDeProductoLotes.forEach(lote => {
-          if (diar.diariaDeProduccionLote.loteId === lote.loteId) {
-            const loteId = lote.loteId;
-            const clientes = mapaLotesClientes[loteId];
-
-            const resumen = {
-              resumenDeTrazabilidadFecha: diar.diariaDeProduccionFecha,
-              resumenDeTrazabilidadLote: lote,
-              resumenDeTrazabilidadProducto: lote.loteProducto,
-              resumenDeTrazabilidadCantidadProducida: diar.diariaDeProduccionCantidadProducida,
-              resumenDeTrazabilidadMatPrimaCarnica: diar.diariaDeProduccionInsumosCarnicos,
-              resumenDeTrazabilidadMatPrimaNoCarnica: diar.diariaDeProduccionAditivos,
-              resumenDeTrazabilidadDestino: clientes,
-              resumenDeTrazabilidadResponsable: usuario,
-            }
-            resumenes.push(resumen);
-          }
-        })
-      })
-    })
-  }*/
 
   function hasDuplicate(list) {
     return new Set(list).size !== list.length;
