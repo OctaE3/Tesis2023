@@ -9,6 +9,9 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { useTheme } from '@material-ui/core/styles';
 import ColumnaReutilizable from '../../../components/Reutilizable/ColumnaReutilizable';
 import { useNavigate } from 'react-router-dom';
+import Logo from '../../../assets/images/Logo.png';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -285,7 +288,7 @@ function ListarCliente() {
           }, 2000);
         }
       })
-  }
+  } 
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {

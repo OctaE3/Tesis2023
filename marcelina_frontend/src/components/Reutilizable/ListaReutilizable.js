@@ -157,7 +157,7 @@ EnhancedTableHead.propTypes = {
   tableHeadCells: PropTypes.array.isRequired,
 };
 
-function ListaReutilizable({ data, tableHeadCells, title, titleListButton, linkButton, listButton, dataMapper, columnRenderers, onEditButton, onDeleteButton, onAddButton }) {
+function ListaReutilizable({ data, tableHeadCells, title, titleListButton, linkButton, listButton, dataMapper, columnRenderers, onEditButton, onDeleteButton, onAddButton, onPdfButton }) {
   const classes = useStyles();
   const [order, setOrder] = useState('desc');
   const [orderBy, setOrderBy] = useState(tableHeadCells[0].id);
