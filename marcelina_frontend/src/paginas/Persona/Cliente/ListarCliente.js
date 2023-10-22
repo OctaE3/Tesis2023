@@ -233,7 +233,7 @@ function ListarCliente() {
 
     if (
       (!filtros.nombre || lowerCaseItem.clienteNombre === filtros.nombre) &&
-      (!filtros.email || lowerCaseItem.clienteEmail.startsWith(filtros.email)) &&
+      (!filtros.email || lowerCaseItem.clienteEmail.includes(filtros.email)) &&
       (!filtros.telefono || lowerCaseItem.clienteContacto.some(contacto => contacto.startsWith(filtros.telefono))) &&
       (!filtros.observaciones || lowerCaseItem.clienteObservaciones.includes(filtros.observaciones)) &&
       (!filtros.localidad || lowerCaseItem.clienteLocalidad.startsWith(filtros.localidad))

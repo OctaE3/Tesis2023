@@ -505,6 +505,16 @@ public class Controladora_Trazabilidad {
                 }
         }
 
+        @DeleteMapping("/eliminar-resumenes-no-permitidos")
+        public ResponseEntity<HttpStatus> eliminarResumenesConLotesNoTerminados() {
+                try {
+                        resumenDeTrazabilidadServicioImpl.deleteResumenTraz();
+                        return new ResponseEntity<HttpStatus>(HttpStatus.OK);
+                } catch (Exception e) {
+                        return new ResponseEntity<HttpStatus>(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+        }
+
         @PutMapping("/modificar-resumen-de-trazabilidad/{resumenDeTrazabilidadId}")
         public ResponseEntity<PResumen_de_Trazabilidad> modificarResumenDeTrazabilidad(
                         @RequestBody PResumen_de_Trazabilidad resumenDeTrazabilidad,

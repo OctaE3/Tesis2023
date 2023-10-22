@@ -125,6 +125,7 @@ public class Controladora_Insumo {
             Optional<Carne> carne = carneServicioImpl.findById(carneId);
             if (carne.isPresent()) {
                 carne.get().setCarneEliminado(true);
+                carne.get().setCarneCantidad(0.0);
                 carneServicioImpl.save(carne.get());
                 return new ResponseEntity<>(HttpStatus.OK);
             }
@@ -245,6 +246,7 @@ public class Controladora_Insumo {
             Optional<Control_de_Insumos> controlDeInsumos = controlDeInsumosServicioImpl.findById(controlDeInsumosId);
             if (controlDeInsumos.isPresent()) {
                 controlDeInsumos.get().setInsumoEliminado(true);
+                controlDeInsumos.get().setInsumoCantidad(0);
                 controlDeInsumosServicioImpl.save(controlDeInsumos.get());
                 return new ResponseEntity<>(HttpStatus.OK);
             }
@@ -255,20 +257,36 @@ public class Controladora_Insumo {
     }
 
     @PutMapping("/modificar-control-de-insumos/{controlDeInsumosId}")
-    public ResponseEntity<Control_de_Insumos> modificarCarne(@RequestBody Control_de_Insumos controlDeInsumos,
+    public ResponseEntity<Control_de_Insumos> modificarControlDeInsumos(
+            @RequestBody Control_de_Insumos controlDeInsumos,
             @PathVariable(value = "controlDeInsumosId") Long controlDeInsumosId) {
         Optional<Control_de_Insumos> controlDeInsumosData = controlDeInsumosServicioImpl.findById(controlDeInsumosId);
         if (controlDeInsumosData.isPresent()) {
-            controlDeInsumosData.get().setInsumoNombre(controlDeInsumos.getInsumoNombre());
-            controlDeInsumosData.get().setInsumoFecha(controlDeInsumos.getInsumoFecha());
-            controlDeInsumosData.get().setInsumoFechaVencimiento(controlDeInsumos.getInsumoFechaVencimiento());
-            controlDeInsumosData.get().setInsumoNroLote(controlDeInsumos.getInsumoNroLote());
-            controlDeInsumosData.get().setInsumoProveedor(controlDeInsumos.getInsumoProveedor());
-            controlDeInsumosData.get().setInsumoTipo(controlDeInsumos.getInsumoTipo());
-            controlDeInsumosData.get().setInsumoCantidad(controlDeInsumos.getInsumoCantidad());
-            controlDeInsumosData.get().setInsumoUnidad(controlDeInsumos.getInsumoUnidad());
-            controlDeInsumosData.get().setInsumoResponsable(controlDeInsumos.getInsumoResponsable());
-            controlDeInsumosData.get().setInsumoMotivoDeRechazo(controlDeInsumos.getInsumoMotivoDeRechazo());
+            if (controlDeInsumos.getInsumoCantidad() == 0) {
+                controlDeInsumosData.get().setInsumoNombre(controlDeInsumos.getInsumoNombre());
+                controlDeInsumosData.get().setInsumoFecha(controlDeInsumos.getInsumoFecha());
+                controlDeInsumosData.get().setInsumoFechaVencimiento(controlDeInsumos.getInsumoFechaVencimiento());
+                controlDeInsumosData.get().setInsumoNroLote(controlDeInsumos.getInsumoNroLote());
+                controlDeInsumosData.get().setInsumoProveedor(controlDeInsumos.getInsumoProveedor());
+                controlDeInsumosData.get().setInsumoTipo(controlDeInsumos.getInsumoTipo());
+                controlDeInsumosData.get().setInsumoCantidad(controlDeInsumos.getInsumoCantidad());
+                controlDeInsumosData.get().setInsumoUnidad(controlDeInsumos.getInsumoUnidad());
+                controlDeInsumosData.get().setInsumoResponsable(controlDeInsumos.getInsumoResponsable());
+                controlDeInsumosData.get().setInsumoMotivoDeRechazo(controlDeInsumos.getInsumoMotivoDeRechazo());
+                controlDeInsumosData.get().setInsumoEliminado(true);
+            } else {
+                controlDeInsumosData.get().setInsumoNombre(controlDeInsumos.getInsumoNombre());
+                controlDeInsumosData.get().setInsumoFecha(controlDeInsumos.getInsumoFecha());
+                controlDeInsumosData.get().setInsumoFechaVencimiento(controlDeInsumos.getInsumoFechaVencimiento());
+                controlDeInsumosData.get().setInsumoNroLote(controlDeInsumos.getInsumoNroLote());
+                controlDeInsumosData.get().setInsumoProveedor(controlDeInsumos.getInsumoProveedor());
+                controlDeInsumosData.get().setInsumoTipo(controlDeInsumos.getInsumoTipo());
+                controlDeInsumosData.get().setInsumoCantidad(controlDeInsumos.getInsumoCantidad());
+                controlDeInsumosData.get().setInsumoUnidad(controlDeInsumos.getInsumoUnidad());
+                controlDeInsumosData.get().setInsumoResponsable(controlDeInsumos.getInsumoResponsable());
+                controlDeInsumosData.get().setInsumoMotivoDeRechazo(controlDeInsumos.getInsumoMotivoDeRechazo());
+                controlDeInsumosData.get().setInsumoEliminado(false);
+            }
 
             return new ResponseEntity<>(controlDeInsumosServicioImpl.save(controlDeInsumosData.get()), HttpStatus.OK);
         } else {
@@ -340,8 +358,15 @@ public class Controladora_Insumo {
     public ResponseEntity<Lote> modificarLote(@RequestBody Lote lote, @PathVariable(value = "loteId") Long loteId) {
         Optional<Lote> loteData = loteServicioImpl.findById(loteId);
         if (loteData.isPresent()) {
-            loteData.get().setLoteProducto(lote.getLoteProducto());
-            loteData.get().setLoteCantidad(lote.getLoteCantidad());
+            if (loteData.get().getLoteCantidad() == 0) {
+                loteData.get().setLoteProducto(lote.getLoteProducto());
+                loteData.get().setLoteCantidad(lote.getLoteCantidad());
+                loteData.get().setLoteEliminado(true);
+            } else {
+                loteData.get().setLoteProducto(lote.getLoteProducto());
+                loteData.get().setLoteCantidad(lote.getLoteCantidad());
+                loteData.get().setLoteEliminado(false);
+            }
             return new ResponseEntity<>(loteServicioImpl.save(loteData.get()), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -890,7 +915,8 @@ public class Controladora_Insumo {
             recepcionDeMateriasPrimasCarnicasData.get().setRecepcionDeMateriasPrimasCarnicasTemperatura(
                     recepcionDeMateriasPrimasCarnicas.getRecepcionDeMateriasPrimasCarnicasTemperatura());
             return new ResponseEntity<>(
-                    recepcionDeMateriasPrimasCarnicasServicioImpl.saveModificar(recepcionDeMateriasPrimasCarnicasData.get()),
+                    recepcionDeMateriasPrimasCarnicasServicioImpl
+                            .saveModificar(recepcionDeMateriasPrimasCarnicasData.get()),
                     HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

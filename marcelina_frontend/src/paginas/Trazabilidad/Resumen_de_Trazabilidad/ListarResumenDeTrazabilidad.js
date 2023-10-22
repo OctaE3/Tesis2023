@@ -119,6 +119,19 @@ function ListarResumenDeTrazabilidad() {
   }, [checkToken]);
 
   useEffect(() => {
+    axios.delete(`/eliminar-resumenes-no-permitidos`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+      })
+      .catch(error => { 
+      })
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get('/listar-resumen-de-trazabilidad', {

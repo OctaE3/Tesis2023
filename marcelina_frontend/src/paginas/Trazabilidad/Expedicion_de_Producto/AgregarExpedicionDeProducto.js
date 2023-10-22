@@ -338,6 +338,8 @@ const AgregarExpedicionDeProducto = () => {
             listaDetalleCantidaLote.push(detalleCantidadLote);
           });
 
+          console.log()
+
           const uniqueProductos = {};
           const productosSinDuplicados = productosCompletos.filter((producto) => {
             const key = `${producto.productoId}-${producto.productoCodigo}`;
@@ -399,13 +401,11 @@ const AgregarExpedicionDeProducto = () => {
                     const expedicionNueva = response.data;
                     const listaExpediciones = expedicionesDeProd;
                     listaExpediciones.push(expedicionNueva);
-                    const lotesTerminados = updateFormData.expedicionDeProductoLotes.filter((lote) => lote.loteCantidad === 0);
+                    const lotesTerminados = updateFormData.expedicionDeProductoLotes.filter((lote) => lote.loteCantidad <= 0);
 
                     const expedicionesLote = listaExpediciones.filter(exp => {
                       return exp.expedicionDeProductoLotes.some(lote => lotesTerminados.some(loteTerm => loteTerm.loteId.toString() === lote.loteId.toString()));
                     });
-                    console.log(lotesTerminados)
-                    console.log(expedicionesLote)
                     if (lotesTerminados !== undefined && lotesTerminados !== null && lotesTerminados.length > 0) {
                       const lotesId = lotesTerminados.map((lote) => lote.loteId);
                       axios.post("/buscar-diarias-de-produccion-lotes", lotesId, {
@@ -416,7 +416,6 @@ const AgregarExpedicionDeProducto = () => {
                       })
                         .then(response => {
                           const diarias = response.data;
-                          console.log(diarias);
                           const mapaLotesClientes = {};
                           let usuario = {};
                           expedicionesLote.forEach(expedicion => {
@@ -429,15 +428,11 @@ const AgregarExpedicionDeProducto = () => {
                               mapaLotesClientes[loteId].push(expedicion.expedicionDeProductoCliente);
                             });
                           });
-                          console.log(mapaLotesClientes);
                           const resumenes = [];
                           diarias.forEach(diar => {
                             expedicionesLote.forEach(exp => {
                               exp.expedicionDeProductoLotes.forEach(lote => {
                                 if (diar.diariaDeProduccionLote.loteId === lote.loteId) {
-                                  console.log(diar)
-                                  console.log(lote)
-                                  console.log(exp)
                                   const loteId = lote.loteId;
                                   const clienteVisto = {};
                                   const clientes = mapaLotesClientes[loteId].filter(cliente => {
@@ -448,7 +443,6 @@ const AgregarExpedicionDeProducto = () => {
                                     }
                                     return false;
                                   })
-                                  console.log(clientes);
                                   const resumen = {
                                     resumenDeTrazabilidadFecha: exp.expedicionDeProductoFecha,
                                     resumenDeTrazabilidadLote: lote,
@@ -475,7 +469,9 @@ const AgregarExpedicionDeProducto = () => {
                             return false;
                           });
 
-                          console.log(resumenesDeTrazabilidad);
+                          for (let i = 0; i < resumenesDeTrazabilidad.length; i++) {
+                            resumenesDeTrazabilidad[i].resumenDeTrazabilidadLote.loteCantidad = 0;
+                          }
 
                           axios.post('/agregar-resumen-de-trazabilidad', resumenesDeTrazabilidad, {
                             headers: {
@@ -484,7 +480,6 @@ const AgregarExpedicionDeProducto = () => {
                             }
                           })
                             .then(response => {
-                              console.log(response.data);
                             })
                             .catch(error => {
 
@@ -492,7 +487,6 @@ const AgregarExpedicionDeProducto = () => {
 
                         })
                         .catch(error => {
-                          console.error(error);
                         })
                     }
                   } else {
