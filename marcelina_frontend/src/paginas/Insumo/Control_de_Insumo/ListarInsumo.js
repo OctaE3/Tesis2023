@@ -143,7 +143,7 @@ function ListarInsumo() {
               Id: data.insumoId,
               isExpired: 'Yes',
             };
-          } else if (diferenciaDias < 0 || data.insumoCantidad <= 0) {
+          } else if (diferenciaDias < 0 || data.insumoCantidad === 0 || data.insumoEliminado === true) {
             return {
               ...data,
               Id: data.insumoId,
@@ -245,14 +245,14 @@ function ListarInsumo() {
   const mapData = (item, key) => {
     if (key === 'insumoFecha') {
       if (item.insumoFecha) {
-        const fecha = new Date(item.insumoFecha); // Convertir fecha a objeto Date
+        const fecha = new Date(item.insumoFecha);
         return format(fecha, 'dd/MM/yyyy');
       } else {
         return '';
       }
     } else if (key === 'insumoFechaVencimiento') {
       if (item.insumoFechaVencimiento) {
-        const fechaV = new Date(item.insumoFechaVencimiento); // Convertir fecha a objeto Date
+        const fechaV = new Date(item.insumoFechaVencimiento);
         return format(fechaV, 'dd/MM/yyyy');
       } else {
         return '';
@@ -320,7 +320,7 @@ function ListarInsumo() {
 
   const handleDeleteInsumo = (rowData) => {
     const id = rowData.Id;
-    axios.put(`/borrar-insumo/${id}`, null, {
+    axios.put(`/borrar-control-de-insumos/${id}`, null, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         "Content-Type": "application/json"
