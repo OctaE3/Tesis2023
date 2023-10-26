@@ -172,6 +172,13 @@ function ListarControlDeNitrito() {
         return '';
       }
     }
+    else if (key === 'controlDeNitritoProductoLote.loteCodigo') {
+      if (item.controlDeNitritoProductoLote && item.controlDeNitritoProductoLote.loteCodigo) {
+        return item.controlDeNitritoProductoLote.loteCodigo;
+      } else {
+        return '';
+      }
+    }
     else if (key === 'controlDeNitritoFecha') {
       if (item.controlDeNitritoFecha) {
         const fecha = new Date(item.controlDeNitritoFecha); // Convertir fecha a objeto Date
@@ -223,7 +230,7 @@ function ListarControlDeNitrito() {
   const filteredData = data.filter((item) => {
     const lowerCaseItem = {
       controlDeNitritoFecha: new Date(item.controlDeNitritoFecha),
-      controlDeNitritoProductoLote: item.controlDeNitritoProductoLote ? item.controlDeNitritoProductoLote.toLowerCase() : '',
+      controlDeNitritoProductoLote: item.controlDeNitritoProductoLote ? item.controlDeNitritoProductoLote.loteCodigo.toLowerCase() : '',
       controlDeNitritoCantidadUtilizada: item.controlDeNitritoCantidadUtilizada ? item.controlDeNitritoCantidadUtilizada : '',
       controlDeNitritoStock: item.controlDeNitritoStock ? item.controlDeNitritoStock : '',
       controlDeNitritoObservaciones: item.controlDeNitritoObservaciones ? item.controlDeNitritoObservaciones.toLowerCase() : '',
@@ -233,7 +240,7 @@ function ListarControlDeNitrito() {
     if (
       (!filtros['fecha-desde'] || lowerCaseItem.controlDeNitritoFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.controlDeNitritoFecha <= new Date(filtros['fecha-hasta'])) &&
-      (!filtros.lote || lowerCaseItem.controlDeNitritoProductoLote.toString() === filtros.lote) &&
+      (!filtros.lote || lowerCaseItem.controlDeNitritoProductoLote.toString().includes(filtros.lote)) &&
       (!filtros.cantidad || lowerCaseItem.controlDeNitritoCantidadUtilizada.toString() === filtros.cantidad) &&
       (!filtros.stock || lowerCaseItem.controlDeNitritoStock.toString() === filtros.stock) &&
       (!filtros.observaciones || lowerCaseItem.controlDeNitritoObservaciones.includes(filtros.observaciones)) &&
@@ -245,7 +252,8 @@ function ListarControlDeNitrito() {
   });
 
   const columnRenderers = {
-    controlDeNitritoResponsable: (responsable) => responsable.usuarioNombre
+    controlDeNitritoResponsable: (responsable) => responsable.usuarioNombre,
+    controlDeNitritoProductoLote: (lote) => lote.loteCodigo,
   };
 
   const handleEditControl = (rowData) => {

@@ -56,7 +56,7 @@ const useStyles = makeStyles(theme => ({
 const AgregarControlDeNitrito = () => {
   const formFields = [
     { name: 'controlDeNitritoFecha', label: 'Fecha', type: 'date', color: 'primary' },
-    { name: 'controlDeNitritoProductoLote', label: 'Producto / Lote', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ]{0,20}$", color: 'primary' },
+    { name: 'controlDeNitritoProductoLote', label: 'Lote', type: 'selector', color: 'primary' },
     { name: 'controlDeNitritoCantidadUtilizada', label: 'Cantidad Utilizada', type: 'text', obligatorio: true, pattern: "^[0-9]{0,10}$", color: 'primary' },
     { name: 'controlDeNitritoStock', label: 'Stock', type: 'text', disabled: 'si', color: 'primary' },
     { name: 'controlDeNitritoObservaciones', label: 'Observaciones', type: 'text', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", multi: '3', color: 'secondary' },
@@ -77,6 +77,9 @@ const AgregarControlDeNitrito = () => {
   const classes = useStyles();
   const navigate = useNavigate();
   const [nitritoStock, setNitritoStock] = useState(0);
+  const [stockReload, setStockReload] = useState(false);
+  const [lotes, setLotes] = useState([]);
+  const [loteSelect, setLoteSelect] = useState([]);
   const [showAlertSuccess, setShowAlertSuccess] = useState(false);
   const [showAlertError, setShowAlertError] = useState(false);
   const [showAlertWarning, setShowAlertWarning] = useState(false);
@@ -145,8 +148,46 @@ const AgregarControlDeNitrito = () => {
         });
     };
 
+    const obtenerLotes = () => {
+      axios.get('/listar-lotes', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+        .then(response => {
+          if (response.data.length > 0) {
+            const data = response.data.map(lote => {
+              if (lote.loteEliminado === false) {
+                return lote;
+              }
+            })
+            const dataSinUndefined = data.filter(data => data !== undefined);
+            setLotes(dataSinUndefined);
+            setLoteSelect(
+              dataSinUndefined.map((lote) => ({
+                value: lote.loteId,
+                label: `${lote.loteCodigo} - ${lote.loteProducto.productoNombre}`
+              }))
+            )
+          }
+        })
+        .catch(error => {
+          if (error.request.status === 401) {
+            setCheckToken(true);
+          } else {
+            updateErrorAlert('No se logró cargar los lotes, recargue la página.')
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 2000);
+          }
+        });
+    };
+
     obtenerNitratos();
-  }, []);
+    obtenerLotes();
+    setStockReload(false);
+  }, [stockReload]);
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -174,7 +215,7 @@ const AgregarControlDeNitrito = () => {
     if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
       return false;
     }
-    else if (lote === undefined || lote === null || lote === '') {
+    else if (lote === undefined || lote === null || lote === 'Seleccionar' || lote === '') {
       return false;
     }
     else if (cantidad === undefined || cantidad === null || cantidad === '') {
@@ -202,9 +243,13 @@ const AgregarControlDeNitrito = () => {
       }, 2500);
     } else {
       const stockRestante = parseInt(stock) - parseInt(formDataWithoutStock.controlDeNitritoCantidadUtilizada);
+
+      const loteCompleto = lotes.find(lote => lote.loteId.toString() === formDataWithoutStock.controlDeNitritoProductoLote.toString());
+
       const controlDeNitritoConResponsable = {
         ...formDataWithoutStock,
         controlDeNitritoStock: stockRestante,
+        controlDeNitritoProductoLote: loteCompleto,
         controlDeNitritoResponsable: window.localStorage.getItem('user'),
       }
 
@@ -226,6 +271,7 @@ const AgregarControlDeNitrito = () => {
         })
           .then(response => {
             if (response.status === 201) {
+              setStockReload(true);
               setFormKey(prevKey => prevKey + 1);
               setShowAlertSuccess(true);
               setTimeout(() => {
@@ -362,6 +408,7 @@ const AgregarControlDeNitrito = () => {
         handleRedirect={redirect}
         selectOptions={{
           controlDeNitritoStock: nitritoStock,
+          controlDeNitritoProductoLote: loteSelect,
         }}
       />
     </Grid>

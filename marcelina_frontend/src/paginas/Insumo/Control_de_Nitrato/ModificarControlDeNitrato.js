@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../components/Navbar/Navbar'
-import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField } from '@material-ui/core'
+import { Container, Typography, Grid, Box, Button, CssBaseline, Dialog, IconButton, makeStyles, DialogActions, DialogContent, DialogContentText, DialogTitle, useMediaQuery, TextField, FormControl, Select, InputLabel } from '@material-ui/core'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AlertasReutilizable from '../../../components/Reutilizable/AlertasReutilizable';
 import { useParams } from 'react-router-dom';
@@ -21,6 +21,9 @@ const useStyles = makeStyles(theme => ({
     },
     select: {
         width: '100%',
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'blue',
+        },
     },
     sendButton: {
         display: 'flex',
@@ -86,7 +89,9 @@ const ModificarControlDeNitrato = () => {
     const [ultimoNitratoDisabled, setUltimoNitratoDisabled] = useState(true);
     const [nitratoStock, setNitratoStock] = useState('');
     const [checkToken, setCheckToken] = useState(false);
-
+    const [lotes, setLotes] = useState([]);
+    const [loteSeleccionado, setLoteSeleccionado] = useState('');
+    const [loteSelect, setLoteSelect] = useState([]);
     const [showAlertSuccess, setShowAlertSuccess] = useState(false);
     const [showAlertError, setShowAlertError] = useState(false);
     const [showAlertWarning, setShowAlertWarning] = useState(false);
@@ -177,6 +182,12 @@ const ModificarControlDeNitrato = () => {
                         controlDeNitratoFecha: fechaFormateada,
                         controlDeNitratoStock: controlEncontrado.controlDeNitratoStock + controlEncontrado.controlDeNitratoCantidadUtilizada,
                     }
+
+                    setLoteSeleccionado({
+                        value: controlEncontrado.controlDeNitratoProductoLote.loteId,
+                        label: `${controlEncontrado.controlDeNitratoProductoLote.loteCodigo} - ${controlEncontrado.controlDeNitratoProductoLote.loteProducto.productoNombre}`
+                    })
+
                     setControl(controlConFechaParseada);
                 })
                 .catch(error => {
@@ -193,7 +204,44 @@ const ModificarControlDeNitrato = () => {
                 });
         };
 
+        const obtenerLotes = () => {
+            axios.get('/listar-lotes', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(response => {
+                    if (response.data.length > 0) {
+                        const data = response.data.map(lote => {
+                            if (lote.loteEliminado === false) {
+                                return lote;
+                            }
+                        })
+                        const dataSinUndefined = data.filter(data => data !== undefined);
+                        setLotes(dataSinUndefined);
+                        setLoteSelect(
+                            dataSinUndefined.map((lote) => ({
+                                value: lote.loteId,
+                                label: `${lote.loteCodigo} - ${lote.loteProducto.productoNombre}`
+                            }))
+                        )
+                    }
+                })
+                .catch(error => {
+                    if (error.request.status === 401) {
+                        setCheckToken(true);
+                    } else {
+                        updateErrorAlert('No se logró cargar los lotes, recargue la página.')
+                        setShowAlertError(true);
+                        setTimeout(() => {
+                            setShowAlertError(false);
+                        }, 2000);
+                    }
+                });
+        };
+
         obtenerControles();
+        obtenerLotes();
     }, []);
 
     useEffect(() => {
@@ -260,7 +308,7 @@ const ModificarControlDeNitrato = () => {
         if (fecha === undefined || fecha === null || fecha === '' || fecha.toString() === 'Invalid Date') {
             return false;
         }
-        else if (lote === undefined || lote === null || lote === '') {
+        else if (lote === undefined || lote === null || lote === 'Seleccionar' || lote === '') {
             return false;
         }
         else if (cantidad === undefined || cantidad === null || cantidad === '') {
@@ -291,8 +339,11 @@ const ModificarControlDeNitrato = () => {
                     setShowAlertError(false);
                 }, 2500);
             } else {
+                const loteCompleto = lotes.find((lote) => lote.loteId.toString() === loteSeleccionado.value.toString());
+
                 const dataMod = {
                     ...data,
+                    controlDeNitratoProductoLote: loteCompleto,
                     controlDeNitratoStock: data.controlDeNitratoStock - data.controlDeNitratoCantidadUtilizada,
                 }
                 axios.put(`/modificar-control-de-nitrato/${id}`, dataMod, {
@@ -451,21 +502,30 @@ const ModificarControlDeNitrato = () => {
                                         />
                                     </Grid>
                                     <Grid item lg={12} md={12} sm={12} xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            autoFocus
-                                            required
-                                            className={classes.customOutlinedBlue}
-                                            InputLabelProps={{ className: classes.customLabelBlue, shrink: true }}
-                                            color="primary"
-                                            margin="normal"
-                                            variant="outlined"
-                                            label="Producto / Lote"
-                                            type="text"
-                                            name="controlDeNitratoProductoLote"
-                                            value={control.controlDeNitratoProductoLote}
-                                            onChange={handleChange}
-                                        />
+                                        <FormControl variant="outlined" className={classes.formControl}>
+                                            <InputLabel className={classes.customLabelBlue} htmlFor={`outlined-controlDeNitratoProductoLote-native-simple`}>Lote</InputLabel>
+                                            <Select
+                                                className={classes.select}
+                                                native
+                                                value={loteSeleccionado.value}
+                                                name="controlDeNitratoProductoLote"
+                                                label="Lote"
+                                                inputProps={{
+                                                    name: "controlDeNitratoProductoLote",
+                                                    id: `outlined-controlDeNitratoProductoLote-native-simple`,
+                                                }}
+                                                onChange={(e) => setLoteSeleccionado({
+                                                    value: e.target.value
+                                                })}
+                                            >
+                                                <option>Seleccionar</option>
+                                                {loteSelect.map((option, ind) => (
+                                                    <option key={ind} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
                                     </Grid>
                                     <Grid item lg={12} md={12} sm={12} xs={12}>
                                         <TextField

@@ -21,10 +21,11 @@ public class PControl_de_Nitrato implements Serializable{
     private Long controlDeNitratoId;
 
     @Column(name = "control_de_nitrato_fecha", nullable = false)
-    private Date controlDeNitratoFecha;
 
-    @Column(name = "control_de_nitrato_producto_lote", length = 30, nullable = false)
-    private String controlDeNitratoProductoLote;
+    private Date controlDeNitratoFecha;
+    @ManyToOne
+    @JoinColumn(name = "control_de_nitrato_producto_lote", nullable = false)
+    private Lote controlDeNitratoProductoLote;
 
     @Column(name = "control_de_nitrato_cantidad_utilizada", nullable = false)
     private Integer controlDeNitratoCantidadUtilizada;
@@ -55,11 +56,11 @@ public class PControl_de_Nitrato implements Serializable{
         this.controlDeNitratoFecha = controlDeNitratoFecha;
     }
 
-    public String getControlDeNitratoProductoLote() {
+    public Lote getControlDeNitratoProductoLote() {
         return controlDeNitratoProductoLote;
     }
 
-    public void setControlDeNitratoProductoLote(String controlDeNitratoProductoLote) {
+    public void setControlDeNitratoProductoLote(Lote controlDeNitratoProductoLote) {
         this.controlDeNitratoProductoLote = controlDeNitratoProductoLote;
     }
 
@@ -95,7 +96,7 @@ public class PControl_de_Nitrato implements Serializable{
         this.controlDeNitratoResponsable = controlDeNitratoResponsable;
     }
 
-    public PControl_de_Nitrato(Long controlDeNitratoId, Date controlDeNitratoFecha, String controlDeNitratoProductoLote,
+    public PControl_de_Nitrato(Long controlDeNitratoId, Date controlDeNitratoFecha, Lote controlDeNitratoProductoLote,
             Integer controlDeNitratoCantidadUtilizada, Double controlDeNitratoStock,
             String controlDeNitratoObservaciones, Usuario controlDeNitratoResponsable) {
         this.controlDeNitratoId = controlDeNitratoId;
