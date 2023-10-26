@@ -8,10 +8,11 @@ import com.chacineria.marcelina.entidad.insumo.Carne;
 
 public interface CarneServicio {
     public Iterable<Carne> findAll();
+
     public Iterable<Carne> findAllByCarneEliminado(Boolean eliminado);
 
-    public List<Carne> findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(Boolean eliminado,
-            String tipo, String categoria, Date fecha1, Date fecha2);
+    public List<Carne> findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween(String tipo, String categoria,
+            Date fecha1, Date fecha2);
 
     public Optional<Carne> findById(Long Id);
 

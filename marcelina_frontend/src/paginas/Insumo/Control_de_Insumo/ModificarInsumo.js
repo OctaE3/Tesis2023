@@ -278,7 +278,8 @@ const ModificarInsumo = () => {
                 }
             }
             else if (name === "insumoCantidad") {
-                const regex = new RegExp("^[0-9]{0,5}$");
+                const regex = new RegExp("^[0-9]{0,4}\\.?[0-9]{0,4}$");
+                //const regex = new RegExp("^[0-9\\.]{0,5}$");
                 if (regex.test(value)) {
                     setControl(prevState => ({
                         ...prevState,
@@ -615,7 +616,7 @@ const ModificarInsumo = () => {
                                             margin="normal"
                                             variant="outlined"
                                             label="Cantidad"
-                                            type="number"
+                                            type="text"
                                             name="insumoCantidad"
                                             value={control.insumoCantidad}
                                             onChange={handleChange}

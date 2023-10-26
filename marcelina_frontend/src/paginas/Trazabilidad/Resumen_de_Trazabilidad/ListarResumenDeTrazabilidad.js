@@ -318,7 +318,7 @@ function ListarResumenDeTrazabilidad() {
       resumenDeTrazabilidadLote: item.resumenDeTrazabilidadLote ? item.resumenDeTrazabilidadLote.loteCodigo.toLowerCase() : '',
       resumenDeTrazabilidadProducto: item.resumenDeTrazabilidadProducto ? item.resumenDeTrazabilidadProducto.productoNombre.toLowerCase() : '',
       resumenDeTrazabilidadCantidadProducida: item.resumenDeTrazabilidadCantidadProducida ? item.resumenDeTrazabilidadCantidadProducida : '',
-      resumenDeTrazabilidadMatPrimaCarnica: item.resumenDeTrazabilidadMatPrimaCarnica.map(resumenDeTrazabilidadMatPrimaCarnica => resumenDeTrazabilidadMatPrimaCarnica),
+      resumenDeTrazabilidadMatPrimaCarnica: item.resumenDeTrazabilidadMatPrimaCarnica.map(carne => `${carne.carneNombre} - ${carne.carneCorte}`),
       resumenDeTrazabilidadMatPrimaNoCarnica: item.resumenDeTrazabilidadMatPrimaNoCarnica.map(resumenDeTrazabilidadMatPrimaNoCarnica => resumenDeTrazabilidadMatPrimaNoCarnica),
       resumenDeTrazabilidadDestino: item.resumenDeTrazabilidadDestino.map(resumenDeTrazabilidadDestino => resumenDeTrazabilidadDestino),
       resumenDeTrazabilidadResponsable: item.resumenDeTrazabilidadResponsable ? item.resumenDeTrazabilidadResponsable.usuarioNombre.toLowerCase() : '',
@@ -330,7 +330,7 @@ function ListarResumenDeTrazabilidad() {
       (!filtros.lote || lowerCaseItem.resumenDeTrazabilidadLote.startsWith(filtros.lote)) &&
       (!filtros.producto || lowerCaseItem.resumenDeTrazabilidadProducto.startsWith(filtros.producto)) &&
       (!filtros.cantidad || lowerCaseItem.resumenDeTrazabilidadCantidadProducida.toString() === filtros.cantidad) &&
-      (!filtros.carne || lowerCaseItem.resumenDeTrazabilidadMatPrimaCarnica.some(carne => carne.carneNombre.toLowerCase().includes(filtros.carne))) &&
+      (!filtros.carne || lowerCaseItem.resumenDeTrazabilidadMatPrimaCarnica.some(carne => carne.toLowerCase().includes(filtros.carne))) &&
       (!filtros.aditivo || lowerCaseItem.resumenDeTrazabilidadMatPrimaNoCarnica.some(aditivo => aditivo.insumoNombre.toLowerCase().includes(filtros.aditivo))) &&
       (!filtros.cliente || lowerCaseItem.resumenDeTrazabilidadDestino.some(cliente => cliente.clienteNombre.toLowerCase().includes(filtros.cliente))) &&
       (!filtros.responsable || lowerCaseItem.resumenDeTrazabilidadResponsable === filtros.responsable)

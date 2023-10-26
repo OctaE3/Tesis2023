@@ -143,7 +143,8 @@ const Home = () => {
         const lastAnual = response.data;
         var fecha = new Date();
         const mes = nombresMeses[fecha.getMonth()];
-        if (lastAnual.anualDeInsumosCarnicosMes.toLowerCase() === mes.toLowerCase()) {
+        const lastA = lastAnual === '' ? null : lastAnual;
+        if (lastA != null && lastA.anualDeInsumosCarnicosMes.toLowerCase() === mes.toLowerCase()) {
           setRegistrado(false);
         } else {
           setRegistrado(true);
@@ -156,53 +157,41 @@ const Home = () => {
 
   useEffect(() => {
     const fecha = new Date();
-    if (fecha.getDate() === 1) {
-      if (registrado === true) {
-        axios.post('/agregar-anual-de-insumos-carnicos-automatico', null, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+    console.log(registrado)
+    if (registrado === true) {
+      axios.post('/agregar-anual-de-insumos-carnicos-automatico', null, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+        .then(response => {
+          if (response.status === 201) {
+            setShowAlertSuccess(true);
+            setTimeout(() => {
+              setShowAlertSuccess(false);
+            }, 3000);
+          } else {
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 3000);
           }
         })
-          .then(response => {
-            if (response.status === 201) {
-              setShowAlertSuccess(true);
-              setTimeout(() => {
-                setShowAlertSuccess(false);
-              }, 3000);
-            } else {
-              setShowAlertError(true);
-              setTimeout(() => {
-                setShowAlertError(false);
-              }, 3000);
-            }
-          })
-          .catch(error => {
-            if (error.request.status === 401) {
-              setShowAlertWarning(true);
-              setTimeout(() => {
-                setShowAlertWarning(false);
-                navigate('/')
-              }, 3000);
-            }
-            else if (error.request.status === 500) {
-              setShowAlertError(true);
-              setTimeout(() => {
-                setShowAlertError(false);
-              }, 3000);
-            }
-          })
-      }
-    } else { }
-
-    const primerDiaProximoMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 1);
-    const diferenciaDias = differenceInDays(primerDiaProximoMes, fecha);
-    if (diferenciaDias <= 5 && diferenciaDias > 1) {
-      updateInfoAlert(`El anual de insumos cárnicos se registrará automáticamente dentro de ${diferenciaDias} días`);
-      setShowAlertInfo(true);
-    }
-    else if (diferenciaDias === 1) {
-      updateInfoAlert(`El anual de insumos cárnicos se registrará automáticamente dentro de ${diferenciaDias} día`);
-      setShowAlertInfo(true);
+        .catch(error => {
+          if (error.request.status === 401) {
+            setShowAlertWarning(true);
+            setTimeout(() => {
+              setShowAlertWarning(false);
+              navigate('/')
+            }, 3000);
+          }
+          else if (error.request.status === 500) {
+            setShowAlertError(true);
+            setTimeout(() => {
+              setShowAlertError(false);
+            }, 3000);
+          }
+        })
     }
   }, [registrado]);
 
@@ -481,7 +470,7 @@ const Home = () => {
                   <Button size="small" component={Link} to="/listar-monitoreo-de-ssop-pre-operativo">Ver</Button>
                 </CardActions>
               </Card>
-            </Grid> 
+            </Grid>
             <Grid item xs={12} sm={5} md={3} lg={3} className={classes.container}>
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>

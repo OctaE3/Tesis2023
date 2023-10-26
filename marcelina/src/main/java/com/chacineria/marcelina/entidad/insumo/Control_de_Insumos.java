@@ -41,8 +41,8 @@ public class Control_de_Insumos implements Serializable{
     @Column(name = "insumo_tipo", length = 30, nullable = false)
     private String insumoTipo;
 
-    @Column(name = "insumo_cantidad", length = 30, nullable = false)
-    private Integer insumoCantidad;
+    @Column(name = "insumo_cantidad", nullable = false)
+    private Double insumoCantidad;
 
     @Column(name = "insumo_unidad", length = 20, nullable = false)
     private String insumoUnidad;
@@ -103,11 +103,11 @@ public class Control_de_Insumos implements Serializable{
         this.insumoTipo = insumoTipo;
     }
 
-    public Integer getInsumoCantidad() {
+    public Double getInsumoCantidad() {
         return insumoCantidad;
     }
 
-    public void setInsumoCantidad(Integer insumoCantidad) {
+    public void setInsumoCantidad(Double insumoCantidad) {
         this.insumoCantidad = insumoCantidad;
     }
 
@@ -160,7 +160,7 @@ public class Control_de_Insumos implements Serializable{
     }
 
     public Control_de_Insumos(Long insumoId, String insumoNombre, Date insumoFecha, Proveedor insumoProveedor,
-            String insumoTipo, Integer insumoCantidad, String insumoUnidad, String insumoNroLote,
+            String insumoTipo, Double insumoCantidad, String insumoUnidad, String insumoNroLote,
             String insumoMotivoDeRechazo, Usuario insumoResponsable, Date insumoFechaVencimiento,
             Boolean insumoEliminado) {
         this.insumoId = insumoId;
