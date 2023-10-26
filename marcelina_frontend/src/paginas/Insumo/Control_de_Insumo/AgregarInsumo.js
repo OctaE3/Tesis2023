@@ -59,7 +59,7 @@ const AgregarInsumo = () => {
         { name: 'insumoFecha', label: 'Fecha', type: 'date', format: 'yyyy-MM-dd', color: 'primary' },
         { name: 'insumoProveedor', label: 'Proveedor *', type: 'selector', color: 'primary' },
         { name: 'insumoTipo', label: 'Tipo *', type: 'selector', color: 'primary' },
-        { name: 'insumoCantidad', label: 'Cantidad', type: 'text', obligatorio: true, pattern: "^[0-9]{0,5}$", color: 'primary' },
+        { name: 'insumoCantidad', label: 'Cantidad', type: 'text', obligatorio: true, pattern: "^[0-9]{0,4}\\.?[0-9]{0,4}$", color: 'primary' },
         { name: 'insumoUnidad', label: 'Unidad *', type: 'selector', color: 'primary' },
         { name: 'insumoNroLote', label: 'Lote', type: 'text', obligatorio: true, pattern: "^[A-Za-z0-9]{0,20}$", color: 'primary' },
         { name: 'insumoMotivoDeRechazo', label: 'Motivo de rechazó', type: 'text', multi: '3', pattern: "^[A-Za-z0-9ÁáÉéÍíÓóÚúÜüÑñ\\s,.]{0,250}$", color: 'secondary' },

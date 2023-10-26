@@ -12,6 +12,6 @@ import org.springframework.stereotype.Repository;
 public interface CarneRepositorio extends JpaRepository<Carne, Long> {
     public Iterable<Carne> findAllByCarneEliminado(Boolean eliminado);
 
-    public List<Carne> findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(Boolean eliminado,
-            String tipo, String categoria, Date fecha1, Date fecha2);
+    public List<Carne> findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween(String tipo, String categoria,
+            Date fecha1, Date fecha2);
 }

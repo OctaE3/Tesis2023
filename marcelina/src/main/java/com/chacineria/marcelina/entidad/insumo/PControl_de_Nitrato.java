@@ -21,8 +21,8 @@ public class PControl_de_Nitrato implements Serializable{
     private Long controlDeNitratoId;
 
     @Column(name = "control_de_nitrato_fecha", nullable = false)
-
     private Date controlDeNitratoFecha;
+    
     @ManyToOne
     @JoinColumn(name = "control_de_nitrato_producto_lote", nullable = false)
     private Lote controlDeNitratoProductoLote;

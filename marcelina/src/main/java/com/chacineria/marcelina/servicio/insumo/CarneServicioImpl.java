@@ -31,9 +31,9 @@ public class CarneServicioImpl implements CarneServicio {
 
     @Override
     @Transactional
-    public List<Carne> findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(Boolean eliminado,
-            String tipo, String categoria, Date fecha1, Date fecha2) {
-        return carneRepositorio.findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(eliminado, tipo,
+    public List<Carne> findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween(String tipo,
+            String categoria, Date fecha1, Date fecha2) {
+        return carneRepositorio.findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween(tipo,
                 categoria, fecha1, fecha2);
     }
 

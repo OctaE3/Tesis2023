@@ -406,7 +406,7 @@ const ModificarDiariaDeProduccion = () => {
     };
 
     const handleCantidadChangeAditivo = (event, index) => {
-        const regex = new RegExp("^[0-9]{0,10}$");
+        const regex = new RegExp("^[0-9]{0,4}\\.?[0-9]{0,4}$");
         if (regex.test(event.target.value)) {
             const updatedAditivoCantidad = [...aditivosCantidad];
             updatedAditivoCantidad[index].cantidad = event.target.value;

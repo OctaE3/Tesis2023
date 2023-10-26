@@ -105,35 +105,35 @@ public class PAnual_de_Insumos_CarnicosServicioImpl implements PAnual_de_Insumos
         } 
         else if (ultimoAnual == null || check == true) {
             List<Carne> carneBovinaSH = carneServicioImpl
-                    .findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(false, "Bovino",
+                    .findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween("Bovino",
                             "CarneSH", ultimoDiaMesAnterior, primerDiaProximoMes);
 
             List<Carne> carneBovinaCH = carneServicioImpl
-                    .findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(false, "Bovino",
+                    .findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween("Bovino",
                             "CarneCH", ultimoDiaMesAnterior, primerDiaProximoMes);
 
             List<Carne> carnePorcinaSH = carneServicioImpl
-                    .findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(false, "Porcino",
+                    .findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween("Porcino",
                             "CarneSH", ultimoDiaMesAnterior, primerDiaProximoMes);
 
             List<Carne> carnePorcinaCH = carneServicioImpl
-                    .findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(false, "Porcino",
+                    .findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween("Porcino",
                             "CarneCH", ultimoDiaMesAnterior, primerDiaProximoMes);
 
             List<Carne> carnePorcinaGrasa = carneServicioImpl
-                    .findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(false, "Porcino",
+                    .findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween("Porcino",
                             "Grasa", ultimoDiaMesAnterior, primerDiaProximoMes);
 
             List<Carne> carneHigado = carneServicioImpl
-                    .findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(false, "Higado",
+                    .findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween("Higado",
                             "Higado", ultimoDiaMesAnterior, primerDiaProximoMes);
 
             List<Carne> carneTripas = carneServicioImpl
-                    .findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(false, "Tripas",
+                    .findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween("Tripas",
                             "Tripas", ultimoDiaMesAnterior, primerDiaProximoMes);
 
             List<Carne> carneSangre = carneServicioImpl
-                    .findAllByCarneEliminadoAndCarneTipoAndCarneCategoriaAndCarneFechaBetween(false, "Sangre",
+                    .findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween("Sangre",
                             "Sangre", ultimoDiaMesAnterior, primerDiaProximoMes);
 
             Integer totalCarneBovinaSH = Double.valueOf(totalPorMes(carneBovinaSH)).intValue();

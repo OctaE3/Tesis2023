@@ -33,7 +33,7 @@ public class Detalle_Cantidad_Insumo {
     private Set<PDiaria_de_Produccion> detalleCantidadInsumoDiariaDeProd;
 
     @Column(name = "detalle_cantidad_insumo_cantidad")
-    private Integer detalleCantidadInsumoCantidad;
+    private Double detalleCantidadInsumoCantidad;
 
     public Long getDetalleCantidadInsumoId() {
         return detalleCantidadInsumoId;
@@ -59,16 +59,16 @@ public class Detalle_Cantidad_Insumo {
         this.detalleCantidadInsumoDiariaDeProd = detalleCantidadInsumoDiariaDeProd;
     }
 
-    public Integer getDetalleCantidadInsumoCantidad() {
+    public Double getDetalleCantidadInsumoCantidad() {
         return detalleCantidadInsumoCantidad;
     }
 
-    public void setDetalleCantidadInsumoCantidad(Integer detalleCantidadInsumoCantidad) {
+    public void setDetalleCantidadInsumoCantidad(Double detalleCantidadInsumoCantidad) {
         this.detalleCantidadInsumoCantidad = detalleCantidadInsumoCantidad;
     }
 
     public Detalle_Cantidad_Insumo(Long detalleCantidadInsumoId, Control_de_Insumos detalleCantidadInsumoInsumo,
-            Set<PDiaria_de_Produccion> detalleCantidadInsumoDiariaDeProd, Integer detalleCantidadInsumoCantidad) {
+            Set<PDiaria_de_Produccion> detalleCantidadInsumoDiariaDeProd, Double detalleCantidadInsumoCantidad) {
         this.detalleCantidadInsumoId = detalleCantidadInsumoId;
         this.detalleCantidadInsumoInsumo = detalleCantidadInsumoInsumo;
         this.detalleCantidadInsumoDiariaDeProd = detalleCantidadInsumoDiariaDeProd;

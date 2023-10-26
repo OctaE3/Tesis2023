@@ -59,7 +59,7 @@ const AgregarDiariaDeProduccion = () => {
     };
 
     const campoInsumo = {
-        name: 'diariaDeProduccionCantidadUtilizadaInsumos', label: 'Cantidad', color: 'primary', pattern: "^[0-9]{0,10}$"
+        name: 'diariaDeProduccionCantidadUtilizadaInsumos', label: 'Cantidad', color: 'primary', pattern: "^[0-9]{0,4}\\.?[0-9]{0,4}$"
     }
 
     const formFields = [

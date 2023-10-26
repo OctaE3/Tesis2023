@@ -246,7 +246,7 @@ public class Controladora_Insumo {
             Optional<Control_de_Insumos> controlDeInsumos = controlDeInsumosServicioImpl.findById(controlDeInsumosId);
             if (controlDeInsumos.isPresent()) {
                 controlDeInsumos.get().setInsumoEliminado(true);
-                controlDeInsumos.get().setInsumoCantidad(0);
+                controlDeInsumos.get().setInsumoCantidad(0.0);
                 controlDeInsumosServicioImpl.save(controlDeInsumos.get());
                 return new ResponseEntity<>(HttpStatus.OK);
             }
