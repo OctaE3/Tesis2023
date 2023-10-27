@@ -293,7 +293,7 @@ const ModificarMoniteoreoDeSSOPOperativo = () => {
         fecha.setDate(fecha.getDate() + 6);
 
         const fecha2 = new Date(fechaFinal);
-        fecha2.setDate(fecha2.getDate() + 2);
+        fecha2.setDate(fecha2.getDate() + 1);
 
         const dias = diasControl;
 

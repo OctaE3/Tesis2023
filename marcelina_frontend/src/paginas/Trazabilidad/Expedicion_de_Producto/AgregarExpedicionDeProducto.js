@@ -63,7 +63,7 @@ const AgregarExpedicionDeProducto = () => {
     { name: 'expedicionDeProductoFecha', label: 'Fecha', type: 'date', color: 'primary' },
     { name: 'expedicionDeProductoLote', label: 'Lote *', type: 'cantidadMultiple', campo: campo, color: 'primary' },
     { name: 'expedicionDeProductoCliente', label: 'Cliente *', type: 'selector', color: 'primary' },
-    { name: 'expedicionDeProductoDocumento', label: 'Documento', type: 'number', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,10}$" },
+    { name: 'expedicionDeProductoDocumento', label: 'Documento', type: 'number', color: 'primary', obligatorio: true, pattern: "^[0-9]{0,8}$" },
   ];
 
   const [alertSuccess] = useState({

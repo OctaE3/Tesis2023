@@ -233,11 +233,11 @@ function ListarResumenDeTrazabilidad() {
 
   const filters = [
     { id: 'fecha', label: 'Fecha', type: 'date', options: ['desde', 'hasta'] },
-    { id: 'lote', label: 'Lote', type: 'select', options: lote },
+    { id: 'lote', label: 'Lote', type: 'text'},
     { id: 'producto', label: 'Producto', type: 'select', options: producto },
     { id: 'cantidad', label: 'Cantidad producida', type: 'text' },
-    { id: 'carne', label: 'Materia prima cárnica', type: 'select', options: carne },
-    { id: 'aditivo', label: 'Materia prima no cárnica', type: 'select', options: insumo },
+    { id: 'carne', label: 'Materia prima cárnica', type: 'text'},
+    { id: 'aditivo', label: 'Materia prima no cárnica', type: 'text'},
     { id: 'cliente', label: 'Cliente', type: 'select', options: cliente },
     { id: 'responsable', label: 'Responsable', type: 'select', options: responsable },
 
@@ -327,7 +327,7 @@ function ListarResumenDeTrazabilidad() {
     if (
       (!filtros['fecha-desde'] || lowerCaseItem.resumenDeTrazabilidadFecha >= new Date(filtros['fecha-desde'])) &&
       (!filtros['fecha-hasta'] || lowerCaseItem.resumenDeTrazabilidadFecha <= new Date(filtros['fecha-hasta'])) &&
-      (!filtros.lote || lowerCaseItem.resumenDeTrazabilidadLote.startsWith(filtros.lote)) &&
+      (!filtros.lote || lowerCaseItem.resumenDeTrazabilidadLote.includes(filtros.lote)) &&
       (!filtros.producto || lowerCaseItem.resumenDeTrazabilidadProducto.startsWith(filtros.producto)) &&
       (!filtros.cantidad || lowerCaseItem.resumenDeTrazabilidadCantidadProducida.toString() === filtros.cantidad) &&
       (!filtros.carne || lowerCaseItem.resumenDeTrazabilidadMatPrimaCarnica.some(carne => carne.toLowerCase().includes(filtros.carne))) &&

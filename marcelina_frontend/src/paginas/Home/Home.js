@@ -230,7 +230,7 @@ const Home = () => {
               <Card className={classes.card} variant="outlined">
                 <CardContent className={classes.cardCont}>
                   <Typography className={classes.title} variant="h5" component="h2" align='center'>
-                    Recepcion de materaias primas carnicas
+                    Recepcion de materias primas carnicas
                   </Typography>
                   <Typography className={classes.content} variant="body2" component="p">
                     <br />
@@ -289,7 +289,6 @@ const Home = () => {
                   </Typography>
                 </CardContent>
                 <CardActions className={classes.cardActions}>
-                  <Button size="small" component={Link} to="/resumen-de-trazabilidad">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-resumen-de-trazabilidad">Ver</Button>
                 </CardActions>
               </Card>
@@ -621,7 +620,7 @@ const Home = () => {
                   </Typography>
                 </CardContent>
                 <CardActions className={classes.cardActions}>
-                  <Button size="small" component={Link} to="">Añadir</Button>
+                  <Button size="small" component={Link} to="/agregar-usuario">Añadir</Button>
                   <Button size="small" component={Link} to="/listar-usuarios">Ver</Button>
                 </CardActions>
               </Card>

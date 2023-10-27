@@ -180,7 +180,7 @@ const AgregarMonitoreoDeSSOPOPerativo = () => {
 
   const handleFormSubmit = (formData) => {
     const fechaFinal = new Date(formData.monitoreoDeSSOPOperativoFechaInicio);
-    fechaFinal.setDate(fechaFinal.getDate() + 5);
+    fechaFinal.setDate(fechaFinal.getDate() + 7);
 
     const year = fechaFinal.getFullYear();
     const month = String(fechaFinal.getMonth() + 1).padStart(2, '0');

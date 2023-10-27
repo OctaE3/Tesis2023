@@ -185,7 +185,15 @@ const AgregarControlDeTemperaturaEnCamaras = () => {
         setShowAlertError(false);
       }, 2500);
     } else {
-      axios.post('/agregar-control-de-temperatura-en-camaras', formData, {
+
+      const fechaR = new Date(control.controlDeTemperaturaEnCamarasFecha);
+      fechaR.setDate(fechaR.getDate() + 1);
+      const data = {
+          ...control,
+          controlDeTemperaturaEnCamarasFecha: fechaR,
+      }
+
+      axios.post('/agregar-control-de-temperatura-en-camaras', data, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           "Content-Type": "application/json"

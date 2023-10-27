@@ -314,7 +314,7 @@ const ModificarExpedicionDeProducto = () => {
     const handleChange = event => {
         const { name, value } = event.target;
         if (name === "expedicionDeProductoDocumento") {
-            const regex = new RegExp("^[0-9]{0,10}$");
+            const regex = new RegExp("^[0-9]{0,8}$");
             if (regex.test(value)) {
                 setControl(prevState => ({
                     ...prevState,

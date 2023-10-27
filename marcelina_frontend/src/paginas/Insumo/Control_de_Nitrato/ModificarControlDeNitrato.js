@@ -340,9 +340,11 @@ const ModificarControlDeNitrato = () => {
                 }, 2500);
             } else {
                 const loteCompleto = lotes.find((lote) => lote.loteId.toString() === loteSeleccionado.value.toString());
-
+                const fechaR = new Date(data.controlDeNitratoFecha);
+                fechaR.setDate(fechaR.getDate() + 1);
                 const dataMod = {
                     ...data,
+                    controlDeNitratoFecha: fechaR,
                     controlDeNitratoProductoLote: loteCompleto,
                     controlDeNitratoStock: data.controlDeNitratoStock - data.controlDeNitratoCantidadUtilizada,
                 }

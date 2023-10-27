@@ -352,6 +352,7 @@ const ModificarMoniteoreoDeSSOPPreOperativo = () => {
                 setShowAlertError(false);
             }, 3000);
         } else {
+            
             axios.put(`/modificar-monitoreo-de-ssop-pre-operativo/${id}`, data, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,

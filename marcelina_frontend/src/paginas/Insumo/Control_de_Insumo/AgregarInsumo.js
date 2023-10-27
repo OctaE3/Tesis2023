@@ -255,7 +255,18 @@ const AgregarInsumo = () => {
                         setShowAlertError(false);
                     }, 3000);
                 } else {
-                    axios.post('/agregar-control-de-insumos', insumoConProveedor, {
+
+                    const fechaR = new Date(insumoConProveedor.insumoFecha);
+                    fechaR.setDate(fechaR.getDate() + 1);
+                    const fechaRV = new Date(insumoConProveedor.insumoFechaVencimiento);
+                    fechaRV.setDate(fechaRV.getDate() + 1);
+                    const data = {
+                        ...insumoConProveedor,
+                        insumoFecha: fechaR,
+                        insumoFechaVencimiento: fechaRV,
+                    }
+
+                    axios.post('/agregar-control-de-insumos', data, {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('token')}`
                         }

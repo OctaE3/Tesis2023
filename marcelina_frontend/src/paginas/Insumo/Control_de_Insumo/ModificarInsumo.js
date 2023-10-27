@@ -372,7 +372,18 @@ const ModificarInsumo = () => {
                         setShowAlertError(false);
                     }, 2500);
                 } else {
-                    axios.put(`/modificar-control-de-insumos/${id}`, data, {
+
+                    const fechaR = new Date(data.insumoFecha);
+                    fechaR.setDate(fechaR.getDate() + 1);
+                    const fechaRV = new Date(data.insumoFechaVencimiento);
+                    fechaRV.setDate(fechaRV.getDate() + 1);
+                    const dataF = {
+                        ...data,
+                        insumoFecha: fechaR,
+                        insumoFechaVencimiento: fechaRV,
+                    }
+
+                    axios.put(`/modificar-control-de-insumos/${id}`, dataF, {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('token')}`,
                             "Content-Type": "application/json"
