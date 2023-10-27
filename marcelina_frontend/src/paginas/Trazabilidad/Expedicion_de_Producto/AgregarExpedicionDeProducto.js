@@ -196,9 +196,11 @@ const AgregarExpedicionDeProducto = () => {
         }
       })
         .then(response => {
-          setClientes(response.data);
+          const clientesT = response.data;
+          const clientesNoEliminados = clientesT.filter((cliente) => cliente.clienteEliminado === false);
+          setClientes(clientesNoEliminados);
           setClienteSelect(
-            response.data.map((cliente) => ({
+            clientesNoEliminados.map((cliente) => ({
               value: cliente.clienteId,
               label: cliente.clienteNombre,
             }))

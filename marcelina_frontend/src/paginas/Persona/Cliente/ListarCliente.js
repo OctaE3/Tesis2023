@@ -75,7 +75,7 @@ function ListarCliente() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess] = useState({
+  const [alertSuccess, setAlertSuccess] = useState({
     title: 'Correcto', body: 'Se eliminó el cliente con éxito!', severity: 'success', type: 'description'
   });
 
@@ -89,6 +89,13 @@ function ListarCliente() {
 
   const updateErrorAlert = (newBody) => {
     setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+  const updateSuccessAlert = (newBody) => {
+    setAlertSuccess((prevAlert) => ({
       ...prevAlert,
       body: newBody,
     }));
@@ -263,6 +270,7 @@ function ListarCliente() {
       .then(response => {
         if (response.status === 200) {
           setDeleteItem(true);
+          updateSuccessAlert('Se eliminó el cliente con éxito!')
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
@@ -288,7 +296,46 @@ function ListarCliente() {
           }, 2000);
         }
       })
-  } 
+  }
+
+  const handleAddCliente = (rowData) => {
+    const id = rowData.Id;
+    axios.put(`/añadir-cliente/${id}`, null, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 200) {
+          setDeleteItem(true);
+          updateSuccessAlert('Se volvio a añadir el cliente con éxito!')
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 2000);
+        } else {
+          updateErrorAlert('No se logró añadir el cliente, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
+      })
+      .catch(error => {
+        console.error(error)
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        }
+        else if (error.request.status === 500) {
+          updateErrorAlert('No se logró añadir el cliente, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
+      })
+  }
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -453,6 +500,7 @@ function ListarCliente() {
         columnRenderers={columnRenderers}
         onEditButton={handleEditCliente}
         onDeleteButton={handleDeleteCliente}
+        onAddButton={handleAddCliente}
       />
 
     </div>

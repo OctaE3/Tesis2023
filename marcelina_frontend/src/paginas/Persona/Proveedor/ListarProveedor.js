@@ -84,7 +84,7 @@ function ListarProveedor() {
     title: 'Advertencia', body: 'Expiró el inicio de sesión para renovarlo, inicie sesión nuevamente.', severity: 'warning', type: 'description'
   });
 
-  const updateSuccesAlert = (newBody) => {
+  const updateSuccessAlert = (newBody) => {
     setAlertSuccess((prevAlert) => ({
       ...prevAlert,
       body: newBody,
@@ -268,6 +268,7 @@ function ListarProveedor() {
       .then(response => {
         if (response.status === 200) {
           setDeleteItem(true);
+          updateSuccessAlert('Se eliminó el proveedor con éxito!')
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
@@ -286,6 +287,45 @@ function ListarProveedor() {
         }
         else if (error.request.status === 500) {
           updateErrorAlert('No se logró eliminar el proveedor, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
+      })
+  }
+
+  const handleAddProveedor = (rowData) => {
+    const id = rowData.Id;
+    axios.put(`/añadir-proveedor/${id}`, null, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 200) {
+          setDeleteItem(true);
+          updateSuccessAlert('Se volvio a añadir el proveedor con éxito!')
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 2000);
+        } else {
+          updateErrorAlert('No se logró añadir el proveedor, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
+      })
+      .catch(error => {
+        console.error(error)
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        }
+        else if (error.request.status === 500) {
+          updateErrorAlert('No se logró añadir el proveedor, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -458,6 +498,7 @@ function ListarProveedor() {
         columnRenderers={columnRenderers}
         onEditButton={handleEditProveedor}
         onDeleteButton={handleDeleteProveedor}
+        onAddButton={handleAddProveedor}
       />
 
     </div>
