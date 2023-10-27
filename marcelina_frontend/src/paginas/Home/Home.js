@@ -93,7 +93,7 @@ const Home = () => {
   const [showAlertInfo, setShowAlertInfo] = useState(false);
   var nombresMeses = [
     "enero", "febrero", "marzo", "abril", "mayo", "junio",
-    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    "julio", "agosto", "setiembre", "octubre", "noviembre", "diciembre"
   ];
 
   const [alertSuccess] = useState({
@@ -142,7 +142,7 @@ const Home = () => {
       .then(response => {
         const lastAnual = response.data;
         var fecha = new Date();
-        const mes = nombresMeses[fecha.getMonth()];
+        const mes = nombresMeses[fecha.getMonth() - 1];
         const lastA = lastAnual === '' ? null : lastAnual;
         if (lastA != null && lastA.anualDeInsumosCarnicosMes.toLowerCase() === mes.toLowerCase()) {
           setRegistrado(false);
@@ -156,7 +156,6 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    const fecha = new Date();
     console.log(registrado)
     if (registrado === true) {
       axios.post('/agregar-anual-de-insumos-carnicos-automatico', null, {

@@ -82,7 +82,7 @@ public class PAnual_de_Insumos_CarnicosServicioImpl implements PAnual_de_Insumos
         Calendar calendario = Calendar.getInstance();
         calendario.setTime(fechaActual);
 
-        calendario.add(Calendar.MONTH, -1);
+        calendario.add(Calendar.MONTH, -2);
         calendario.set(Calendar.DAY_OF_MONTH, calendario.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date ultimoDiaMesAnterior = new Date(calendario.getTimeInMillis());
 
@@ -90,9 +90,13 @@ public class PAnual_de_Insumos_CarnicosServicioImpl implements PAnual_de_Insumos
         calendario.set(Calendar.DAY_OF_MONTH, 1);
         Date primerDiaProximoMes = new Date(calendario.getTimeInMillis());
 
+        calendario.add(Calendar.MONTH, -1);
+        calendario.set(Calendar.DAY_OF_MONTH, 1);
+        Date fechaConElMes = new Date(calendario.getTimeInMillis());
+
         PAnual_de_Insumos_Carnicos ultimoAnual = findLastAnualDeInsumosCarnicos();
 
-        String mes = nombreMes(fechaActual);
+        String mes = nombreMes(fechaConElMes);
         String mensaje = "";
         Boolean check = false;
 
@@ -102,8 +106,7 @@ public class PAnual_de_Insumos_CarnicosServicioImpl implements PAnual_de_Insumos
             } else {
                 check = true;
             }
-        } 
-        else if (ultimoAnual == null || check == true) {
+        } else if (ultimoAnual == null || check == true) {
             List<Carne> carneBovinaSH = carneServicioImpl
                     .findAllByCarneTipoAndCarneCategoriaAndCarneFechaBetween("Bovino",
                             "CarneSH", ultimoDiaMesAnterior, primerDiaProximoMes);
