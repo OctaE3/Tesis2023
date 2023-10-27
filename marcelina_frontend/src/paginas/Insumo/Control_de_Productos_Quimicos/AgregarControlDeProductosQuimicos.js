@@ -229,7 +229,14 @@ const AgregarControlDeProductosQuimicos = () => {
                     setShowAlertError(false);
                 }, 2500);
             } else {
-                axios.post('/agregar-control-de-productos-quimicos', quimicosConProveedor, {
+                const fechaR = new Date(quimicosConProveedor.controlDeProductosQuimicosFecha);
+                fechaR.setDate(fechaR.getDate() + 1);
+                const data = {
+                    ...quimicosConProveedor,
+                    controlDeProductosQuimicosFecha: fechaR,
+                }
+
+                axios.post('/agregar-control-de-productos-quimicos', data, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }

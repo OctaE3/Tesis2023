@@ -335,9 +335,13 @@ const ModificarControlDeNitrito = () => {
                 }, 2500);
             } else {
                 const loteCompleto = lotes.find((lote) => lote.loteId.toString() === loteSeleccionado.value.toString());
-
+                
+                const fechaR = new Date(data.controlDeNitritoFecha);
+                fechaR.setDate(fechaR.getDate() + 1);
+                
                 const dataMod = {
                     ...data,
+                    controlDeNitritoFecha: fechaR,
                     controlDeNitritoProductoLote: loteCompleto,
                     controlDeNitritoStock: control.controlDeNitritoStock - control.controlDeNitritoCantidadUtilizada,
                 };

@@ -263,7 +263,15 @@ const AgregarControlDeNitrito = () => {
           setShowAlertError(false);
         }, 2500);
       } else {
-        axios.post('/agregar-control-de-nitrito', controlDeNitritoConResponsable, {
+
+        const fechaR = new Date(controlDeNitritoConResponsable.controlDeNitritoFecha);
+        fechaR.setDate(fechaR.getDate() + 1);
+        const data = {
+            ...controlDeNitritoConResponsable,
+            controlDeNitritoFecha: fechaR,
+        }
+
+        axios.post('/agregar-control-de-nitrito', data, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             "Content-Type": "application/json"

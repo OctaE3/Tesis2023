@@ -299,8 +299,18 @@ const AgregarRecepcionDeMateriasPrimasCarnicas = () => {
                 recepcionDeMateriasPrimasCarnicasResponsable: window.localStorage.getItem('user'),
             };
 
+            const fechaR = new Date(materiasPrimasConProveedor.recepcionDeMateriasPrimasCarnicasFecha);
+            fechaR.setDate(fechaR.getDate() + 1);
+            const materiasPrimas = {
+                ...materiasPrimasConProveedor,
+                recepcionDeMateriasPrimasCarnicasFecha: fechaR,
+            }
+            
+            
+
+
             const data = {
-                recepcionDeMateriasPrimasCarnicas: materiasPrimasConProveedor,
+                recepcionDeMateriasPrimasCarnicas: materiasPrimas,
                 listaCarne: carnes,
             }
 
