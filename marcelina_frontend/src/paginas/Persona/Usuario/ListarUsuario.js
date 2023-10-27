@@ -70,7 +70,7 @@ function ListarUsuario() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess] = useState({
+  const [alertSuccess, setAlertSuccess] = useState({
     title: 'Correcto', body: 'Se eliminó el usuario con éxito!', severity: 'success', type: 'description'
   });
 
@@ -84,6 +84,13 @@ function ListarUsuario() {
 
   const updateErrorAlert = (newBody) => {
     setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+  const updateSuccessAlert = (newBody) => {
+    setAlertSuccess((prevAlert) => ({
       ...prevAlert,
       body: newBody,
     }));
@@ -216,6 +223,7 @@ function ListarUsuario() {
       .then(response => {
         if (response.status === 200) {
           setDeleteItem(true);
+          updateSuccessAlert('Se eliminó el usuario con éxito!')
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
@@ -239,6 +247,45 @@ function ListarUsuario() {
           setTimeout(() => {
             setShowAlertError(false);
           }, 2500);
+        }
+      })
+  }
+
+  const handleAddUsuario = (rowData) => {
+    const id = rowData.Id;
+    axios.put(`/añadir-usuario/${id}`, null, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 200) {
+          setDeleteItem(true);
+          updateSuccessAlert('Se volvio a añadir el usuario con éxito!')
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 2000);
+        } else {
+          updateErrorAlert('No se logró añadir el usuario, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
+      })
+      .catch(error => {
+        console.error(error)
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        }
+        else if (error.request.status === 500) {
+          updateErrorAlert('No se logró añadir el usuario, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
         }
       })
   }
@@ -384,6 +431,7 @@ function ListarUsuario() {
         columnRenderers={""}
         onEditButton={handleEditUsuario}
         onDeleteButton={handleDeleteUsuario}
+        onAddButton={handleAddUsuario}
       />
 
     </div>

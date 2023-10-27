@@ -244,9 +244,11 @@ const ModificarRecepcionDeMateriasPrimasCarnicas = () => {
                 }
             })
                 .then(response => {
-                    setProveedores(response.data);
+                    const proveedorT = response.data;
+                    const proveedorNoEliminados = proveedorT.filter((proveedor) => proveedor.proveedorEliminado === false);
+                    setProveedores(proveedorNoEliminados);
                     setProveedorSelect(
-                        response.data.map((proveedor) => ({
+                        proveedorNoEliminados.map((proveedor) => ({
                             value: proveedor.proveedorId,
                             label: proveedor.proveedorNombre,
                         }))

@@ -71,7 +71,7 @@ function ListarProducto() {
 
   const [blinking, setBlinking] = useState(true);
 
-  const [alertSuccess] = useState({
+  const [alertSuccess, setAlertSuccess] = useState({
     title: 'Correcto', body: 'Se eliminó el producto con éxito!', severity: 'success', type: 'description'
   });
 
@@ -85,6 +85,13 @@ function ListarProducto() {
 
   const updateErrorAlert = (newBody) => {
     setAlertError((prevAlert) => ({
+      ...prevAlert,
+      body: newBody,
+    }));
+  };
+
+  const updateSuccessAlert = (newBody) => {
+    setAlertSuccess((prevAlert) => ({
       ...prevAlert,
       body: newBody,
     }));
@@ -222,6 +229,7 @@ function ListarProducto() {
       .then(response => {
         if (response.status === 200) {
           setDeleteItem(true);
+          updateSuccessAlert('Se eliminó el producto con éxito!')
           setShowAlertSuccess(true);
           setTimeout(() => {
             setShowAlertSuccess(false);
@@ -240,6 +248,45 @@ function ListarProducto() {
         }
         else if (error.request.status === 500) {
           updateErrorAlert('No se logró eliminar el producto, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
+      })
+  }
+
+  const handleAddProducto = (rowData) => {
+    const id = rowData.Id;
+    axios.put(`/añadir-producto/${id}`, null, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        if (response.status === 200) {
+          setDeleteItem(true);
+          updateSuccessAlert('Se volvio a añadir el producto con éxito!')
+          setShowAlertSuccess(true);
+          setTimeout(() => {
+            setShowAlertSuccess(false);
+          }, 2000);
+        } else {
+          updateErrorAlert('No se logró añadir el usuario, recargue la página.')
+          setShowAlertError(true);
+          setTimeout(() => {
+            setShowAlertError(false);
+          }, 2000);
+        }
+      })
+      .catch(error => {
+        console.error(error)
+        if (error.request.status === 401) {
+          setCheckToken(true);
+        }
+        else if (error.request.status === 500) {
+          updateErrorAlert('No se logró añadir el usuario, recargue la página.')
           setShowAlertError(true);
           setTimeout(() => {
             setShowAlertError(false);
@@ -394,6 +441,7 @@ function ListarProducto() {
         columnRenderers={""}
         onEditButton={handleEditProducto}
         onDeleteButton={handleDeleteProducto}
+        onAddButton={handleAddProducto}
       />
 
     </div>

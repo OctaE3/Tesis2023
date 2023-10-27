@@ -158,9 +158,11 @@ const AgregarCliente = () => {
         }
       })
         .then(response => {
-          setLocalidades(response.data);
+          const localidadesT = response.data;
+          const localidadesNoEliminadas = localidadesT.filter((localidad) => localidad.localidadEliminado === false);
+          setLocalidades(localidadesNoEliminadas);
           setLocalidadesSelect(
-            response.data.map((localidad) => ({
+            localidadesNoEliminadas.map((localidad) => ({
               value: localidad.localidadId,
               label: localidad.localidadCiudad,
             }))
